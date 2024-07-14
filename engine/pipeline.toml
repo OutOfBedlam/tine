@@ -1,0 +1,28 @@
+## pipeline configuration
+##
+
+## name of the pipeline, default is the filename
+# name = "my-pipeline"
+
+## define pipeline default values
+[defaults]
+	## default interval 
+	interval = "10s"
+
+[log]
+    ## log file path, "-" for stdout, "" for no log
+    ## default is "-"
+    filename = "-"
+    ## log level: DEBUG, INFO, WARN, ERROR
+    level = "INFO"
+    ## max log file size in MB
+    max_size = 100
+    ## max log file age in days
+    max_age = 7
+    ## max log file backups
+    max_backups = 10
+    ## compress log backup files
+    compress = false
+    ## chown the log file (empty for current user)
+    ## ignored on windows
+    # chown = ""

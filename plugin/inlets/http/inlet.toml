@@ -1,0 +1,11 @@
+#[[in.http]]
+    ### address e.g. http://localhost:8080
+    # address = ""
+
+    ### success code (default: 200)
+    # success = 200
+
+    ### timeout (default: 3s)
+    # timeout = "3s"
+
+    # interval = "10s"

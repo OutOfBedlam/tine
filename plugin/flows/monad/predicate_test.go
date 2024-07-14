@@ -1,0 +1,92 @@
+package monad
+
+import (
+	"testing"
+
+	"github.com/OutOfBedlam/tine/engine"
+	"github.com/stretchr/testify/require"
+)
+
+func TestNewPredicate(t *testing.T) {
+	tests := []struct {
+		code   string
+		txCode string
+	}{
+		{
+			"${ load1 } < 2.5",
+			"_load1.Value < 2.5",
+		},
+	}
+
+	for _, tt := range tests {
+		p, err := ExprPredicate(tt.code)
+		require.NoError(t, err)
+		predicate := p.(*exprPredicate)
+		require.Equal(t, tt.txCode, predicate.translatedCode)
+	}
+}
+
+func TestPredict(t *testing.T) {
+	teststs := []struct {
+		expect bool
+		code   string
+		record engine.Record
+	}{
+		{
+			true,
+			`${load1} < 2.5 // float compare with float`,
+			engine.NewRecord(engine.NewFloatField("load1", 2.0)),
+		},
+		{
+			true,
+			`${load1} == 2 // int compare with int`,
+			engine.NewRecord(engine.NewIntField("load1", 2)),
+		},
+		{
+			false,
+			`${load1} == "2" // int compare with string`,
+			engine.NewRecord(engine.NewFloatField("load1", 2.1)),
+		},
+		{
+			false,
+			`${load1} == 2.1 // string compare with float`,
+			engine.NewRecord(engine.NewStringField("load1", "2.1")),
+		},
+		{
+			true,
+			`${a} + ${b} == 3.0 // float compare with float`,
+			engine.NewRecord(
+				engine.NewIntField("A", 1),
+				engine.NewIntField("B", 2),
+			),
+		},
+		{
+			true,
+			`${a} == 1 && ${b} == 2`,
+			engine.NewRecord(
+				engine.NewIntField("A", 1),
+				engine.NewIntField("B", 2),
+			),
+		},
+		{
+			false,
+			`${a} == 1 && ${b} != 2`,
+			engine.NewRecord(
+				engine.NewIntField("A", 1),
+				engine.NewIntField("B", 2),
+			),
+		},
+		// OR test
+	}
+
+	for _, tt := range teststs {
+		p, err := ExprPredicate(tt.code)
+		require.NoError(t, err)
+		predicate := p.(*exprPredicate)
+		result := predicate.Apply(tt.record)
+		if result != tt.expect {
+			t.Errorf("expect: %v, got: %v exp:%s", tt.expect, result, tt.code)
+		}
+		require.Equal(t, tt.expect, result)
+	}
+}

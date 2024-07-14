@@ -1,0 +1,9 @@
+#[[in.nats]]
+    ### nats server statz endpoint
+    # server = ""
+
+    ### timeout (default: 3s)
+    # timeout = "3s"
+
+    # interval = "10s"
+    

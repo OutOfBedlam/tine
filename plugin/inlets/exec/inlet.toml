@@ -1,0 +1,26 @@
+#[[inlets.exec]]
+    ## Commands array
+    # commands = []
+
+    ## Environment variables
+    ## Array of "key=value" pairs
+    ## e.g. ["key1=value1", "key2=value2"]
+    # environments = []    
+
+    ## Field name prefix
+    # prefix = ""
+
+    ## Timeout
+    # timeout = "3s"
+
+    ## Ignore non-zero exit code
+    # ignore_error = false
+
+    ## Interval
+    # interval = "10s"
+
+    ## How many times to run the command, 0 for infinite
+    # count = 0
+
+    ## Trim space of output
+    # trim_space = false

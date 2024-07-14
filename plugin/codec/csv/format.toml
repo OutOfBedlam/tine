@@ -1,0 +1,43 @@
+
+# CSV Decoder
+#
+# format = "csv"
+#
+# example)
+[[inlets._name_.reader]]
+    format     = "csv"
+    # It specifies the field names for each column in the CSV file
+    # The order of the fields should be the same as the order of the columns in the CSV file
+    # If the CSV file has more fields, it silently ignored
+    fields     = ["time", "name", "value"]
+    # string, int, uint, float, bool
+    # "any" is the special type for parse string to the most suitable type
+    #       it will try to fit the value to bool, float, time and string
+    # The length of types should be same with the length of fields
+    types      = ["time", "string", "any"]
+    compress   = ""
+    timeformat = "s"
+    tz         = "Asia/Seoul"
+
+# CSV Encoder
+#
+# format = "csv"
+# example)
+[[outlets._name_.writer]]
+    format     = "csv"
+    ## CSV sub format options
+    ## If it is empty, output all fields in order
+    ## - "time_name_value" : split fields to each line in order of "time, name, value", 
+    ##                       the name field is prepend with inlet_name+'.'+field_name
+    ## - "name_time_value" : same with the above but in order of "name, time, value".
+    ##
+    # subformat  = "time_name_value"
+
+    ## It specifies the field names to export to the CSV file
+    ## If it is empty, it will export all fields
+    fields     = []
+
+    compress   = ""
+    timeformat = "2006-01-02 15:04:05"
+    tz         = "Asia/Seoul"
+    decimal    = 3

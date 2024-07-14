@@ -1,0 +1,30 @@
+#[[inlets.cpu]]
+    # percpu = false
+    # totalcpu = true
+
+#[[inlets.load]]
+    # loads = [1, 5, 15]
+
+#[[inlets.mem]]
+
+#[[inlets.disk]]
+    ## default is all mount points
+    # mount_points = ["/", "/mnt"]
+    # ignore_fs = ["tmpfs", "devtmpfs", "devfs", "iso9660", "overlay", "aufs", "squashfs"]
+
+#[[inlets.diskio]]
+    ## default is all devices
+    # devices = ["sda*", "sdb*"]
+
+#[[inlets.net]]
+    # devices = ["eth*"]
+
+#[[inlets.netstat]]
+    ## macOS does not support netstat
+    ## supproted protocols: ip, icmp, icmpmsg, tcp, udp, udplite
+    # protocols = ["tcp", "udp"]
+
+#[[inlets.sensor]]
+
+#[[inlets.host]]
+
