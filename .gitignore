@@ -32,3 +32,4 @@ tine
 tine.exe
 tine.toml
 tine.conf
+dist/

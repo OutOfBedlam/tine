@@ -1,14 +1,10 @@
-package damper
+package base
 
 import (
 	"time"
 
 	"github.com/OutOfBedlam/tine/engine"
 )
-
-func init() {
-	engine.RegisterFlow(&engine.FlowReg{Name: "damper", Factory: DamperFlow})
-}
 
 type damperFlow struct {
 	buffer         []engine.Record
@@ -17,8 +13,6 @@ type damperFlow struct {
 	bufferInterval time.Duration
 	lastFlush      time.Time
 }
-
-var _ = (engine.Flow)((*damperFlow)(nil))
 
 func DamperFlow(ctx *engine.Context) engine.Flow {
 	bufferSize := ctx.Config().GetInt("buffer_size", 20)

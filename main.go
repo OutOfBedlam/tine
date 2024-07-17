@@ -60,14 +60,14 @@ func main() {
 	pipelineConfigs := []string{}
 	for _, pc := range flag.Args() {
 		if _, err := os.Stat(pc); err != nil {
-			fmt.Println("config file not found:", pc)
+			fmt.Println("pipeline file not found:", pc)
 			os.Exit(1)
 		}
 		pipelineConfigs = append(pipelineConfigs, pc)
 	}
 
 	if len(pipelineConfigs) == 0 {
-		fmt.Println("no pipeline config file specified")
+		fmt.Println("no pipeline file specified")
 		os.Exit(1)
 	}
 
@@ -75,7 +75,7 @@ func main() {
 	for _, pc := range pipelineConfigs {
 		p, err := engine.New(engine.WithConfigFile(pc))
 		if err != nil {
-			fmt.Println("failed to parse config file:", err)
+			fmt.Println("failed to parse pipeline file:", err)
 			os.Exit(1)
 		}
 		pipelines = append(pipelines, p)

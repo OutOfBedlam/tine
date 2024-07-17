@@ -31,7 +31,7 @@ var pipelineSerial int64
 
 func WithConfig(conf string) Option {
 	return func(p *Pipeline) error {
-		if _, err := toml.Decode(conf, p); err != nil {
+		if err := LoadConfig(conf, &p.PipelineConfig); err != nil {
 			return err
 		}
 		if p.Name == "" {
@@ -47,7 +47,7 @@ func WithConfigFile(path string) Option {
 		if content, err := os.ReadFile(path); err != nil {
 			return err
 		} else {
-			if _, err := toml.Decode(string(content), p); err != nil {
+			if err := LoadConfig(string(content), &p.PipelineConfig); err != nil {
 				return err
 			}
 			if p.Name == "" {
@@ -92,7 +92,7 @@ func New(opts ...Option) (*Pipeline, error) {
 
 	// context
 	p.ctx = newContext(p).WithLogger(p.logger)
-	p.flows = []*FlowHandler{NewFlowHandler(FanInFlow(p.ctx))}
+	p.flows = []*FlowHandler{NewFlowHandler(p.ctx, "fan-in", FanInFlow(p.ctx))}
 	return p, nil
 }
 
@@ -109,7 +109,7 @@ func (p *Pipeline) Context() *Context {
 }
 
 func (p *Pipeline) AddInlet(name string, inlet Inlet) (*InletHandler, error) {
-	ret, err := NewInletHandler(name, inlet, p.flows[0].inCh)
+	ret, err := NewInletHandler(p.ctx, name, inlet, p.flows[0].inCh)
 	if err != nil {
 		return nil, err
 	}
@@ -117,8 +117,8 @@ func (p *Pipeline) AddInlet(name string, inlet Inlet) (*InletHandler, error) {
 	return ret, nil
 }
 
-func (p *Pipeline) AddOutlet(outlet Outlet) (*OutletHandler, error) {
-	ret, err := NewOutletHandler(outlet)
+func (p *Pipeline) AddOutlet(name string, outlet Outlet) (*OutletHandler, error) {
+	ret, err := NewOutletHandler(p.ctx, name, outlet)
 	if err != nil {
 		return nil, err
 	}
@@ -126,8 +126,8 @@ func (p *Pipeline) AddOutlet(outlet Outlet) (*OutletHandler, error) {
 	return ret, nil
 }
 
-func (p *Pipeline) AddFlow(flow Flow) (*FlowHandler, error) {
-	ret := NewFlowHandler(flow)
+func (p *Pipeline) AddFlow(name string, flow Flow) (*FlowHandler, error) {
+	ret := NewFlowHandler(p.ctx, name, flow)
 	p.flows[len(p.flows)-1].Via(ret)
 	p.flows = append(p.flows, ret)
 	return ret, nil
@@ -136,58 +136,60 @@ func (p *Pipeline) AddFlow(flow Flow) (*FlowHandler, error) {
 func (p *Pipeline) Build() (returnErr error) {
 	p.plumbingOnce.Do(func() {
 		// inlets
-		for kind, list := range p.Inlets {
-			if reg := GetInletRegistry(kind); reg != nil {
-				for _, v := range list {
-					c := makeConfig(v, p.Defaults)
-					flowCfgs := c.GetConfig("flows", nil)
-					if flowCfgs != nil {
-						c.Unset("flows")
-					}
-					inlet := reg.Factory(p.ctx.WithConfig(c))
-					if _, err := p.AddInlet(kind, inlet); err != nil {
-						p.ctx.LogError("failed to add inlet", "inlet", kind, "error", err.Error())
-					} else {
-						p.ctx.LogDebug(">>> flowsCfg", "type", fmt.Sprintf("%T", flowCfgs))
-						for flowKind, flowCfg := range flowCfgs {
-							p.ctx.LogDebug(">>> flow", "kind", flowKind, "cfg", fmt.Sprintf("%T", flowCfg))
+		for _, inletCfg := range p.Inlets {
+			if reg := GetInletRegistry(inletCfg.Plugin); reg != nil {
+				c := makeConfig(inletCfg.Params, p.Defaults)
+				inlet := reg.Factory(p.ctx.WithConfig(c))
+				if inletHandler, err := p.AddInlet(inletCfg.Plugin, inlet); err != nil {
+					p.ctx.LogError("failed to add inlet", "inlet", inletCfg.Plugin, "error", err.Error())
+				} else {
+					var lastFlow *FlowHandler
+					for _, flowCfg := range inletCfg.Flows {
+						reg := GetFlowRegistry(flowCfg.Plugin)
+						if reg == nil {
+							returnErr = fmt.Errorf("flow %q not found", flowCfg.Plugin)
+							return
 						}
+						c := makeConfig(flowCfg.Params, p.Defaults)
+						flow := NewFlowHandler(p.ctx, flowCfg.Plugin, reg.Factory(p.ctx.WithConfig(c)))
+						if lastFlow == nil {
+							lastFlow = inletHandler.Via(flow)
+						} else {
+							lastFlow = lastFlow.Via(flow)
+						}
+						inletHandler.AddFlow(flow)
 					}
 				}
 			} else {
-				returnErr = fmt.Errorf("inlet %q not found", kind)
+				returnErr = fmt.Errorf("inlet %q not found", inletCfg.Plugin)
 				return
 			}
 		}
 
 		// flows
-		for kind, list := range p.Flows {
-			if reg := GetFlowRegistry(kind); reg != nil {
-				for _, v := range list {
-					c := makeConfig(v, p.Defaults)
-					flow := reg.Factory(p.ctx.WithConfig(c))
-					if _, err := p.AddFlow(flow); err != nil {
-						p.ctx.LogError("failed to add flow", "flow", kind, "error", err.Error())
-					}
+		for _, flowCfg := range p.Flows {
+			if reg := GetFlowRegistry(flowCfg.Plugin); reg != nil {
+				c := makeConfig(flowCfg.Params, p.Defaults)
+				flow := reg.Factory(p.ctx.WithConfig(c))
+				if _, err := p.AddFlow(flowCfg.Plugin, flow); err != nil {
+					p.ctx.LogError("failed to add flow", "flow", flowCfg.Plugin, "error", err.Error())
 				}
 			} else {
-				returnErr = fmt.Errorf("flow %q not found", kind)
+				returnErr = fmt.Errorf("flow %q not found", flowCfg.Plugin)
 				return
 			}
 		}
 
 		// outlets
-		for kind, list := range p.Outlets {
-			if reg := GetOutletRegistry(kind); reg != nil {
-				for _, v := range list {
-					c := makeConfig(v, p.Defaults)
-					outlet := reg.Factory(p.ctx.WithConfig(c))
-					if _, err := p.AddOutlet(outlet); err != nil {
-						p.ctx.LogError("failed to add outlet", "outlet", kind, "error", err.Error())
-					}
+		for _, outletCfg := range p.Outlets {
+			if reg := GetOutletRegistry(outletCfg.Plugin); reg != nil {
+				c := makeConfig(outletCfg.Params, p.Defaults)
+				outlet := reg.Factory(p.ctx.WithConfig(c))
+				if _, err := p.AddOutlet(outletCfg.Plugin, outlet); err != nil {
+					p.ctx.LogError("failed to add outlet", "outlet", outletCfg.Plugin, "error", err.Error())
 				}
 			} else {
-				returnErr = fmt.Errorf("outlet %q not found", kind)
+				returnErr = fmt.Errorf("outlet %q not found", outletCfg.Plugin)
 				return
 			}
 		}
@@ -222,7 +224,7 @@ func (p *Pipeline) Run() error {
 
 	// fanout flow attached
 	fanout := FanOutFlow(p.ctx).(*fanOutFlow)
-	fanoutHandler := NewFlowHandler(fanout)
+	fanoutHandler := NewFlowHandler(p.ctx, "fan-out", fanout)
 	fanout.LinkOutlets(p.outputs...)
 	p.flows[len(p.flows)-1].Via(fanoutHandler)
 	p.flows = append(p.flows, fanoutHandler)

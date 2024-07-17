@@ -1,25 +1,121 @@
 package engine
 
 import (
+	"cmp"
 	"fmt"
+	"slices"
 	"strings"
+	"sync"
 )
 
-type Table struct {
+type Key interface {
+	cmp.Ordered
+}
+
+type Table[T Key] struct {
+	mutex     sync.RWMutex
 	columns   []string
 	types     []Type
-	rows      [][]*Field
+	rows      map[T]*Row[T]
 	predicate Predicate
 }
 
-func NewTable() *Table {
-	return &Table{}
+type Row[T Key] struct {
+	Key    T
+	Fields []*Field
+}
+
+func NewRow[T Key](key T, cap int) *Row[T] {
+	return &Row[T]{
+		Key:    key,
+		Fields: make([]*Field, cap),
+	}
+}
+
+func NewTable[T Key]() *Table[T] {
+	return &Table[T]{
+		rows: make(map[T]*Row[T]),
+	}
+}
+
+func (tb *Table[T]) Keys() []T {
+	keys := make([]T, 0, len(tb.rows))
+	for k := range tb.rows {
+		keys = append(keys, k)
+	}
+	if len(keys) == 0 {
+		return nil
+	}
+	slices.Sort(keys)
+	return keys
+}
+
+func (tb *Table[T]) Set(k T, fields ...*Field) {
+	tb.mutex.Lock()
+	defer tb.mutex.Unlock()
+	var row *Row[T]
+	if r, ok := tb.rows[k]; ok {
+		row = r
+	} else {
+		row = NewRow(k, len(tb.columns))
+		tb.rows[k] = row
+	}
+
+	var get_field = func(col string) *Field {
+		for _, f := range fields {
+			if f != nil && strings.EqualFold(f.Name, col) {
+				return f
+			}
+		}
+		return nil
+	}
+
+	for colIdx, col := range tb.columns {
+		inField := get_field(col)
+		if inField != nil {
+			row.Fields[colIdx] = inField.Convert(tb.types[colIdx])
+		}
+	}
+
+	for _, f := range fields {
+		if f == nil {
+			continue
+		}
+		colIdx := tb.columnIdx(f.Name)
+		if colIdx >= 0 {
+			continue
+		}
+		tb.AddColumn(f.Name, f.Type)
+		row.Fields = append(row.Fields, f)
+	}
+	tb.rows[row.Key] = row
+}
+
+func (tb *Table[T]) Get(k T) *Row[T] {
+	tb.mutex.RLock()
+	defer tb.mutex.RUnlock()
+	return tb.rows[k]
+}
+
+func (tb *Table[T]) Rows() [][]*Field {
+	tb.mutex.RLock()
+	defer tb.mutex.RUnlock()
+
+	keys := tb.Keys()
+	ret := [][]*Field{}
+	for _, k := range keys {
+		row := tb.rows[k]
+		ret = append(ret, row.Fields)
+	}
+	return ret
 }
 
 // AddColumns adds columns to the table
 //
 // names and types should be same size, otherwise panic
-func (tb *Table) AddColumns(names []string, types []Type) {
+func (tb *Table[T]) AddColumns(names []string, types []Type) {
+	tb.mutex.Lock()
+	defer tb.mutex.Unlock()
 	if len(names) != len(types) {
 		panic("names and types should be same size")
 	}
@@ -29,66 +125,41 @@ func (tb *Table) AddColumns(names []string, types []Type) {
 }
 
 // AddColumn adds a column to the table
-func (tb *Table) AddColumn(name string, t Type) {
+func (tb *Table[T]) AddColumn(name string, t Type) {
 	tb.columns = append(tb.columns, strings.ToUpper(name))
 	tb.types = append(tb.types, t)
 }
 
 // Columns returns the column names
-func (tb *Table) Columns() []string {
+func (tb *Table[T]) Columns() []string {
+	tb.mutex.RLock()
+	defer tb.mutex.RUnlock()
 	return tb.columns
 }
 
 // Types returns the column types
-func (tb *Table) Types() []Type {
+func (tb *Table[T]) Types() []Type {
+	tb.mutex.RLock()
+	defer tb.mutex.RUnlock()
 	return tb.types
 }
 
-// Add adds a record to the table
-func (tb *Table) Add(fields ...*Field) {
-	rec := sliceRecord(fields)
-
-	row := make([]*Field, len(tb.columns))
-	for colIdx, colName := range tb.columns {
-		field := rec.Field(colName)
-		row[colIdx] = field.Convert(tb.types[colIdx])
-	}
-
-	tb.rows = append(tb.rows, row)
-}
-
 // Clear removes all records from the table
-func (tb *Table) Clear() {
-	tb.rows = tb.rows[:0]
+func (tb *Table[T]) Clear() {
+	tb.mutex.Lock()
+	defer tb.mutex.Unlock()
+	clear(tb.rows)
 }
 
 // Len returns the number of records in the table
-func (tb *Table) Len() int {
+func (tb *Table[T]) Len() int {
+	tb.mutex.RLock()
+	defer tb.mutex.RUnlock()
 	return len(tb.rows)
 }
 
-// Row returns a record by index
-func (tb *Table) Row(rowIdx int) []any {
-	if rowIdx < 0 || rowIdx >= len(tb.rows) {
-		return nil
-	}
-	ret := make([]any, len(tb.columns))
-	for i, field := range tb.rows[rowIdx] {
-		ret[i] = field.Value
-	}
-	return ret
-}
-
-// RowsFields returns a record by index
-func (tb *Table) RowsFields(rowIdx int) []*Field {
-	if rowIdx < 0 || rowIdx >= len(tb.rows) {
-		return nil
-	}
-	return tb.rows[rowIdx]
-}
-
-// ColumnIdx returns the index of a column by name
-func (tb *Table) ColumnIdx(colName string) int {
+// columnIdx returns the index of a column by name
+func (tb *Table[T]) columnIdx(colName string) int {
 	colIdx := -1
 	for i, name := range tb.columns {
 		if name == strings.ToUpper(colName) {
@@ -100,8 +171,8 @@ func (tb *Table) ColumnIdx(colName string) int {
 }
 
 // Series returns a series of a column by name
-func (tb *Table) Series(colName string) []any {
-	colIdx := tb.ColumnIdx(colName)
+func (tb *Table[T]) Series(colName string) []*Field {
+	colIdx := tb.columnIdx(colName)
 	if colIdx == -1 {
 		return nil
 	}
@@ -109,20 +180,21 @@ func (tb *Table) Series(colName string) []any {
 }
 
 // SeriesByIdx returns a series of a column by index
-func (tb *Table) SeriesByIdx(colIdx int) []any {
+func (tb *Table[T]) SeriesByIdx(colIdx int) []*Field {
 	if colIdx < 0 || colIdx >= len(tb.columns) {
 		return nil
 	}
-	ret := make([]any, len(tb.rows))
-	for i, row := range tb.rows {
-		ret[i] = row[colIdx].Value
+	keys := tb.Keys()
+	ret := make([]*Field, len(keys))
+	for i, k := range keys {
+		ret[i] = tb.rows[k].Fields[colIdx]
 	}
 	return ret
 }
 
 // SeriesFields returns a series of a column by name
-func (tb *Table) SeriesFields(colName string) []*Field {
-	colIdx := tb.ColumnIdx(colName)
+func (tb *Table[T]) SeriesFields(colName string) []*Field {
+	colIdx := tb.columnIdx(colName)
 	if colIdx == -1 {
 		return nil
 	}
@@ -130,23 +202,24 @@ func (tb *Table) SeriesFields(colName string) []*Field {
 }
 
 // SeriesFieldsByIdx returns a series of a column by index
-func (tb *Table) SeriesFieldsByIdx(colIdx int) []*Field {
+func (tb *Table[T]) SeriesFieldsByIdx(colIdx int) []*Field {
 	if colIdx < 0 || colIdx >= len(tb.columns) {
 		return nil
 	}
-	ret := make([]*Field, len(tb.rows))
-	for i, row := range tb.rows {
-		ret[i] = row[colIdx]
+	keys := tb.Keys()
+	ret := make([]*Field, len(keys))
+	for i, k := range keys {
+		ret[i] = tb.rows[k].Fields[colIdx]
 	}
 	return ret
 }
 
 // Select returns a new table with selected columns
-func (tb *Table) Select(fields []string) (*Table, error) {
+func (tb *Table[T]) Select(fields []string) (*Table[T], error) {
 	colIndexes := make([]int, 0, len(fields))
 	unknownCols := []string{}
 	for _, col := range fields {
-		idx := tb.ColumnIdx(col)
+		idx := tb.columnIdx(col)
 		if idx == -1 {
 			unknownCols = append(unknownCols, col)
 			continue
@@ -156,17 +229,17 @@ func (tb *Table) Select(fields []string) (*Table, error) {
 	if len(unknownCols) > 0 {
 		return nil, fmt.Errorf("unknown columns: %v", unknownCols)
 	}
-	ret := NewTable()
+	ret := NewTable[T]()
 	for _, idx := range colIndexes {
 		ret.AddColumn(tb.columns[idx], tb.types[idx])
 	}
-	for _, row := range tb.rows {
-		rec := sliceRecord(row)
+	for k, row := range tb.rows {
+		rec := sliceRecord(row.Fields)
 		if r := rec.FieldsAt(colIndexes...); r != nil {
 			if tb.predicate != nil && !tb.predicate.Apply(rec) {
 				continue
 			}
-			ret.Add(r...)
+			ret.Set(k, r...)
 		}
 	}
 	return ret, nil
@@ -178,24 +251,27 @@ func (tb *Table) Select(fields []string) (*Table, error) {
 // and returns the table itself. so that chain calls are possible.
 //
 // tb := tb.Filter(...).Compact().Select(...)
-func (tb *Table) Compact() *Table {
+func (tb *Table[T]) Compact() *Table[T] {
 	if tb.predicate == nil {
 		return tb
 	}
-	rows := make([][]*Field, 0, len(tb.rows))
-	for _, row := range tb.rows {
-		rec := sliceRecord(row)
+	ret := &Table[T]{
+		columns: tb.columns,
+		types:   tb.types,
+		rows:    make(map[T]*Row[T]),
+	}
+	for k, row := range tb.rows {
+		rec := sliceRecord(row.Fields)
 		if tb.predicate.Apply(rec) {
-			rows = append(rows, row)
+			ret.Set(k, row.Fields...)
 		}
 	}
-	tb.rows = rows
-	return tb
+	return ret
 }
 
 // Filter returns a new table with filtered records
-func (tb *Table) Filter(filter Predicate) *Table {
-	ret := &Table{
+func (tb *Table[T]) Filter(filter Predicate) *Table[T] {
+	ret := &Table[T]{
 		columns: tb.columns,
 		types:   tb.types,
 		rows:    tb.rows,
@@ -206,4 +282,26 @@ func (tb *Table) Filter(filter Predicate) *Table {
 		ret.predicate = filter
 	}
 	return ret
+}
+
+func (tb *Table[T]) Split(filter Predicate) (*Table[T], *Table[T]) {
+	ret := &Table[T]{
+		columns: tb.columns,
+		types:   tb.types,
+		rows:    make(map[T]*Row[T]),
+	}
+	other := &Table[T]{
+		columns: tb.columns,
+		types:   tb.types,
+		rows:    make(map[T]*Row[T]),
+	}
+	for k, row := range tb.rows {
+		rec := sliceRecord(row.Fields)
+		if filter.Apply(rec) {
+			ret.Set(k, row.Fields...)
+		} else {
+			other.Set(k, row.Fields...)
+		}
+	}
+	return ret, other
 }

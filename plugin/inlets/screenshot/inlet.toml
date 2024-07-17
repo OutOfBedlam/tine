@@ -1,0 +1,8 @@
+[[inlets.screenshot]]
+    ## The interval to run
+    interval = "3s"
+    ## How many times run before stop (0 is infinite)
+    count = 1
+    ## The display number to capture
+    ## if it is empty, it will capture all displays
+    displays = [0, 1]

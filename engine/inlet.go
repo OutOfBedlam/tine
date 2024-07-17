@@ -3,7 +3,7 @@ package engine
 import (
 	"fmt"
 	"io"
-	"log/slog"
+	"strings"
 	"sync"
 	"time"
 )
@@ -84,6 +84,7 @@ func (in *InletPullFuncWrap) Close() error {
 }
 
 type InletHandler struct {
+	ctx      *Context
 	name     string
 	inlet    Inlet
 	outCh    chan<- []Record
@@ -92,14 +93,16 @@ type InletHandler struct {
 	stopOnce sync.Once
 	runner   func() error
 	stopper  func()
+	flows    []*FlowHandler
 }
 
-func NewInletHandler(name string, inlet Inlet, outCh chan<- []Record) (*InletHandler, error) {
+func NewInletHandler(ctx *Context, name string, inlet Inlet, outCh chan<- []Record) (*InletHandler, error) {
 	if err := inlet.Open(); err != nil {
 		return nil, fmt.Errorf("failed to open input: %v", err)
 	}
 
 	ret := &InletHandler{
+		ctx:     ctx,
 		name:    name,
 		outCh:   outCh,
 		inlet:   inlet,
@@ -125,17 +128,48 @@ func NewInletHandler(name string, inlet Inlet, outCh chan<- []Record) (*InletHan
 }
 
 func (in *InletHandler) Start() {
+	in.startSubFlows()
 	go in.runner()
 }
 
 func (in *InletHandler) Stop() {
 	in.stopOnce.Do(func() {
 		in.stopper()
+		in.stopSubFlows()
 	})
 }
 
+// AddFlow adds a sub-flow to the inlet handler
+func (in *InletHandler) AddFlow(flow *FlowHandler) {
+	in.flows = append(in.flows, flow)
+}
+
+// Via connects the inlet handler to a flow handler
+func (in *InletHandler) Via(flow *FlowHandler) *FlowHandler {
+	flow.outCh = in.outCh
+	in.outCh = flow.inCh
+	return flow
+}
+
 func (in *InletHandler) Run() error {
+	in.startSubFlows()
 	return in.runner()
+}
+
+func (in *InletHandler) startSubFlows() error {
+	for _, f := range in.flows {
+		if err := f.Start(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (in *InletHandler) stopSubFlows() error {
+	for _, f := range in.flows {
+		f.Stop()
+	}
+	return nil
 }
 
 func (in *InletHandler) stopPull() {
@@ -158,6 +192,16 @@ func (in *InletHandler) runPull() error {
 		}
 	}()
 
+	defer func() {
+		e := recover()
+		if e != nil {
+			if err, ok := e.(error); ok && !strings.Contains(err.Error(), "send on closed channel") {
+				in.ctx.LogError("panic recover", "error", err)
+			} else {
+				in.ctx.LogWarn("panic recover", "error", e)
+			}
+		}
+	}()
 	for range in.trigger {
 		if pull, ok := in.inlet.(PullInlet); ok {
 			recs, err := pull.Pull()
@@ -166,9 +210,9 @@ func (in *InletHandler) runPull() error {
 			}
 			if err != nil {
 				if err == io.EOF {
-					slog.Debug("input eof")
+					in.ctx.LogDebug("input eof")
 				} else {
-					slog.Error("failed to get input", "error", err.Error())
+					in.ctx.LogError("failed to get input", "error", err.Error())
 				}
 				break
 			}
@@ -181,7 +225,7 @@ func (in *InletHandler) runPull() error {
 
 func (in *InletHandler) stopPush() {
 	if err := in.inlet.Close(); err != nil {
-		slog.Error("failed to close input", "error", err.Error())
+		in.ctx.LogError("failed to close input", "error", err.Error())
 	}
 }
 
@@ -194,7 +238,7 @@ func (in *InletHandler) runPush() error {
 	defer func() {
 		e := recover()
 		if e != nil {
-			slog.Error("inlethandler panic in inlet push", "error", e)
+			in.ctx.LogError("inlethandler panic in inlet push", "error", e)
 		}
 	}()
 
@@ -204,15 +248,15 @@ func (in *InletHandler) runPush() error {
 		}
 		if err != nil {
 			if err == io.EOF {
-				slog.Debug("input eof")
+				in.ctx.LogDebug("input eof")
 			} else {
-				slog.Error("failed to get input", "error", err.Error())
+				in.ctx.LogError("failed to get input", "error", err.Error())
 			}
 			in.Stop()
 		}
 	})
 	if err := in.inlet.Close(); err != nil {
-		slog.Error("failed to close input", "error", err.Error())
+		in.ctx.LogError("failed to close input", "error", err.Error())
 	}
 	return nil
 }

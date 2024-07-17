@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"log/slog"
 	"sync"
 )
 
@@ -51,6 +50,8 @@ func FlowNames() []string {
 }
 
 type FlowHandler struct {
+	ctx   *Context
+	name  string
 	inCh  chan []Record
 	outCh chan<- []Record
 	flow  Flow
@@ -59,12 +60,14 @@ type FlowHandler struct {
 	closeWg     sync.WaitGroup
 }
 
-func NewFlowHandler(flow Flow) *FlowHandler {
+func NewFlowHandler(ctx *Context, name string, flow Flow) *FlowHandler {
 	parallelism := flow.Parallelism()
 	if parallelism < 1 {
 		parallelism = 1
 	}
 	ret := &FlowHandler{
+		ctx:  ctx,
+		name: name,
 		inCh: make(chan []Record),
 		flow: flow,
 	}
@@ -98,7 +101,7 @@ func (fh *FlowHandler) Start() error {
 					}()
 					r, err := fh.flow.Process(r)
 					if err != nil {
-						slog.Error("failed to handle flow", "error", err.Error())
+						fh.ctx.LogError("failed to handle flow", "error", err.Error())
 					}
 					if len(r) > 0 {
 						fh.outCh <- r
@@ -112,7 +115,7 @@ func (fh *FlowHandler) Start() error {
 			for records := range fh.inCh {
 				r, err := fh.flow.Process(records)
 				if err != nil {
-					slog.Error("failed to handle flow", "error", err.Error())
+					fh.ctx.LogError("failed to handle flow", "error", err.Error())
 				}
 				if len(r) > 0 {
 					fh.outCh <- r

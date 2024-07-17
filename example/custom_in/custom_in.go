@@ -15,7 +15,7 @@ import (
 
 func main() {
 	// Create engine
-	eng, err := engine.New(engine.WithName("example"))
+	eng, err := engine.New(engine.WithName("custom_in"))
 	if err != nil {
 		panic(err)
 	}
@@ -28,8 +28,7 @@ func main() {
 
 	// Add outlet printing to stdout '-'
 	conf = engine.NewConfig().Set("path", "-").Set("interval", interval)
-	eng.AddOutlet(
-		file.FileOutlet(eng.Context().WithConfig(conf)))
+	eng.AddOutlet("file", file.FileOutlet(eng.Context().WithConfig(conf)))
 
 	// Add your custom input function.
 	custom := func() ([]engine.Record, error) {

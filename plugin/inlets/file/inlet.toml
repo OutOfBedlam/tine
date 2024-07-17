@@ -1,25 +1,25 @@
-#[[inlets.file]]
+[[inlets.file]]
     ### input file path
-    # path = "/data/input.csv"
+    path = "/data/input.csv"
     
-    #[inlets.file.reader]
+    [inlets.file.reader]
         ### input format
-        # format     = "csv"
+        format     = "csv"
 
         ### output fields
-        # fields     = ["name", "time","value"]
+        fields     = ["name", "time","value"]
 
         ### output compression
-        # compress   = ""
+        compress   = ""
 
         ### time format (default: s)
         ### s, ms, us, ns, Golang timeformat string")
         ### e.g. timeformat = "2006-01-02 15:04:05 07:00"
-        # timeformat = "s"
+        timeformat = "s"
 
         ### timezone (default: Local)
         ### e.g. tz = "Local"
         ### e.g. tz = "UTC"
         ### e.g. tz = "America/New_York"
-        # tz = "Local"
-        # tz = "Asia/Seoul"
+        tz = "Local"
+

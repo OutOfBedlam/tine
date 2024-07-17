@@ -1,0 +1,42 @@
+[[flows.damper]]
+    ## damper makes the stream of records to be delayed by the given duration.
+    ## It collects records those _ts time is older thant now-"interval" time, and send thme to the next flow in a time.
+    interval = "3s"
+
+[[flows.dump]]
+    ## dump writes the record to the log with the given log level.
+    ## DEBUG | INFO | WARN | ERROR  (default: DEBUG)
+	level = "DEBUG"
+    ## The decimal format for float fields. (default: -1 which means no rounding)
+    precision = 2
+    ## The time format for time fields. (default: "2006-01-02 15:04:05")
+    timeformat = "2006-01-02 15:04:05"
+
+[[flows.merge]]
+    wait_limit = "2s"
+
+[[flows.set_field]]
+    ## Add or update fields in a record with the given fields.
+    ## The toml syntax does not allow newlines within inline tables, 
+    ## so all fields are specified in a single line
+    set = { my_field = 1.23, my_machine = "machine123", test_flag = true }
+    ## If there are too many fields to fit in a line, use array of inline tables. like this:
+    # set = [
+    #     { my_field = 1.23, my_machine = "machine123", test_flag = true },
+    #     { extra_field = "extra" },
+    #     { more = true }
+    # ]
+
+[[flows.set_field_name]]
+    ## Rename fields in a record with the given prefix and suffix.
+    prefix = "hello_"
+    suffix = "_world"
+
+[[flows.flatten]]
+    ## This flow flattens a record into multiple records,
+    ## the individual field of the record converted to a "_ts, name, value" record except "_ts" and "_in" field.
+    ## The new "name" field is formed by concatenating the original "_in" value and the field name.
+    ## For example, if the orginal record is {"_ts": timestamp, "_in": "my", "field1": 1, "field2": 2} and name_infix is "_" (which is the default),
+    ## then the new records will be [{"_ts": timestamp, "name": "my_field1", "value": 1}, {"_ts": timestamp, "name": "my_field2", "value": 2}]
+    ## If "_in" field does not exist in the record, the "name" is not changed and keep the original field's name.
+    name_infix = "_"

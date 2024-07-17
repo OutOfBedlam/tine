@@ -302,12 +302,27 @@ func NetstatInlet(ctx *engine.Context) engine.Inlet {
 				engine.NewStringField("protocol", st.Protocol),
 			)
 			for key, val := range st.Stats {
-				rec = rec.Append(engine.NewIntField(key, val))
+				rec = rec.Append(engine.NewIntField(camelToSnake(key), val))
 			}
 			ret = append(ret, rec)
 		}
 		return ret, nil
 	}, interval)
+}
+
+func camelToSnake(s string) string {
+	ret := ""
+	for i, c := range s {
+		if 'A' <= c && c <= 'Z' {
+			if i > 0 {
+				ret += "_"
+			}
+			ret += string(c + 32)
+		} else {
+			ret += string(c)
+		}
+	}
+	return ret
 }
 
 func SensorsInlet(ctx *engine.Context) engine.Inlet {

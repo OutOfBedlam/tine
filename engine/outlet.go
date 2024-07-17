@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"log/slog"
 	"sync"
 	"time"
 )
@@ -67,6 +66,8 @@ func (out *OutletFuncWrap) Close() error {
 }
 
 type OutletHandler struct {
+	ctx     *Context
+	name    string
 	inCh    chan []Record
 	outlet  Outlet
 	isOpen  bool
@@ -75,12 +76,14 @@ type OutletHandler struct {
 	buffer  []Record
 }
 
-func NewOutletHandler(outlet Outlet) (*OutletHandler, error) {
+func NewOutletHandler(ctx *Context, name string, outlet Outlet) (*OutletHandler, error) {
 	var interval time.Duration
 	if interval < 1*time.Second {
 		interval = 1 * time.Second
 	}
 	ret := &OutletHandler{
+		ctx:     ctx,
+		name:    name,
 		inCh:    make(chan []Record),
 		outlet:  outlet,
 		closeCh: make(chan bool),
@@ -117,7 +120,7 @@ func (out *OutletHandler) flush() {
 		return
 	}
 	if err := out.outlet.Handle(out.buffer); err != nil {
-		slog.Error("failed to output flush", "error", err.Error())
+		out.ctx.LogError("failed to output flush", "error", err.Error())
 	}
 	out.buffer = out.buffer[:0]
 }
@@ -131,7 +134,7 @@ func (out *OutletHandler) Stop() {
 	close(out.inCh)
 
 	if err := out.outlet.Close(); err != nil {
-		slog.Error("failed to open output", "error", err.Error())
+		out.ctx.LogError("failed to open output", "error", err.Error())
 	}
 }
 

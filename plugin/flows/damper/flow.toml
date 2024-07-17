@@ -1,3 +1,0 @@
-# [[flows.damper]]
-    ## Immportant: damper can not have parallelism, it will be ignored
-#     interval = "3s"

@@ -1,10 +1,14 @@
 package engine
 
 import (
+	"bytes"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/OutOfBedlam/tine/util"
 )
 
 type OpenCloser interface {
@@ -34,6 +38,9 @@ type Record interface {
 
 	// Append returns a new record with fields appended
 	Append(...*Field) Record
+
+	// AppendOrReplace returns a new record with fields appended or replaced if the field name already exists
+	AppendOrReplace(...*Field) Record
 }
 
 func NewRecord(fields ...*Field) Record {
@@ -47,9 +54,32 @@ func (r sliceRecord) Append(fields ...*Field) Record {
 	return r
 }
 
+func (r sliceRecord) AppendOrReplace(fields ...*Field) Record {
+	for _, f := range fields {
+		found := false
+		for i, old := range r {
+			if old == nil {
+				continue
+			}
+			if strings.EqualFold(old.Name, f.Name) {
+				r[i] = f
+				found = true
+				break
+			}
+		}
+		if !found {
+			r = append(r, f)
+		}
+	}
+	return r
+}
+
 func (r sliceRecord) Field(name string) *Field {
 	name = strings.ToUpper(name)
 	for _, f := range r {
+		if f == nil {
+			continue
+		}
 		if strings.ToUpper(f.Name) == name {
 			return f
 		}
@@ -90,7 +120,11 @@ func (r sliceRecord) Empty() bool {
 func (r sliceRecord) Names() []string {
 	ret := make([]string, len(r))
 	for i, f := range r {
-		ret[i] = strings.ToUpper(f.Name)
+		if f != nil {
+			ret[i] = strings.ToUpper(f.Name)
+		} else {
+			ret[i] = ""
+		}
 	}
 	return ret
 }
@@ -110,6 +144,8 @@ func (f *Field) StringWithFormat(tf *Timeformatter, decimal int) string {
 		strVal = f.Value.(string)
 	case TIME:
 		strVal = tf.Format(f.Value.(time.Time))
+	case BINARY:
+		strVal = fmt.Sprintf("BIN(%s)", util.FormatFileSize(f.Value.(*BinaryValue).Len()))
 	default:
 		panic("unsupported type-" + string(f.Type))
 	}
@@ -120,6 +156,14 @@ type Field struct {
 	Name  string `json:"name"`
 	Value any    `json:"value"`
 	Type  Type   `json:"-"`
+}
+
+func UnwrapFields(fields []*Field) []any {
+	ret := make([]any, len(fields))
+	for i, f := range fields {
+		ret[i] = f.Value
+	}
+	return ret
 }
 
 func (f *Field) String() string {
@@ -147,6 +191,17 @@ func (f *Field) ToBool() *Field {
 	return nil
 }
 
+func (f *Field) GetBool() (bool, bool) {
+	if f.Type == BOOL {
+		return f.Value.(bool), true
+	}
+	if b := f.ToBool(); b == nil {
+		return false, false
+	} else {
+		return b.Value.(bool), true
+	}
+}
+
 func (f *Field) ToInt() *Field {
 	if f.Type == INT {
 		return NewIntField(f.Name, f.Value.(int64))
@@ -170,6 +225,17 @@ func (f *Field) ToInt() *Field {
 		return NewIntField(f.Name, f.Value.(time.Time).Unix())
 	}
 	return nil
+}
+
+func (f *Field) GetInt() (int64, bool) {
+	if f.Type == INT {
+		return f.Value.(int64), true
+	}
+	if i := f.ToInt(); i == nil {
+		return 0, false
+	} else {
+		return i.Value.(int64), true
+	}
 }
 
 func (f *Field) ToUint() *Field {
@@ -201,6 +267,17 @@ func (f *Field) ToUint() *Field {
 	return nil
 }
 
+func (f *Field) GetUint() (uint64, bool) {
+	if f.Type == UINT {
+		return f.Value.(uint64), true
+	}
+	if u := f.ToUint(); u == nil {
+		return 0, false
+	} else {
+		return u.Value.(uint64), true
+	}
+}
+
 func (f *Field) ToFloat() *Field {
 	if f.Type == FLOAT {
 		return NewFloatField(f.Name, f.Value.(float64))
@@ -226,6 +303,17 @@ func (f *Field) ToFloat() *Field {
 	return nil
 }
 
+func (f *Field) GetFloat() (float64, bool) {
+	if f.Type == FLOAT {
+		return f.Value.(float64), true
+	}
+	if fl := f.ToFloat(); fl == nil {
+		return 0, false
+	} else {
+		return fl.Value.(float64), true
+	}
+}
+
 func (f *Field) ToString() *Field {
 	if f.Type == STRING {
 		return NewStringField(f.Name, f.Value.(string))
@@ -243,6 +331,17 @@ func (f *Field) ToString() *Field {
 		return NewStringField(f.Name, f.Value.(time.Time).Format(time.RFC3339))
 	}
 	return nil
+}
+
+func (f *Field) GetString() (string, bool) {
+	if f.Type == STRING {
+		return f.Value.(string), true
+	}
+	if s := f.ToString(); s == nil {
+		return "", false
+	} else {
+		return s.Value.(string), true
+	}
 }
 
 func (f *Field) ToTime() *Field {
@@ -268,6 +367,39 @@ func (f *Field) ToTime() *Field {
 	return nil
 }
 
+func (f *Field) GetTime() (time.Time, bool) {
+	if f.Type == TIME {
+		return f.Value.(time.Time), true
+	}
+	if t := f.ToTime(); t == nil {
+		return time.Time{}, false
+	} else {
+		return t.Value.(time.Time), true
+	}
+}
+
+func (f *Field) ToBinary() *Field {
+	switch f.Type {
+	case STRING:
+		return NewBinaryField(f.Name, NewBinaryValue([]byte(f.Value.(string))))
+	case BINARY:
+		return NewBinaryField(f.Name, f.Value.(*BinaryValue))
+	}
+	return nil
+}
+
+func (f *Field) GetBinary() (*BinaryValue, bool) {
+	if f.Type == BINARY {
+		return f.Value.(*BinaryValue), true
+	}
+	if b := f.ToBinary(); b == nil {
+		return nil, false
+	} else {
+		return b.Value.(*BinaryValue), true
+	}
+
+}
+
 func (f *Field) Convert(to Type) *Field {
 	if f.Type == to {
 		return f
@@ -285,6 +417,8 @@ func (f *Field) Convert(to Type) *Field {
 		return f.ToString()
 	case TIME:
 		return f.ToTime()
+	case BINARY:
+		return f.ToBinary()
 	}
 	return nil
 }
@@ -344,6 +478,11 @@ func (f *Field) Eq(other any) bool {
 		switch o := other.(type) {
 		case time.Time:
 			return f.Value.(time.Time).Equal(o)
+		}
+	case BINARY:
+		switch o := other.(type) {
+		case *BinaryValue:
+			return bytes.Equal(f.Value.(*BinaryValue).data, o.data)
 		}
 	}
 	return false
@@ -538,10 +677,11 @@ type Type byte
 const (
 	BOOL   Type = 'b' // bool
 	INT    Type = 'i' // int64
-	UINT   Type = 'u' // Uint64
+	UINT   Type = 'u' // uint64
 	FLOAT  Type = 'f' // float64
 	STRING Type = 's' // string
 	TIME   Type = 't' // time.Time
+	BINARY Type = 'B' // *BinaryType
 )
 
 func NewBoolField(name string, value bool) *Field {
@@ -592,6 +732,22 @@ func NewTimeField(name string, value time.Time) *Field {
 	}
 }
 
+func NewBinaryField(name string, value *BinaryValue) *Field {
+	return &Field{
+		Name:  name,
+		Value: value,
+		Type:  BINARY,
+	}
+}
+
+func CopyField(name string, other *Field) *Field {
+	return &Field{
+		Name:  name,
+		Value: other.Value,
+		Type:  other.Type,
+	}
+}
+
 func Map2Records(prefix string, obj map[string]any) []Record {
 	ret := []Record{}
 	for k, v := range obj {
@@ -599,17 +755,19 @@ func Map2Records(prefix string, obj map[string]any) []Record {
 		subrecs := []Record{}
 		switch v := v.(type) {
 		case float64:
-			r.Append(NewFloatField(prefix+k, v))
+			r = r.Append(NewFloatField(prefix+k, v))
 		case int:
-			r.Append(NewIntField(prefix+k, int64(v)))
+			r = r.Append(NewIntField(prefix+k, int64(v)))
 		case int64:
-			r.Append(NewIntField(prefix+k, v))
+			r = r.Append(NewIntField(prefix+k, v))
 		case string:
-			r.Append(NewStringField(prefix+k, v))
+			r = r.Append(NewStringField(prefix+k, v))
 		case bool:
-			r.Append(NewBoolField(prefix+k, v))
+			r = r.Append(NewBoolField(prefix+k, v))
 		case time.Time:
-			r.Append(NewTimeField(prefix+k, v))
+			r = r.Append(NewTimeField(prefix+k, v))
+		case []byte:
+			r = r.Append(NewBinaryField(prefix+k, NewBinaryValue(v)))
 		case map[string]any:
 			subrecs = append(subrecs, Map2Records(prefix+k+".", v)...)
 		case []any:
@@ -624,9 +782,54 @@ func Map2Records(prefix string, obj map[string]any) []Record {
 	return ret
 }
 
+type BinaryValue struct {
+	data   []byte
+	header http.Header
+}
+
+func NewBinaryValue(data []byte) *BinaryValue {
+	return &BinaryValue{data: data, header: http.Header{}}
+}
+
+func (bv *BinaryValue) Data() []byte {
+	return bv.data
+}
+
+func (bv *BinaryValue) Len() int64 {
+	return int64(len(bv.data))
+}
+
+func (bv *BinaryValue) AddHeader(key, value string) {
+	bv.header.Add(key, value)
+}
+
+func (bv *BinaryValue) DelHeader(key string) {
+	bv.header.Del(key)
+}
+
+func (bv *BinaryValue) GetHeader(key string) string {
+	return bv.header.Get(key)
+}
+
+func (bv *BinaryValue) SetHeader(key, value string) {
+	bv.header.Set(key, value)
+}
+
+func (bv *BinaryValue) GetHeaderValues(key string) []string {
+	return bv.header.Values(key)
+}
+
 type Timeformatter struct {
 	format string
 	loc    *time.Location
+}
+
+func NewTimeformatter(format string) *Timeformatter {
+	return &Timeformatter{format: format, loc: time.Local}
+}
+
+func NewTimeformatterWithLocation(format string, tz *time.Location) *Timeformatter {
+	return &Timeformatter{format: format, loc: tz}
 }
 
 var DefaultTimeformatter = &Timeformatter{format: time.RFC3339, loc: time.Local}

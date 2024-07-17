@@ -1,0 +1,11 @@
+[[outlet.excel]]
+    ## Save the records into Microsoft Excel file format.
+    ## File path (*.xlsx) to save the records
+    path = "./output.xlsx"
+    ## It stores all records in memory first then write to the file 
+    ## when the count of the buffered records in memory reaches to "records_per_file".
+    ## So, every excel file it writes has "records_per_file" rows. (+ 1 header row)
+    ## If records_per_file is 0, it will keep all records in memory (consuming memory) 
+    ## and write to the file when the pipeline is closed.
+    ## (default 20000)
+    records_per_file = 20000

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
+	"unicode"
 
 	"github.com/OutOfBedlam/tine/engine"
 )
@@ -14,16 +16,28 @@ func main() {
 	fmt.Print(engine.DefaultConfigString)
 	fmt.Print("\n#\n# inets and outlets\n#\n\n")
 
-	plugins, err := os.ReadDir("plugin")
+	_, err := os.ReadDir("plugin")
 	if err != nil {
 		panic(err)
 	}
-	for _, lookingfor := range []string{"inlet.toml", "flow.toml", "outlet.toml"} {
+	for _, f := range []string{"inlets", "flows", "outlets"} {
+		dirFor(filepath.Join("plugin", f), []string{"inlet.toml", "flow.toml", "outlet.toml"})
+	}
+
+	os.Exit(0)
+}
+
+func dirFor(dir string, lookingFor []string) {
+	plugins, err := os.ReadDir(dir)
+	if err != nil {
+		panic(err)
+	}
+	for _, lookingfor := range lookingFor {
 		for _, f := range plugins {
 			if !f.IsDir() {
 				continue
 			}
-			tomlPath := filepath.Join("plugin", f.Name(), lookingfor)
+			tomlPath := filepath.Join(dir, f.Name(), lookingfor)
 			if _, err := os.Stat(tomlPath); err != nil {
 				continue
 			}
@@ -32,8 +46,27 @@ func main() {
 				fmt.Println("# gen-config error:", tomlPath, err.Error())
 				panic(err)
 			}
-			fmt.Printf("%s\n", string(content))
+			for _, line := range strings.Split(string(content), "\n") {
+				if strings.HasPrefix(strings.TrimSpace(line), "#") || strings.TrimSpace(line) == "" {
+					fmt.Printf("%s\n", line)
+				} else {
+					whitespace := []rune{}
+					remains := ""
+					for i, c := range line {
+						if unicode.IsSpace(c) {
+							whitespace = append(whitespace, c)
+						} else {
+							remains = line[i:]
+							break
+						}
+					}
+					if remains[0] == '[' {
+						fmt.Printf("%s#%s\n", string(whitespace), remains)
+					} else {
+						fmt.Printf("%s# %s\n", string(whitespace), remains)
+					}
+				}
+			}
 		}
 	}
-	os.Exit(0)
 }

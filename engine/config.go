@@ -4,16 +4,99 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/BurntSushi/toml"
 	"github.com/OutOfBedlam/tine/util"
 )
 
 type PipelineConfig struct {
-	Name     string              `toml:"name"`
-	Log      util.LogConfig      `toml:"log"`
-	Defaults Config              `toml:"defaults"`
-	Inlets   map[string][]Config `toml:"inlets,omitempty"`
-	Flows    map[string][]Config `toml:"flows,omitempty"`
-	Outlets  map[string][]Config `toml:"outlets,omitempty"`
+	Name     string
+	Log      util.LogConfig
+	Defaults Config
+	Inlets   []InletConfig
+	Outlets  []OutletConfig
+	Flows    []FlowConfig
+}
+
+func LoadConfig(content string, cfg *PipelineConfig) error {
+	vc := NewConfig()
+	meta, err := toml.Decode(content, &vc)
+	if err != nil {
+		return err
+	}
+	cfg.Name = vc.GetString("name", cfg.Name)
+	if lc := vc.GetConfig("log", nil); lc != nil {
+		cfg.Log.Filename = lc.GetString("filename", cfg.Log.Filename)
+		cfg.Log.Level = lc.GetString("level", cfg.Log.Level)
+		cfg.Log.MaxSize = lc.GetInt("max_size", cfg.Log.MaxSize)
+		cfg.Log.MaxAge = lc.GetInt("max_age", cfg.Log.MaxAge)
+		cfg.Log.MaxBackups = lc.GetInt("max_backups", cfg.Log.MaxBackups)
+		cfg.Log.Compress = lc.GetBool("compress", cfg.Log.Compress)
+		cfg.Log.Chown = lc.GetString("chown", cfg.Log.Chown)
+	}
+	cfg.Defaults = vc.GetConfig("defaults", cfg.Defaults)
+
+	for _, keys := range meta.Keys() {
+		if len(keys) == 2 && (keys[0] == "inlets" || keys[0] == "outlets" || keys[0] == "flows") {
+			kind := keys[0]
+			pluginName := keys[1]
+			inletCfg := vc.GetConfig(kind, nil)
+			params := inletCfg.GetConfig(pluginName, nil)
+			flowCfgs := params.GetConfig("flows", nil)
+			params.Unset("flows")
+			flows := []FlowConfig{}
+			if kind != "flows" {
+				flowsInOrder := []string{}
+				for _, keys := range meta.Keys() {
+					if len(keys) == 4 && keys[0] == kind && keys[1] == pluginName && keys[2] == "flows" {
+						flowsInOrder = append(flowsInOrder, keys[3])
+					}
+				}
+				for _, flowName := range flowsInOrder {
+					flowParam := flowCfgs.GetConfig(flowName, nil)
+					flows = append(flows, FlowConfig{
+						Plugin: flowName,
+						Params: flowParam,
+					})
+				}
+			}
+			if kind == "inlets" {
+				cfg.Inlets = append(cfg.Inlets, InletConfig{
+					Plugin: pluginName,
+					Params: params,
+					Flows:  flows,
+				})
+			} else if kind == "outlets" {
+				cfg.Outlets = append(cfg.Outlets, OutletConfig{
+					Plugin: pluginName,
+					Params: params,
+					//Flows:  flows,
+				})
+			} else if kind == "flows" {
+				cfg.Flows = append(cfg.Flows, FlowConfig{
+					Plugin: pluginName,
+					Params: params,
+				})
+			}
+		}
+	}
+	return nil
+}
+
+type InletConfig struct {
+	Plugin string
+	Params Config
+	Flows  []FlowConfig
+}
+
+type OutletConfig struct {
+	Plugin string
+	Params Config
+	//Flows  []FlowConfig
+}
+
+type FlowConfig struct {
+	Plugin string
+	Params Config
 }
 
 type Config map[string]any
@@ -55,6 +138,14 @@ func (c Config) GetConfigArray(key string, defaultVal []Config) []Config {
 			result := make([]Config, 0, len(val))
 			for _, x := range val {
 				result = append(result, x)
+			}
+			return result
+		case []any:
+			result := make([]Config, 0, len(val))
+			for _, x := range val {
+				if xv, ok := x.(map[string]any); ok {
+					result = append(result, xv)
+				}
 			}
 			return result
 		}
