@@ -724,6 +724,8 @@ func TestGatherSysUptime(t *testing.T) {
 		t.Skip("Skipping test on non-linux systems")
 	}
 
+	t.Skip("Skipping test due to 'IF-MIB::ifTable' not being available on all systems")
+
 	inlet := SnmpInlet(DummyContext(
 		engine.NewConfig().
 			Set("agent", "udp://127.0.0.1").
