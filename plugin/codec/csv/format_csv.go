@@ -55,6 +55,10 @@ func (cw *CSVEncoder) encodeDefault(recs []engine.Record) error {
 				values = append(values, "")
 				continue
 			}
+			if field.Type == engine.BINARY {
+				values = append(values, "[BINARY]")
+				continue
+			}
 			values = append(values, field.StringWithFormat(cw.Timeformatter, cw.Decimal))
 		}
 		cw.enc.Write(values)
@@ -80,6 +84,9 @@ func (cw *CSVEncoder) encodeNameTimeValue(recs []engine.Record, timeFirst bool) 
 		}
 		for _, field := range rec.Fields(cw.Fields...) {
 			if field == nil || field.Name == engine.FIELD_TIMESTAMP || field.Name == engine.FIELD_INLET {
+				continue
+			}
+			if field.Type == engine.BINARY {
 				continue
 			}
 			if timeFirst {

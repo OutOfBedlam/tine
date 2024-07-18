@@ -22,7 +22,7 @@ jobs:
         go-version-file: 'go.mod'
 
     - name: Build
-      run: go build -v ./...
+      run: go run magefiles/mage.go build
 
     - name: Test
       run: go test -v ./...

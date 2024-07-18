@@ -18,7 +18,7 @@ var Default = Build
 
 func Build() error {
 	mg.Deps(CheckTmp, CheckGoreleaser)
-	if _, err := sh.Output("goreleaser", "build", "--single-target", "--auto-snapshot", "--clean"); err != nil {
+	if _, err := sh.Output("goreleaser", "build", "--single-target", "--snapshot", "--clean"); err != nil {
 		return err
 	}
 	return nil

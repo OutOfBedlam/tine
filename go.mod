@@ -18,6 +18,7 @@ require (
 	github.com/sleepinggenius2/gosmi v0.4.4
 	github.com/stretchr/testify v1.9.0
 	github.com/xuri/excelize/v2 v2.8.1
+	golang.org/x/image v0.14.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
 

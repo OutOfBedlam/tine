@@ -52,6 +52,9 @@ func (jw *JSONEncoder) encodeDefault(recs []engine.Record) error {
 		}
 		r := map[string]any{}
 		for _, f := range rec.Fields() {
+			if f == nil {
+				continue
+			}
 			if f.Type == engine.TIME {
 				if jw.Timeformatter.IsEpoch() {
 					r[f.Name] = jw.Timeformatter.Epoch(f.Value.(time.Time))
@@ -59,7 +62,11 @@ func (jw *JSONEncoder) encodeDefault(recs []engine.Record) error {
 					r[f.Name] = jw.Timeformatter.Format(f.Value.(time.Time))
 				}
 			} else {
-				r[f.Name] = f.Value
+				if f.Type == engine.BINARY {
+					r[f.Name] = "[BINARY]"
+				} else {
+					r[f.Name] = f.Value
+				}
 			}
 		}
 		rs = append(rs, r)

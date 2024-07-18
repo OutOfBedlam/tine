@@ -1,0 +1,3 @@
+package tensorflow
+
+var A = ""

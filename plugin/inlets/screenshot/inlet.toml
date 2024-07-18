@@ -6,3 +6,6 @@
     ## The display number to capture
     ## if it is empty, it will capture all displays
     displays = [0, 1]
+    ## capture image format
+    ## rgba | png | jpeg | gif
+    format = "rgba"

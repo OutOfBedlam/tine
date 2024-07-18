@@ -12,6 +12,7 @@ import (
 	"github.com/OutOfBedlam/tine/engine"
 
 	_ "github.com/OutOfBedlam/tine/plugin/all"
+	_ "github.com/OutOfBedlam/tine/x"
 )
 
 var usageStr = `

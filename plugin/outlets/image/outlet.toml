@@ -1,0 +1,11 @@
+[[outlets.image]]
+    ## The path to the output file.
+    ## If the file exists, it will be append "_"+sequence number before the extension.
+    ## supported formats: png, jpeg, gif
+    path = "./output.png"
+    ## fields that contains the image data
+    ## if not specified, it will find all binary fields that has Content-type "image/*"
+    # fields = ["image"]
+    ## Quality of jpeg image (jpeg only)
+    ## 1 ~ 100
+    # jpeg_quality = 75

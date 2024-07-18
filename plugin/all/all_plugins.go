@@ -6,7 +6,6 @@ package all
 import (
 	// formats
 	_ "github.com/OutOfBedlam/tine/plugin/codec/csv"
-	_ "github.com/OutOfBedlam/tine/plugin/codec/image"
 	_ "github.com/OutOfBedlam/tine/plugin/codec/json"
 
 	// compressors
@@ -26,6 +25,7 @@ import (
 	_ "github.com/OutOfBedlam/tine/plugin/outlets/excel"
 	_ "github.com/OutOfBedlam/tine/plugin/outlets/file"
 	_ "github.com/OutOfBedlam/tine/plugin/outlets/http"
+	_ "github.com/OutOfBedlam/tine/plugin/outlets/image"
 	_ "github.com/OutOfBedlam/tine/plugin/outlets/mqtt"
 
 	// flows
