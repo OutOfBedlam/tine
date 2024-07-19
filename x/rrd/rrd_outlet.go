@@ -18,14 +18,8 @@ func init() {
 }
 
 func RRDOutlet(ctx *engine.Context) engine.Outlet {
-	path := ctx.Config().GetString("path", "")
-	fields := ctx.Config().GetStringArray("fields", nil)
-	timeField := ctx.Config().GetString("time_field", "_ts")
 	return &rrdOutlet{
-		ctx:       ctx,
-		path:      path,
-		fields:    fields,
-		timeField: timeField,
+		ctx: ctx,
 	}
 }
 
@@ -38,43 +32,60 @@ type rrdOutlet struct {
 }
 
 func (o *rrdOutlet) Open() error {
+	o.path = o.ctx.Config().GetString("path", "")
+	o.timeField = o.ctx.Config().GetString("time_field", "_ts")
 	step := uint(o.ctx.Config().GetDuration("step", 10*time.Second).Seconds())
-	heartbeat := uint(o.ctx.Config().GetDuration("heartbeat", time.Duration(2*step)*time.Second).Seconds())
+	if step < 1 {
+		step = 1
+	}
+	defaultHeartbeat := o.ctx.Config().GetDuration("heartbeat", time.Duration(2*step)*time.Second)
 	overwrite := o.ctx.Config().GetBool("overwrite", false)
+
 	c := xrrd.NewCreator(o.path, time.Now().Add(-1*time.Second), step)
-	for i, field := range o.fields {
-		c.DS(fmt.Sprintf("%s=field%d[%d]", field, i, i), "GAUGE", heartbeat, 0, 10)
+
+	fieldsCfg := o.ctx.Config().GetConfigArray("fields", nil)
+	for _, fc := range fieldsCfg {
+		// field
+		field := fc.GetString("field", "")
+		o.fields = append(o.fields, field)
+		// ds
+		ds := fc.GetString("ds", field)
+		ds = strings.ReplaceAll(ds, ":", "_")
+		// dst  GAUGE, COUNTER, DCOUNTER, DERIVE, DDERIVE, ABSOLUTE, COMPUTE
+		dst := fc.GetString("dst", "GAUGE")
+		// heartbeat
+		heartbeat := fc.GetDuration("heartbeat", defaultHeartbeat)
+		// min, max
+		min := fc.GetString("min", "U")
+		max := fc.GetString("max", "U")
+		// rpn
+		if rpn := fc.GetString("rpn", ""); rpn != "" {
+			c.DS(ds, dst, heartbeat.Seconds(), min, max, rpn)
+		} else {
+			c.DS(ds, dst, heartbeat.Seconds(), min, max)
+		}
 	}
 
 	rralst := o.ctx.Config().GetConfigArray("rra", nil)
 	for _, rra := range rralst {
+		var args = []any{}
+		// CF
 		cf := strings.ToUpper(rra.GetString("cf", ""))
 		if cf != "AVERAGE" && cf != "MIN" && cf != "MAX" && cf != "LAST" {
 			return fmt.Errorf("invalid rra cf=%q", cf)
 		}
-		var args = []any{}
-
+		// xff
 		xff := rra.GetFloat("xff", 0.5)
 		args = append(args, xff)
-
-		steps := rra.GetInt("steps", 1)
-		samples := rra.GetString("samples", "")
-		if samples != "" {
-			args = append(args, samples)
-		} else {
-			args = append(args, steps)
-		}
-
-		rows := rra.GetInt("rows", 1000)
-		retain := rra.GetString("retain", "")
-		if retain != "" {
-			args = append(args, retain)
-		} else {
-			args = append(args, rows)
-		}
-
+		// steps
+		steps := rra.GetString("steps", "1")
+		args = append(args, steps)
+		// rows
+		rows := rra.GetString("rows", "1000")
+		args = append(args, rows)
 		c.RRA(cf, args...)
 	}
+
 	if err := c.Create(overwrite); err != nil && !os.IsExist(err) {
 		return fmt.Errorf("fail to create rrd path=%q, %s", o.path, err.Error())
 	}

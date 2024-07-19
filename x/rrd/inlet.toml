@@ -1,0 +1,45 @@
+[[inlets.rrd_graph]]
+    ## RRD database file path to read
+    path = "./tmp/test.rrd"
+    ## rrdtool graph generation interval
+    ## if not set, it will generate graph once
+    interval = "1s"
+    ## graph title
+    title = "Test Graph"
+    ## time range: from now - range to now
+    range = "15m"
+    ## graph size [width, height]
+    size = [450,130]
+    ## border
+    border = 0
+    ## units length
+    units_length = 5
+    ## units exponent
+    units_exponent = 0
+    ## watermark text (default is pipeline name)
+    watermark = "My Watermark"
+    ## vertical label
+    v_label = "Load"
+    ## zoom factor
+    zoom = 1.5
+    ## graph color theme
+    theme = "gchart2"
+    ## specify each color override for theme colors
+    # back = "#ffffff"
+    # canvas = "#ffffff"
+    # font = "#000000"
+    ## data sources to draw
+    ## ds     data source name in rrd
+    ## cf     consolidation function (AVERAGE, MIN, MAX, LAST)
+    ## type   line, area, stack, etc.
+    ## color  color code (e.g. "#ff0000") override for theme colors
+    ## name   data source name format (e.g. name="%-6s\\n")
+    ## min    minimum value format (e.g. min="%3.1lf"), omit not to show
+    ## max    maximum value format (e.g. max="%3.1lf"), omit not to show
+    ## avg    average value format (e.g. avg="%3.1lf"), omit not to show
+    ## last   last value format (e.g. last="%3.1lf"), omit not to show
+    fields = [
+        { ds = "load1", cf="AVERAGE", type="line", name="%-6s", min="%3.1lf", max="%3.1lf", avg="%3.1lf", last="%3.1lf\\n"},
+        { ds = "load5", cf="AVERAGE", type="line", name="%-6s", min="%3.1lf", max="%3.1lf", avg="%3.1lf", last="%3.1lf\\n"},
+        { ds = "load15", cf="AVERAGE", type="area", name="%-6s", min="%3.1lf", max="%3.1lf", avg="%3.1lf", last="%3.1lf\\n"},
+    ]

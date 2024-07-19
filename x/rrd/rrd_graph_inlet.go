@@ -3,6 +3,7 @@ package rrd
 import (
 	"fmt"
 	"io"
+	"math"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -95,8 +96,19 @@ func generate(ctx *engine.Context) ([]engine.Record, error) {
 	if ul := conf.GetInt("units_length", 5); ul > 0 {
 		g.SetUnitsLength(uint(ul))
 	}
-
-	g.SetBorder(0)
+	if border := uint(conf.GetInt("border", 0)); border >= uint(0) {
+		g.SetBorder(border)
+	}
+	if ue := int(conf.GetInt("units_exponent", math.MinInt64)); ue != math.MinInt64 {
+		g.SetUnitsExponent(ue)
+	}
+	options := []string{"--disable-rrdtool-tag"}
+	if zoom := conf.GetFloat("zoom", 0); zoom > 0 {
+		options = append(options, "--zoom", fmt.Sprintf("%f", zoom))
+	}
+	if len(options) > 0 {
+		g.AddOptions(options...)
+	}
 
 	var theme *Theme
 	if th, ok := themes[conf.GetString("theme", "")]; ok {
@@ -110,7 +122,7 @@ func generate(ctx *engine.Context) ([]engine.Record, error) {
 	g.SetColor("FONT", strings.TrimPrefix(theme.Font, "#"))
 
 	seriesNameMaxLen := 0
-	series := conf.GetConfigArray("series", nil)
+	series := conf.GetConfigArray("fields", nil)
 	for _, ser := range series {
 		ds := ser.GetString("ds", "")
 		vname := ser.GetString("vname", ds)
@@ -133,27 +145,33 @@ func generate(ctx *engine.Context) ([]engine.Record, error) {
 				color += "66"
 			}
 		}
+		if len(color) != 8 {
+			return nil, fmt.Errorf("invalid color: %s", color)
+		}
 		cf := ser.GetString("cf", "AVERAGE")
 
 		g.Def(vname, path, ds, cf)
 
-		nameFormated := fmt.Sprintf(fmt.Sprintf("%%-%ds", seriesNameMaxLen), vname)
+		nameFormat := fmt.Sprintf("%%-%ds", seriesNameMaxLen)
+		nameFormat = ser.GetString("name", nameFormat)
+		nameFormatted := fmt.Sprintf(nameFormat, vname)
 		switch typ {
 		case "LINE":
 			width := float32(ser.GetFloat("width", 1.0))
-			g.Line(width, vname, color, nameFormated)
+			g.Line(width, vname, color, nameFormatted)
 		case "AREA":
-			g.Area(vname, color, nameFormated)
+			g.Area(vname, color, nameFormatted)
 		}
 
-		g.VDef(vname+"_max", vname+",MAXIMUM")
-		g.VDef(vname+"_min", vname+",MINIMUM")
-		g.VDef(vname+"_avg", vname+",AVERAGE")
-		g.VDef(vname+"_cur", vname+",LAST")
-		g.GPrint(vname+"_min", "min %4.2lf")
-		g.GPrint(vname+"_max", "max %4.2lf")
-		g.GPrint(vname+"_avg", "avg %4.2lf")
-		g.GPrint(vname+"_cur", "last %4.2lf\\n")
+		gprintOrder := []string{"min", "max", "avg", "last"}
+		gprintFn := []string{"MINIMUM", "MAXIMUM", "AVERAGE", "LAST"}
+		for i, gp := range gprintOrder {
+			fn := gprintFn[i]
+			if f := ser.GetString(gp, ""); f != "" {
+				g.VDef(vname+"_"+gp, vname+","+fn) // g.VDef("load_cur", "load,LAST")
+				g.GPrint(vname+"_"+gp, gp+" "+f)   // g.GPrint("load_cur", "last %4.2lf\\n")
+			}
+		}
 	}
 
 	now := time.Now()
@@ -236,5 +254,29 @@ var themes = map[string]*Theme{
 		Canvas:   "#000000",
 		Font:     "#ffffff",
 		Palettes: []string{"#f0c571", "#59a89c", "#0b81a2", "#e25759", "#9d2c00", "#7e4794", "#36b700"},
+	},
+	"wctu": {
+		Back:     "#ffffff",
+		Canvas:   "#ffffff",
+		Font:     "#000000",
+		Palettes: []string{"#EA644A", "#EC9D48", "#ECD748", "#54EC48", "#48C4EC", "#68E4FC", "#7648EC", "#DE48EC"},
+	},
+	"wctu2": {
+		Back:     "#ffffff",
+		Canvas:   "#ffffff",
+		Font:     "#000000",
+		Palettes: []string{"#CC3118", "#CC7016", "#C9B215", "#24BC14", "#1598C3", "#0588B3", "#4D18E4", "#B415C7"},
+	},
+	"gchart": {
+		Back:     "#ffffff",
+		Canvas:   "#ffffff",
+		Font:     "#000000",
+		Palettes: []string{"#3366CC", "#FF9900", "#990099", "#0099C6", "#66AA00", "#316395", "#22AA99", "#6633CC", "#8B0707", "#5574A6"},
+	},
+	"gchart2": {
+		Back:     "#ffffff",
+		Canvas:   "#ffffff",
+		Font:     "#000000",
+		Palettes: []string{"#DC3912", "#109618", "#3B3EAC", "#DD4477", "#B82E2E", "#994499", "#AAAA11", "#E67300", "#329262", "#651067"},
 	},
 }
