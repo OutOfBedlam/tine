@@ -1,3 +1,0 @@
-package tensorflow
-
-var A = ""

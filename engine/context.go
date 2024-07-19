@@ -49,6 +49,10 @@ func (ctx *Context) Config() Config {
 	return ctx.conf
 }
 
+func (ctx *Context) PipelineName() string {
+	return ctx.pipeline.Name
+}
+
 func (ctx *Context) Done() <-chan struct{} {
 	return ctx.base.Done()
 }
