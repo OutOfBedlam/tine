@@ -239,6 +239,30 @@ func (c Config) GetInt(key string, defaultVal int) int {
 	return defaultVal
 }
 
+func (c Config) GetFloat(key string, defaultVal float64) float64 {
+	if v, ok := c[key]; ok {
+		switch val := v.(type) {
+		case int:
+			return float64(val)
+		case uint:
+			return float64(val)
+		case int64:
+			return float64(val)
+		case uint64:
+			return float64(val)
+		case float32:
+			return float64(val)
+		case float64:
+			return val
+		case string:
+			if result, err := strconv.ParseFloat(val, 64); err == nil {
+				return result
+			}
+		}
+	}
+	return defaultVal
+}
+
 func (c Config) GetIntArray(key string, defaultVal []int) []int {
 	if v, ok := c[key]; ok {
 		switch val := v.(type) {

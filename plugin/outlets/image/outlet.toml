@@ -1,7 +1,11 @@
 [[outlets.image]]
+    ##
+    # overwrite = true
+    #
     ## The path to the output file.
-    ## If the file exists, it will be append "_"+sequence number before the extension.
-    ## supported formats: png, jpeg, gif
+    ## If the file exists and overwrite is false, it will be append "_"+field_name+"_"+sequence number before the extension.
+    ## If the file exists and overwrite is true, it will be append "_"+field_name before the extension.
+    ## supported formats: png, jpeg, gif, bmp
     path = "./output.png"
     ## fields that contains the image data
     ## if not specified, it will find all binary fields that has Content-type "image/*"

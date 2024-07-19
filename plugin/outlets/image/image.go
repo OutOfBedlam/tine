@@ -29,7 +29,9 @@ func ImageOutlet(ctx *engine.Context) engine.Outlet {
 	fields := ctx.Config().GetStringArray("fields", []string{})
 	dstContentType := ""
 	jpegQuality := ctx.Config().GetInt("jpeg_quality", 75)
-	dstSeqPattern := path
+	overwrite := ctx.Config().GetBool("overwrite", false)
+
+	dstPattern := path
 	if path != "" {
 		ext := filepath.Ext(path)
 		ext = strings.ToLower(ext)
@@ -46,14 +48,19 @@ func ImageOutlet(ctx *engine.Context) engine.Outlet {
 		ext = filepath.Ext(path)
 		base := filepath.Base(path)
 		baseWithoutExt := base[:len(base)-len(ext)]
-		dstSeqPattern = filepath.Join(filepath.Dir(path), baseWithoutExt+"_%d"+ext)
+		if overwrite {
+			dstPattern = filepath.Join(filepath.Dir(path), baseWithoutExt+"_%s"+ext)
+		} else {
+			dstPattern = filepath.Join(filepath.Dir(path), baseWithoutExt+"_%s_%d"+ext)
+		}
 	}
 	return &imageOutlet{
 		ctx:            ctx,
 		dstPath:        path,
 		dstContentType: dstContentType,
 		srcFields:      fields,
-		dstSeqPattern:  dstSeqPattern,
+		dstPattern:     dstPattern,
+		dstOverwrite:   overwrite,
 		jpegQuality:    jpegQuality,
 	}
 }
@@ -64,7 +71,8 @@ type imageOutlet struct {
 	dstContentType string
 	srcFields      []string
 	dstSequence    int32
-	dstSeqPattern  string
+	dstPattern     string
+	dstOverwrite   bool
 	// jpeg options
 	jpegQuality int
 }
@@ -173,30 +181,42 @@ func (iout *imageOutlet) writeImageField(field *engine.Field) error {
 		srcImg = &image.RGBA{Pix: bin.Data(), Stride: int(stride), Rect: rect}
 	}
 
-	dstPath := iout.dstPath
-	dstSequence := atomic.LoadInt32(&iout.dstSequence)
-inc_seq:
-	if dstSequence > 0 {
-		dstPath = fmt.Sprintf(iout.dstSeqPattern, dstSequence)
-	}
-	// check if pe.dstPath file does exists on file system
-	if _, err := os.Stat(dstPath); err == nil {
-		// File exists
-		dstSequence = atomic.AddInt32(&iout.dstSequence, 1)
-		goto inc_seq
-	} else if os.IsNotExist(err) {
-		// File does not exist
+	var writer *os.File
+	if iout.dstOverwrite {
+		dstPath := fmt.Sprintf(iout.dstPattern, field.Name)
+		if w, err := os.OpenFile(dstPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644); err != nil {
+			return err
+		} else {
+			writer = w
+		}
+		defer writer.Close()
+		iout.ctx.LogDebug("outlets.image", "write_to", dstPath)
 	} else {
-		return err
-	}
+		dstPath := iout.dstPath
+		dstSequence := atomic.LoadInt32(&iout.dstSequence)
+	inc_seq:
+		if dstSequence > 0 {
+			dstPath = fmt.Sprintf(iout.dstPattern, field.Name, dstSequence)
+		}
+		// check if pe.dstPath file does exists on file system
+		if _, err := os.Stat(dstPath); err == nil {
+			// File exists
+			dstSequence = atomic.AddInt32(&iout.dstSequence, 1)
+			goto inc_seq
+		} else if os.IsNotExist(err) {
+			// File does not exist
+		} else {
+			return err
+		}
 
-	writer, err := os.OpenFile(dstPath, os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
+		if w, err := os.OpenFile(dstPath, os.O_CREATE|os.O_WRONLY, 0644); err != nil {
+			return err
+		} else {
+			writer = w
+		}
+		defer writer.Close()
+		iout.ctx.LogDebug("outlets.image", "write_to", dstPath)
 	}
-	defer writer.Close()
-
-	iout.ctx.LogDebug("outlets.image", "write_to", dstPath)
 
 	if srcImg == nil {
 		// no need to convert

@@ -2,6 +2,8 @@ package rrd
 
 import (
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/OutOfBedlam/tine/engine"
@@ -36,16 +38,44 @@ type rrdOutlet struct {
 }
 
 func (o *rrdOutlet) Open() error {
-	//startTime := o.ctx.Config().GetTime("start_time", time.Now())
 	step := uint(o.ctx.Config().GetDuration("step", 10*time.Second).Seconds())
-	heartbeat := 2 * step
+	heartbeat := uint(o.ctx.Config().GetDuration("heartbeat", time.Duration(2*step)*time.Second).Seconds())
+	overwrite := o.ctx.Config().GetBool("overwrite", false)
 	c := xrrd.NewCreator(o.path, time.Now().Add(-1*time.Second), step)
 	for i, field := range o.fields {
 		c.DS(fmt.Sprintf("%s=field%d[%d]", field, i, i), "GAUGE", heartbeat, 0, 10)
 	}
-	c.RRA("LAST", 0.5, 5, 100)
-	c.RRA("AVERAGE", 0.5, 5, 100)
-	if err := c.Create(true); err != nil {
+
+	rralst := o.ctx.Config().GetConfigArray("rra", nil)
+	for _, rra := range rralst {
+		cf := strings.ToUpper(rra.GetString("cf", ""))
+		if cf != "AVERAGE" && cf != "MIN" && cf != "MAX" && cf != "LAST" {
+			return fmt.Errorf("invalid rra cf=%q", cf)
+		}
+		var args = []any{}
+
+		xff := rra.GetFloat("xff", 0.5)
+		args = append(args, xff)
+
+		steps := rra.GetInt("steps", 1)
+		samples := rra.GetString("samples", "")
+		if samples != "" {
+			args = append(args, samples)
+		} else {
+			args = append(args, steps)
+		}
+
+		rows := rra.GetInt("rows", 1000)
+		retain := rra.GetString("retain", "")
+		if retain != "" {
+			args = append(args, retain)
+		} else {
+			args = append(args, rows)
+		}
+
+		c.RRA(cf, args...)
+	}
+	if err := c.Create(overwrite); err != nil && !os.IsExist(err) {
 		return fmt.Errorf("fail to create rrd path=%q, %s", o.path, err.Error())
 	}
 	o.updater = xrrd.NewUpdater(o.path)
