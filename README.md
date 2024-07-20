@@ -115,6 +115,34 @@ Run this program, it shows the output like ...
 1721510215,cpu,7.14
 ```
 
+## Pipelines as your HTTP Handler
+
+Use pipelines as your HTTP Handler, See the full code [./example/httpsvr](./example/httpsvr/httpsvr.go).
+
+```go
+var helloWorldPipeline = `
+[[inlets.cpu]]
+    interval = "3s"
+    count = 1
+    totalcpu = true
+    percpu = true
+[[outlets.file]]
+    format = "json"
+`
+var screenshotPipeline = `
+[[inlets.screenshot]]
+    count = 1
+    displays = [0]
+[[outlets.image]]
+    path = "nonamed.png"
+`
+
+router := http.NewServeMux()
+router.HandleFunc("GET /helloworld", engine.HttpHandleFunc(helloWorldPipeline))
+router.HandleFunc("GET /screenshot", engine.HttpHandleFunc(screenshotPipeline))
+http.ListenAndServe(":8080", router)
+```
+
 ## Plugin system
 
 ### Format plugins

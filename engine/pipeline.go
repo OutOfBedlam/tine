@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"net/http"
 	"os"
 	"path/filepath"
 	"sync"
@@ -123,6 +124,31 @@ func New(opts ...Option) (*Pipeline, error) {
 	p.ctx = newContext(p).WithLogger(p.logger)
 	p.flows = []*FlowHandler{NewFlowHandler(p.ctx, "fan-in", FanInFlow(p.ctx))}
 	return p, nil
+}
+
+func HttpHandleFunc(config string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		p, err := New(
+			WithConfig(config),
+			WithWriter(w),
+			WithSetContentTypeFunc(func(contentType string) {
+				w.Header().Set("Content-Type", contentType)
+			}),
+			WithSetContentEncodingFunc(func(contentEncoding string) {
+				w.Header().Set("Content-Encoding", contentEncoding)
+			}),
+		)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = p.Run()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		p.Stop()
+	}
 }
 
 func (p *Pipeline) logMsg(msg string) string {
