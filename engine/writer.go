@@ -63,7 +63,6 @@ func NewWriter(w io.Writer, cfg Config) (*Writer, error) {
 		ret.ContentEncoding = ""
 	}
 
-	fmt.Println("Decimal", ret.Decimal)
 	ret.encoder = reg.Factory(EncoderConfig{
 		Writer:        ret.raw,
 		Subformat:     ret.Subformat,
