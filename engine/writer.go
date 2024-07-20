@@ -41,19 +41,14 @@ func WithWriterConfig(cfg Config) WriterOptions {
 	}
 }
 
-func WithWriter(w io.Writer) WriterOptions {
-	return func(e *Writer) {
-		e.raw = &NopCloser{w}
-	}
-}
-
-func NewWriter(opts ...WriterOptions) (*Writer, error) {
+func NewWriter(w io.Writer, opts ...WriterOptions) (*Writer, error) {
 	ret := &Writer{
 		format:     "csv",
 		decimal:    -1,
 		timeformat: "s",
 		timezone:   "Local",
 		fields:     []string{},
+		raw:        &NopCloser{w},
 	}
 
 	for _, opt := range opts {

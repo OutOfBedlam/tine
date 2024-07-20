@@ -239,6 +239,30 @@ func (c Config) GetInt(key string, defaultVal int) int {
 	return defaultVal
 }
 
+func (c Config) GetInt64(key string, defaultVal int64) int64 {
+	if v, ok := c[key]; ok {
+		switch val := v.(type) {
+		case int:
+			return int64(val)
+		case uint:
+			return int64(val)
+		case int32:
+			return int64(val)
+		case uint32:
+			return int64(val)
+		case int64:
+			return val
+		case uint64:
+			return int64(val)
+		case string:
+			if result, err := strconv.ParseInt(val, 10, 64); err == nil {
+				return result
+			}
+		}
+	}
+	return defaultVal
+}
+
 func (c Config) GetFloat(key string, defaultVal float64) float64 {
 	if v, ok := c[key]; ok {
 		switch val := v.(type) {

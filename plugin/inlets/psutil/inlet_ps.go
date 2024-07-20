@@ -74,6 +74,7 @@ func CpuInlet(ctx *engine.Context) engine.Inlet {
 	perCpu := conf.GetBool("percpu", false)
 	totalCpu := conf.GetBool("totalcpu", true)
 	interval := conf.GetDuration("interval", defaultInterval)
+	count := conf.GetInt64("count", 0)
 	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
 		tv, err := cpu.Percent(0, false)
 		if err != nil {
@@ -100,13 +101,14 @@ func CpuInlet(ctx *engine.Context) engine.Inlet {
 			}
 		}
 		return []engine.Record{rec}, nil
-	}, interval)
+	}, engine.WithInterval(interval), engine.WithRunCountLimit(count))
 }
 
 func LoadInlet(ctx *engine.Context) engine.Inlet {
 	conf := ctx.Config()
 	loads := conf.GetIntArray("loads", []int{1, 5, 15})
 	interval := conf.GetDuration("interval", defaultInterval)
+	count := conf.GetInt64("count", 0)
 	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
 		stat, err := load.Avg()
 		if err != nil {
@@ -124,12 +126,13 @@ func LoadInlet(ctx *engine.Context) engine.Inlet {
 			}
 		}
 		return []engine.Record{rec}, nil
-	}, interval)
+	}, engine.WithInterval(interval), engine.WithRunCountLimit(count))
 }
 
 func MemInlet(ctx *engine.Context) engine.Inlet {
 	conf := ctx.Config()
 	interval := conf.GetDuration("interval", defaultInterval)
+	count := conf.GetInt64("count", 0)
 	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
 		stat, err := mem.VirtualMemory()
 		if err != nil {
@@ -142,7 +145,7 @@ func MemInlet(ctx *engine.Context) engine.Inlet {
 			engine.NewFloatField("used_percent", stat.UsedPercent),
 		)
 		return []engine.Record{rec}, nil
-	}, interval)
+	}, engine.WithInterval(interval), engine.WithRunCountLimit(count))
 }
 
 func DiskInlet(ctx *engine.Context) engine.Inlet {
@@ -150,6 +153,7 @@ func DiskInlet(ctx *engine.Context) engine.Inlet {
 	mountpoints := conf.GetStringArray("mount_points", []string{})
 	ignorefs := conf.GetStringArray("ignore_fs", []string{})
 	interval := conf.GetDuration("interval", defaultInterval)
+	count := conf.GetInt64("count", 0)
 	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
 		stat, err := disk.Partitions(false)
 		if err != nil {
@@ -197,13 +201,14 @@ func DiskInlet(ctx *engine.Context) engine.Inlet {
 			ret = append(ret, rec)
 		}
 		return ret, nil
-	}, interval)
+	}, engine.WithInterval(interval), engine.WithRunCountLimit(count))
 }
 
 func DiskioInlet(ctx *engine.Context) engine.Inlet {
 	conf := ctx.Config()
 	devPatterns := conf.GetStringArray("devices", []string{})
 	interval := conf.GetDuration("interval", defaultInterval)
+	count := conf.GetInt64("count", 0)
 	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
 		stat, err := disk.IOCounters()
 		if err != nil {
@@ -242,13 +247,14 @@ func DiskioInlet(ctx *engine.Context) engine.Inlet {
 			ret = append(ret, rec)
 		}
 		return ret, nil
-	}, interval)
+	}, engine.WithInterval(interval), engine.WithRunCountLimit(count))
 }
 
 func NetInlet(ctx *engine.Context) engine.Inlet {
 	conf := ctx.Config()
 	nicPatterns := conf.GetStringArray("devices", []string{"*"})
 	interval := conf.GetDuration("interval", defaultInterval)
+	count := conf.GetInt64("count", 0)
 	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
 		stat, err := net.IOCounters(true)
 		if err != nil {
@@ -284,13 +290,14 @@ func NetInlet(ctx *engine.Context) engine.Inlet {
 			ret = append(ret, rec)
 		}
 		return ret, nil
-	}, interval)
+	}, engine.WithInterval(interval), engine.WithRunCountLimit(count))
 }
 
 func NetstatInlet(ctx *engine.Context) engine.Inlet {
 	conf := ctx.Config()
 	protos := conf.GetStringArray("protocols", []string{})
 	interval := conf.GetDuration("interval", defaultInterval)
+	count := conf.GetInt64("count", 0)
 	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
 		stat, err := net.ProtoCounters(protos)
 		if err != nil {
@@ -307,7 +314,7 @@ func NetstatInlet(ctx *engine.Context) engine.Inlet {
 			ret = append(ret, rec)
 		}
 		return ret, nil
-	}, interval)
+	}, engine.WithInterval(interval), engine.WithRunCountLimit(count))
 }
 
 func camelToSnake(s string) string {
@@ -328,6 +335,7 @@ func camelToSnake(s string) string {
 func SensorsInlet(ctx *engine.Context) engine.Inlet {
 	conf := ctx.Config()
 	interval := conf.GetDuration("interval", defaultInterval)
+	count := conf.GetInt64("count", 0)
 	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
 		stat, err := sensors.SensorsTemperatures()
 		if err != nil {
@@ -345,12 +353,13 @@ func SensorsInlet(ctx *engine.Context) engine.Inlet {
 			ret = append(ret, rec)
 		}
 		return ret, nil
-	}, interval)
+	}, engine.WithInterval(interval), engine.WithRunCountLimit(count))
 }
 
 func HostInlet(ctx *engine.Context) engine.Inlet {
 	conf := ctx.Config()
 	interval := conf.GetDuration("interval", defaultInterval)
+	count := conf.GetInt64("count", 0)
 	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
 		stat, err := host.Info()
 		if err != nil {
@@ -371,5 +380,5 @@ func HostInlet(ctx *engine.Context) engine.Inlet {
 			engine.NewStringField("host_id", stat.HostID),
 		)
 		return []engine.Record{rec}, nil
-	}, interval)
+	}, engine.WithInterval(interval), engine.WithRunCountLimit(count))
 }

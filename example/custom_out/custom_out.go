@@ -14,17 +14,17 @@ import (
 
 func main() {
 	// Create engine
-	eng, _ := engine.New(engine.WithName("custom_out"))
+	pipeline, _ := engine.New(engine.WithName("custom_out"))
 
 	// Add inlet getting cpu usage
-	ctx := eng.Context().WithConfig(map[string]any{
+	ctx := pipeline.Context().WithConfig(map[string]any{
 		"percpu":   false,
 		"interval": 3 * time.Second,
 	})
-	eng.AddInlet("cpu", psutil.CpuInlet(ctx))
+	pipeline.AddInlet("cpu", psutil.CpuInlet(ctx))
 
 	// Add outlet printing to stdout in custom format
-	eng.AddOutlet("custom", engine.OutletWithFunc(func(recs []engine.Record) error {
+	pipeline.AddOutlet("custom", engine.OutletWithFunc(func(recs []engine.Record) error {
 		for _, r := range recs {
 			if field := r.Field("total_percent"); field != nil {
 				cpu, _ := field.GetFloat()
@@ -35,7 +35,7 @@ func main() {
 	}))
 
 	// Start the engine
-	go eng.Start()
+	go pipeline.Start()
 
 	// wait Ctrl+C
 	done := make(chan os.Signal, 1)
@@ -43,5 +43,5 @@ func main() {
 	<-done
 
 	// Stop the engine
-	eng.Stop()
+	pipeline.Stop()
 }

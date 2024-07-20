@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -23,7 +24,14 @@ type Pipeline struct {
 	logger       *slog.Logger
 	plumbingOnce sync.Once
 	stopOnce     sync.Once
+	rawWriter    io.Writer
+
+	setContentTypeFunc     SetContentTypeCallback
+	setContentEncodingFunc SetContentEncodingCallback
 }
+
+type SetContentTypeCallback func(contentType string)
+type SetContentEncodingCallback func(contentEncoding string)
 
 type Option func(*Pipeline) error
 
@@ -66,9 +74,30 @@ func WithName(name string) Option {
 	}
 }
 
+func WithWriter(w io.Writer) Option {
+	return func(p *Pipeline) error {
+		p.rawWriter = w
+		return nil
+	}
+}
+
 func WithLogger(logger *slog.Logger) Option {
 	return func(p *Pipeline) error {
 		p.logger = logger
+		return nil
+	}
+}
+
+func WithSetContentTypeFunc(fn SetContentTypeCallback) Option {
+	return func(p *Pipeline) error {
+		p.setContentTypeFunc = fn
+		return nil
+	}
+}
+
+func WithSetContentEncodingFunc(fn SetContentEncodingCallback) Option {
+	return func(p *Pipeline) error {
+		p.setContentEncodingFunc = fn
 		return nil
 	}
 }
@@ -247,7 +276,7 @@ func (p *Pipeline) Run() error {
 		return errors.New("no outlet to start")
 	}
 
-	p.ctx.LogInfo("start", "inputs", len(p.inputs), "flows", len(p.flows)-2, "outputs", len(p.outputs))
+	p.ctx.LogInfo("start", "inlets", len(p.inputs), "flows", len(p.flows)-2, "outlets", len(p.outputs))
 
 	// start inputs
 	inputWg := sync.WaitGroup{}
@@ -262,10 +291,10 @@ func (p *Pipeline) Run() error {
 	}
 
 	inputWg.Wait()
-	p.ctx.LogInfo("input completed")
+	p.ctx.LogDebug("inlets completed")
 
 	p.Stop()
-	p.ctx.LogInfo(p.logMsg("stop"))
+	p.ctx.LogInfo("stop")
 
 	return nil
 }
