@@ -194,3 +194,46 @@ func (ff *fanOutFlow) Process(r []Record) ([]Record, error) {
 	}
 	return nil, nil
 }
+
+type FlowFuncWrapOption func(*FlowFuncWrap)
+
+func WithFlowFuncParallelism(parallelism int) FlowFuncWrapOption {
+	return func(fw *FlowFuncWrap) {
+		if parallelism > 0 {
+			fw.parallelism = 1
+		} else {
+			fw.parallelism = parallelism
+		}
+	}
+}
+
+type FlowFuncWrap struct {
+	fn          func([]Record) ([]Record, error)
+	parallelism int
+}
+
+var _ = (Flow)((*FlowFuncWrap)(nil))
+
+func FlowWithFunc(fn func([]Record) ([]Record, error), opts ...FlowFuncWrapOption) Flow {
+	ret := &FlowFuncWrap{fn: fn}
+	for _, opt := range opts {
+		opt(ret)
+	}
+	return ret
+}
+
+func (fw *FlowFuncWrap) Open() error {
+	return nil
+}
+
+func (fw *FlowFuncWrap) Close() error {
+	return nil
+}
+
+func (fw *FlowFuncWrap) Process(r []Record) ([]Record, error) {
+	return fw.fn(r)
+}
+
+func (fw *FlowFuncWrap) Parallelism() int {
+	return fw.parallelism
+}

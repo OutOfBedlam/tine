@@ -33,12 +33,12 @@ func usage() {
 }
 
 func listPlugins() int {
-	fmt.Println("Input plugins: data -> [inlet] -> [decompress] -> [decoder] -> records")
+	fmt.Println("Input: data -> [inlet] -> [decompress] -> [decoder] -> records")
 	fmt.Println("  Decoders   ", strings.Join(engine.DecoderNames(), ","))
 	fmt.Println("  Decompress ", strings.Join(engine.DecompressorNames(), ","))
 	fmt.Println("  Inlets     ", strings.Join(engine.InletNames(), ","))
 	fmt.Println("")
-	fmt.Println("Output plugins: records -> [encoder] -> [compress] -> [outlet] -> data")
+	fmt.Println("Output: records -> [encoder] -> [compress] -> [outlet] -> data")
 	fmt.Println("  Encoders   ", strings.Join(engine.EncoderNames(), ","))
 	fmt.Println("  Compress   ", strings.Join(engine.CompressorNames(), ","))
 	fmt.Println("  Outlets    ", strings.Join(engine.OutletNames(), ","))

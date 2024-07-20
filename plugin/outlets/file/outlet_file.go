@@ -19,20 +19,17 @@ func FileOutlet(ctx *engine.Context) engine.Outlet {
 }
 
 type fileOutlet struct {
+	*engine.Writer
 	ctx    *engine.Context
-	writer *engine.Writer
 	closer io.Closer
 }
 
 func (fo *fileOutlet) Open() error {
-	path := fo.ctx.Config().GetString("path", "-")
-	writerConf := fo.ctx.Config().GetConfig("writer", engine.Config{"format": "csv"})
-	fo.ctx.LogDebug("outlet.file", "path", path, "format", writerConf.GetString("format", "?"))
-
 	var out io.Writer
 	if w := fo.ctx.Writer(); w != nil {
 		out = w
 	} else {
+		path := fo.ctx.Config().GetString("path", "-")
 		if path == "" {
 			out = io.Discard
 		} else if path == "-" {
@@ -46,21 +43,20 @@ func (fo *fileOutlet) Open() error {
 			}
 		}
 	}
-	w, err := engine.NewWriter(out,
-		engine.WithWriterConfig(writerConf),
-	)
+
+	w, err := engine.NewWriter(out, fo.ctx.Config())
 	if err != nil {
 		return err
 	}
 	fo.ctx.SetContentType(w.ContentType)
 	fo.ctx.SetContentEncoding(w.ContentEncoding)
-	fo.writer = w
+	fo.Writer = w
 	return nil
 }
 
 func (fo *fileOutlet) Close() error {
-	if fo.writer != nil {
-		if err := fo.writer.Close(); err != nil {
+	if fo.Writer != nil {
+		if err := fo.Writer.Close(); err != nil {
 			return err
 		}
 	}
@@ -73,5 +69,5 @@ func (fo *fileOutlet) Close() error {
 }
 
 func (fo *fileOutlet) Handle(recs []engine.Record) error {
-	return fo.writer.Write(recs)
+	return fo.Writer.Write(recs)
 }

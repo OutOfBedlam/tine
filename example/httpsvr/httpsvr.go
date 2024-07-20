@@ -23,8 +23,7 @@ func getHelloWorld(w http.ResponseWriter, r *http.Request) {
 		percpu = true
 	[[outlets.file]]
 		path = "-"
-		[[outlets.file.writer]]
-			format = "json"
+		format = "json"
 	`
 	// Create engine
 	pipeline, err := engine.New(
@@ -58,7 +57,7 @@ func getScreenshot(w http.ResponseWriter, r *http.Request) {
 	   count = 1
 	   displays = [0]
 	[[outlets.image]]
-		path = "screenshot.png"
+		path = "nonamed.png"
 	`
 
 	// Create engine

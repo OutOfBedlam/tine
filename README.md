@@ -69,52 +69,50 @@ $ ./load.tml
 
 Create an engine and add inlets and outlets.
 
-See the full code from the directory [./example/embed](./example/embed/main.go).
+See the full code from the directory [./example/custom_in](./example/helloworld/custom_in.go).
 
 ```go
 // Create engine
-eng, err := engine.New(engine.WithName("example"))
+pipeline, err := engine.New(engine.WithName("custom_in"))
 if err != nil {
     panic(err)
 }
 
 interval := 3 * time.Second
-defaults := engine.NewConfig().Set("interval", interval)
 
 // Add inlet for cpu usage
-eng.AddInlet(
-    psutil.CpuInlet(engine.NewConfig().Set("percpu", "false")), defaults)
+conf := engine.NewConfig().Set("percpu", false).Set("interval", interval)
+pipeline.AddInlet("cpu", psutil.CpuInlet(pipeline.Context().WithConfig(conf)))
 
 // Add outlet printing to stdout '-'
-eng.AddOutlet(
-    file.FileOutlet(engine.NewConfig().Set("path", "-")), defaults)
+conf = engine.NewConfig().Set("path", "-").Set("decimal", 2)
+pipeline.AddOutlet("file", file.FileOutlet(pipeline.Context().WithConfig(conf)))
 
 // Add your custom input function.
 custom := func() ([]engine.Record, error) {
     result := []engine.Record{
         engine.NewRecord(
-            engine.NewStringField(engine.NAME_FIELD, "random"),
-            engine.NewFloatField(engine.VALUE_FIELD, rand.Float64()*100),
+            engine.NewStringField("name", "random"),
+            engine.NewFloatField("value", rand.Float64()*100),
         ),
     }
     return result, nil
 }
-eng.AddInlet(
-    engine.InletWithFunc(custom, interval), defaults)
+pipeline.AddInlet("custom", engine.InletWithPullFunc(custom, engine.WithInterval(interval)))
 
 // Start the engine
-go eng.Start()
+go pipeline.Start()
 ```
 
 Run this program, it shows the output like ...
 
 ```
-cpu.percent,1720227446,7.1
-random,1720227446,80.56
-cpu.percent,1720227449,8.4
-random,1720227449,83.61
-cpu.percent,1720227452,8.9
-random,1720227452,13.21
+1721510209,custom,random,43.01
+1721510209,cpu,7.93
+1721510212,custom,random,25.14
+1721510212,cpu,7.35
+1721510215,custom,random,83.24
+1721510215,cpu,7.14
 ```
 
 ## Plugin system
@@ -123,22 +121,31 @@ random,1720227452,13.21
 
 |  Name       |    Description |
 |:------------|:---------------|
-| `csv`       | [csv](./plugin/csv) encoder |
-| `json`      | [json](./plugin/json) encoder |
+| `csv`       | [csv](./plugin/codec/csv) encoder |
+| `json`      | [json](./plugin/codec/json) encoder |
 
 ### Compressor plugins
 
 |  Name                           |    Description |
 |:--------------------------------|:---------------|
-| `gzip`, `zlib`, `lzw`, `flate`  | [compress](./plugin/compress) |
-| `snappy`                        | [snappy](./plugin/snappy) encoder |
+| `gzip`, `zlib`, `lzw`, `flate`  | [compress](./plugin/codec/compress) |
+| `snappy`                        | [snappy](./plugin/codec/snappy) encoder |
 
 
-### Inlet plugins
+### List plugins
 
-> cpu,load,mem,disk,diskio,net,netstat,sensors,host,http,nats
-  
+```sh
+$ tine --list
 
-### Outlet Plugins
+Input: data -> [inlet] -> [decompress] -> [decoder] -> records
+  Decoders    csv
+  Decompress  flate,gzip,inflate,lzw,snappy,zlib
+  Inlets      exec,file,http,cpu,load,mem,disk,diskio,net,sensors,host,screenshot,syslog,rrd_graph,nats
 
-> file,http,mqtt
+Ouput: records -> [encoder] -> [compress] -> [outlet] -> data
+  Encoders    csv,json
+  Compress    deflate,flate,gzip,lzw,snappy,zlib
+  Outlets     excel,file,http,image,rrd,mqtt
+
+Flows         set_field_name,fan-in,fan-out,merge,flatten,damper,dump,set_field
+```

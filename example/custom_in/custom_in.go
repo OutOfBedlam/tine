@@ -27,7 +27,7 @@ func main() {
 	pipeline.AddInlet("cpu", psutil.CpuInlet(pipeline.Context().WithConfig(conf)))
 
 	// Add outlet printing to stdout '-'
-	conf = engine.NewConfig().Set("path", "-").Set("interval", interval)
+	conf = engine.NewConfig().Set("path", "-").Set("decimal", 2)
 	pipeline.AddOutlet("file", file.FileOutlet(pipeline.Context().WithConfig(conf)))
 
 	// Add your custom input function.

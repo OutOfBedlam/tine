@@ -27,12 +27,11 @@ var serial uint64
 type mqttOutlet struct {
 	ctx *engine.Context
 
-	host       string
-	topic      string
-	qos        byte
-	timeout    time.Duration
-	client     paho.Client
-	writerConf engine.Config
+	host    string
+	topic   string
+	qos     byte
+	timeout time.Duration
+	client  paho.Client
 }
 
 func (mo *mqttOutlet) Open() error {
@@ -43,7 +42,6 @@ func (mo *mqttOutlet) Open() error {
 	mo.topic = conf.GetString("topic", mo.topic)
 	mo.qos = byte(conf.GetInt("qos", 1))
 	mo.timeout = conf.GetDuration("timeout", 3*time.Second)
-	mo.writerConf = conf.GetConfig("writer", engine.Config{"format": "csv"})
 
 	opts := paho.NewClientOptions()
 	opts.SetCleanSession(true)
@@ -72,9 +70,7 @@ func (mo *mqttOutlet) Close() error {
 
 func (mo *mqttOutlet) Handle(recs []engine.Record) error {
 	data := &bytes.Buffer{}
-	w, err := engine.NewWriter(data,
-		engine.WithWriterConfig(mo.writerConf),
-	)
+	w, err := engine.NewWriter(data, mo.ctx.Config())
 	if err != nil {
 		return err
 	}

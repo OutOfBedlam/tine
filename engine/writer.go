@@ -8,61 +8,44 @@ import (
 )
 
 type Writer struct {
+	Format       string
+	Subformat    string
+	OutputIndent string
+	OutputPrefix string
+	Timeformat   string
+	Timezone     string
+	Decimal      int
+	Compress     string
+	Fields       []string
+
 	ContentType     string
 	ContentEncoding string
-
-	format       string
-	subFormat    string
-	outputIndent string
-	outputPrefix string
-	timeformat   string
-	timezone     string
-	decimal      int
-	compress     string
-	fields       []string
-
-	encoder Encoder
-	raw     io.WriteCloser
+	encoder         Encoder
+	raw             io.WriteCloser
 }
 
-type WriterOptions func(*Writer)
-
-func WithWriterConfig(cfg Config) WriterOptions {
-	return func(e *Writer) {
-		e.format = cfg.GetString("format", e.format)
-		e.subFormat = cfg.GetString("subformat", e.subFormat)
-		e.outputIndent = cfg.GetString("indent", e.outputIndent)
-		e.outputPrefix = cfg.GetString("prefix", e.outputPrefix)
-		e.timeformat = cfg.GetString("timeformat", e.timeformat)
-		e.timezone = cfg.GetString("tz", e.timezone)
-		e.decimal = cfg.GetInt("decimal", e.decimal)
-		e.compress = cfg.GetString("compress", e.compress)
-		e.fields = cfg.GetStringArray("fields", e.fields)
-	}
-}
-
-func NewWriter(w io.Writer, opts ...WriterOptions) (*Writer, error) {
+func NewWriter(w io.Writer, cfg Config) (*Writer, error) {
 	ret := &Writer{
-		format:     "csv",
-		decimal:    -1,
-		timeformat: "s",
-		timezone:   "Local",
-		fields:     []string{},
-		raw:        &NopCloser{w},
+		Format:       cfg.GetString("format", "csv"),
+		Subformat:    cfg.GetString("subformat", ""),
+		OutputIndent: cfg.GetString("indent", ""),
+		OutputPrefix: cfg.GetString("prefix", ""),
+		Decimal:      cfg.GetInt("decimal", -1),
+		Timeformat:   cfg.GetString("timeformat", "s"),
+		Timezone:     cfg.GetString("tz", "Local"),
+		Compress:     cfg.GetString("compress", ""),
+		Fields:       cfg.GetStringArray("fields", []string{}),
+		raw:          &NopCloser{w},
 	}
 
-	for _, opt := range opts {
-		opt(ret)
-	}
-
-	reg := GetEncoder(ret.format)
+	reg := GetEncoder(ret.Format)
 	if reg == nil {
-		return nil, fmt.Errorf("format %q not found", ret.format)
+		return nil, fmt.Errorf("format %q not found", ret.Format)
 	}
 	timeformatter := &Timeformatter{
-		format: ret.timeformat,
+		format: ret.Timeformat,
 	}
-	if loc, err := time.LoadLocation(ret.timezone); err == nil {
+	if loc, err := time.LoadLocation(ret.Timezone); err == nil {
 		timeformatter.loc = loc
 	} else {
 		timeformatter.loc = time.Local
@@ -72,7 +55,7 @@ func NewWriter(w io.Writer, opts ...WriterOptions) (*Writer, error) {
 		ret.raw = &NopCloser{io.Writer(os.Stdout)}
 	}
 
-	comppress := GetCompressor(ret.compress)
+	comppress := GetCompressor(ret.Compress)
 	if comppress != nil {
 		ret.raw = comppress.Factory(ret.raw)
 		ret.ContentEncoding = comppress.ContentEncoding
@@ -80,14 +63,15 @@ func NewWriter(w io.Writer, opts ...WriterOptions) (*Writer, error) {
 		ret.ContentEncoding = ""
 	}
 
+	fmt.Println("Decimal", ret.Decimal)
 	ret.encoder = reg.Factory(EncoderConfig{
 		Writer:        ret.raw,
-		Subformat:     ret.subFormat,
-		Indent:        ret.outputIndent,
-		Prefix:        ret.outputPrefix,
+		Subformat:     ret.Subformat,
+		Indent:        ret.OutputIndent,
+		Prefix:        ret.OutputPrefix,
 		Timeformatter: timeformatter,
-		Fields:        ret.fields,
-		Decimal:       ret.decimal,
+		Fields:        ret.Fields,
+		Decimal:       ret.Decimal,
 	})
 	ret.ContentType = reg.ContentType
 	if ret.ContentType == "" {
