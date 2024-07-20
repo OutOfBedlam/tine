@@ -30,8 +30,6 @@ type httpOutlet struct {
 	addr        string
 	method      string
 	successCode int
-
-	writerConf engine.Config
 }
 
 func (ho *httpOutlet) Open() error {
@@ -40,11 +38,6 @@ func (ho *httpOutlet) Open() error {
 	ho.method = conf.GetString("method", "POST")
 	ho.successCode = conf.GetInt("success", 200)
 	timeout := conf.GetDuration("timeout", 3*time.Second)
-
-	ho.writerConf = conf.GetConfig("writer", engine.Config{"format": "csv"})
-
-	// outlet common params
-	slog.Debug("outlet.http", "address", ho.addr, "method", ho.method, "writer", ho.writerConf)
 
 	transport := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
@@ -62,9 +55,7 @@ func (ho *httpOutlet) Close() error {
 
 func (ho *httpOutlet) Handle(recs []engine.Record) error {
 	data := &bytes.Buffer{}
-	w, err := engine.NewWriter(data,
-		engine.WithWriterConfig(ho.writerConf),
-	)
+	w, err := engine.NewWriter(data, ho.ctx.Config())
 	if err != nil {
 		return err
 	}

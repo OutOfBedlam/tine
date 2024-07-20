@@ -15,8 +15,7 @@ var config = `
 
 [[outlets.file]]
 	path = "-"
-	[[outlets.file.writer]]
-		format = "json"
+	format = "json"
 `
 
 func main() {
