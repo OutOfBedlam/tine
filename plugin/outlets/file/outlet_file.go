@@ -30,25 +30,30 @@ func (fo *fileOutlet) Open() error {
 	fo.ctx.LogDebug("outlet.file", "path", path, "format", writerConf.GetString("format", "?"))
 
 	var out io.Writer
-	if path == "" {
-		out = io.Discard
-	} else if path == "-" {
-		out = io.Writer(os.Stdout)
+	if w := fo.ctx.Writer(); w != nil {
+		out = w
 	} else {
-		if f, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644); err != nil {
-			fo.ctx.LogError("failed to open file", "path", path, "error", err.Error())
+		if path == "" {
+			out = io.Discard
+		} else if path == "-" {
+			out = io.Writer(os.Stdout)
 		} else {
-			out = f
-			fo.closer = f
+			if f, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644); err != nil {
+				fo.ctx.LogError("failed to open file", "path", path, "error", err.Error())
+			} else {
+				out = f
+				fo.closer = f
+			}
 		}
 	}
-	w, err := engine.NewWriter(
-		engine.WithWriter(out),
+	w, err := engine.NewWriter(out,
 		engine.WithWriterConfig(writerConf),
 	)
 	if err != nil {
 		return err
 	}
+	fo.ctx.SetContentType(w.ContentType)
+	fo.ctx.SetContentEncoding(w.ContentEncoding)
 	fo.writer = w
 	return nil
 }

@@ -6,7 +6,6 @@ import (
 	"compress/lzw"
 	"compress/zlib"
 	"io"
-	"os"
 
 	"github.com/OutOfBedlam/tine/engine"
 )
@@ -44,7 +43,7 @@ func init() {
 		Name:            "gzip",
 		ContentEncoding: "gzip",
 		Factory: func(w io.Writer) io.WriteCloser {
-			return gzip.NewWriter(os.Stdout)
+			return gzip.NewWriter(w)
 		},
 	})
 	engine.RegisterDecompressor(&engine.Decompressor{
@@ -58,7 +57,7 @@ func init() {
 		Name:            "lzw",
 		ContentEncoding: "lzw",
 		Factory: func(w io.Writer) io.WriteCloser {
-			return lzw.NewWriter(os.Stdout, lzw.LSB, 8)
+			return lzw.NewWriter(w, lzw.LSB, 8)
 		},
 	})
 	engine.RegisterDecompressor(&engine.Decompressor{
@@ -71,7 +70,7 @@ func init() {
 		Name:            "zlib",
 		ContentEncoding: "zlib",
 		Factory: func(w io.Writer) io.WriteCloser {
-			return zlib.NewWriter(os.Stdout)
+			return zlib.NewWriter(w)
 		},
 	})
 	engine.RegisterDecompressor(&engine.Decompressor{

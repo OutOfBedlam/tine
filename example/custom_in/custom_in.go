@@ -15,7 +15,7 @@ import (
 
 func main() {
 	// Create engine
-	eng, err := engine.New(engine.WithName("custom_in"))
+	pipeline, err := engine.New(engine.WithName("custom_in"))
 	if err != nil {
 		panic(err)
 	}
@@ -24,11 +24,11 @@ func main() {
 
 	// Add inlet for cpu usage
 	conf := engine.NewConfig().Set("percpu", false).Set("interval", interval)
-	eng.AddInlet("cpu", psutil.CpuInlet(eng.Context().WithConfig(conf)))
+	pipeline.AddInlet("cpu", psutil.CpuInlet(pipeline.Context().WithConfig(conf)))
 
 	// Add outlet printing to stdout '-'
 	conf = engine.NewConfig().Set("path", "-").Set("interval", interval)
-	eng.AddOutlet("file", file.FileOutlet(eng.Context().WithConfig(conf)))
+	pipeline.AddOutlet("file", file.FileOutlet(pipeline.Context().WithConfig(conf)))
 
 	// Add your custom input function.
 	custom := func() ([]engine.Record, error) {
@@ -40,10 +40,10 @@ func main() {
 		}
 		return result, nil
 	}
-	eng.AddInlet("custom", engine.InletWithPullFunc(custom, interval))
+	pipeline.AddInlet("custom", engine.InletWithPullFunc(custom, engine.WithInterval(interval)))
 
 	// Start the engine
-	go eng.Start()
+	go pipeline.Start()
 
 	// wait Ctrl+C
 	done := make(chan os.Signal, 1)
@@ -51,5 +51,5 @@ func main() {
 	<-done
 
 	// Stop the engine
-	eng.Stop()
+	pipeline.Stop()
 }

@@ -21,7 +21,7 @@ var config = `
 
 func main() {
 	// Create engine
-	eng, err := engine.New(
+	engine, err := engine.New(
 		engine.WithName("helloworld"),
 		engine.WithConfig(config),
 	)
@@ -30,11 +30,11 @@ func main() {
 	}
 
 	// Execute engine
-	err = eng.Run()
+	err = engine.Run()
 	if err != nil {
 		panic(err)
 	}
 
 	// Stop engine
-	eng.Stop()
+	engine.Stop()
 }

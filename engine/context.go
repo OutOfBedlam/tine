@@ -2,6 +2,7 @@ package engine
 
 import (
 	"context"
+	"io"
 	"log/slog"
 	"time"
 )
@@ -51,6 +52,22 @@ func (ctx *Context) Config() Config {
 
 func (ctx *Context) PipelineName() string {
 	return ctx.pipeline.Name
+}
+
+func (ctx *Context) Writer() io.Writer {
+	return ctx.pipeline.rawWriter
+}
+
+func (ctx *Context) SetContentType(contentType string) {
+	if ctx.pipeline.setContentTypeFunc != nil && contentType != "" {
+		ctx.pipeline.setContentTypeFunc(contentType)
+	}
+}
+
+func (ctx *Context) SetContentEncoding(contentEncoding string) {
+	if ctx.pipeline.setContentEncodingFunc != nil && contentEncoding != "" {
+		ctx.pipeline.setContentEncodingFunc(contentEncoding)
+	}
 }
 
 func (ctx *Context) Done() <-chan struct{} {

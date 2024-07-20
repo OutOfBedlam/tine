@@ -7,6 +7,7 @@ import (
 	"image/gif"
 	"image/jpeg"
 	"image/png"
+	"io"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -27,10 +28,14 @@ func init() {
 func ImageOutlet(ctx *engine.Context) engine.Outlet {
 	path := ctx.Config().GetString("path", "")
 	fields := ctx.Config().GetStringArray("fields", []string{})
-	dstContentType := ""
+	dstContentType := ctx.Config().GetString("content_type", "image/png")
 	jpegQuality := ctx.Config().GetInt("jpeg_quality", 75)
 	overwrite := ctx.Config().GetBool("overwrite", false)
 
+	var writer io.Writer
+	if w := ctx.Writer(); w != nil {
+		writer = w
+	}
 	dstPattern := path
 	if path != "" {
 		ext := filepath.Ext(path)
@@ -54,6 +59,8 @@ func ImageOutlet(ctx *engine.Context) engine.Outlet {
 			dstPattern = filepath.Join(filepath.Dir(path), baseWithoutExt+"_%s_%d"+ext)
 		}
 	}
+	ctx.SetContentType(dstContentType)
+
 	return &imageOutlet{
 		ctx:            ctx,
 		dstPath:        path,
@@ -61,6 +68,7 @@ func ImageOutlet(ctx *engine.Context) engine.Outlet {
 		srcFields:      fields,
 		dstPattern:     dstPattern,
 		dstOverwrite:   overwrite,
+		dstWriter:      writer,
 		jpegQuality:    jpegQuality,
 	}
 }
@@ -73,6 +81,7 @@ type imageOutlet struct {
 	dstSequence    int32
 	dstPattern     string
 	dstOverwrite   bool
+	dstWriter      io.Writer
 	// jpeg options
 	jpegQuality int
 }
@@ -181,15 +190,19 @@ func (iout *imageOutlet) writeImageField(field *engine.Field) error {
 		srcImg = &image.RGBA{Pix: bin.Data(), Stride: int(stride), Rect: rect}
 	}
 
-	var writer *os.File
+	var writer io.Writer
+	if iout.dstWriter != nil {
+		writer = iout.dstWriter
+		goto write_image
+	}
 	if iout.dstOverwrite {
 		dstPath := fmt.Sprintf(iout.dstPattern, field.Name)
 		if w, err := os.OpenFile(dstPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644); err != nil {
 			return err
 		} else {
 			writer = w
+			defer w.Close()
 		}
-		defer writer.Close()
 		iout.ctx.LogDebug("outlets.image", "write_to", dstPath)
 	} else {
 		dstPath := iout.dstPath
@@ -213,11 +226,12 @@ func (iout *imageOutlet) writeImageField(field *engine.Field) error {
 			return err
 		} else {
 			writer = w
+			defer w.Close()
 		}
-		defer writer.Close()
 		iout.ctx.LogDebug("outlets.image", "write_to", dstPath)
 	}
 
+write_image:
 	if srcImg == nil {
 		// no need to convert
 		writer.Write(bv.Data())

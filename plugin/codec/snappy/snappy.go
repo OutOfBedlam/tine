@@ -2,7 +2,6 @@ package snappy
 
 import (
 	"io"
-	"os"
 
 	"github.com/OutOfBedlam/tine/engine"
 	"github.com/golang/snappy"
@@ -13,7 +12,7 @@ func init() {
 		Name:            "snappy",
 		ContentEncoding: "snappy",
 		Factory: func(w io.Writer) io.WriteCloser {
-			return snappy.NewBufferedWriter(os.Stdout)
+			return snappy.NewBufferedWriter(w)
 		},
 	})
 	engine.RegisterDecompressor(&engine.Decompressor{

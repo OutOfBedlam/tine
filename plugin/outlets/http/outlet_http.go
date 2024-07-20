@@ -62,8 +62,7 @@ func (ho *httpOutlet) Close() error {
 
 func (ho *httpOutlet) Handle(recs []engine.Record) error {
 	data := &bytes.Buffer{}
-	w, err := engine.NewWriter(
-		engine.WithWriter(data),
+	w, err := engine.NewWriter(data,
 		engine.WithWriterConfig(ho.writerConf),
 	)
 	if err != nil {

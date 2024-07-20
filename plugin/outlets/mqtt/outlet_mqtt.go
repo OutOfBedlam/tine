@@ -72,8 +72,7 @@ func (mo *mqttOutlet) Close() error {
 
 func (mo *mqttOutlet) Handle(recs []engine.Record) error {
 	data := &bytes.Buffer{}
-	w, err := engine.NewWriter(
-		engine.WithWriter(data),
+	w, err := engine.NewWriter(data,
 		engine.WithWriterConfig(mo.writerConf),
 	)
 	if err != nil {

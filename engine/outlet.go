@@ -2,6 +2,7 @@ package engine
 
 import (
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -74,6 +75,8 @@ type OutletHandler struct {
 	closeCh chan bool
 	closeWg sync.WaitGroup
 	buffer  []Record
+	recv    uint64
+	flushed uint64
 }
 
 func NewOutletHandler(ctx *Context, name string, outlet Outlet) (*OutletHandler, error) {
@@ -104,23 +107,27 @@ func (out *OutletHandler) Start() error {
 			select {
 			case r := <-out.inCh:
 				out.buffer = append(out.buffer, r...)
-				out.flush()
+				atomic.AddUint64(&out.recv, uint64(len(r)))
+				out.flush(false)
 			case <-out.closeCh:
-				out.flush()
 				break loop
 			}
 		}
+		out.flush(true)
+		out.isOpen = false
 		out.closeWg.Done()
 	}()
 	return nil
 }
 
-func (out *OutletHandler) flush() {
+func (out *OutletHandler) flush(_ /*force*/ bool) {
 	if len(out.buffer) == 0 {
 		return
 	}
 	if err := out.outlet.Handle(out.buffer); err != nil {
 		out.ctx.LogError("failed to output flush", "error", err.Error())
+	} else {
+		atomic.AddUint64(&out.flushed, uint64(len(out.buffer)))
 	}
 	out.buffer = out.buffer[:0]
 }
@@ -136,6 +143,7 @@ func (out *OutletHandler) Stop() {
 	if err := out.outlet.Close(); err != nil {
 		out.ctx.LogError("failed to open output", "error", err.Error())
 	}
+	out.ctx.LogDebug("outlet stopped", "name", out.name, "recv", out.recv, "flushed", out.flushed)
 }
 
 func (out *OutletHandler) Sink() chan<- []Record {

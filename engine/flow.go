@@ -2,6 +2,7 @@ package engine
 
 import (
 	"sync"
+	"sync/atomic"
 )
 
 var flowRegistry = make(map[string]*FlowReg)
@@ -58,6 +59,9 @@ type FlowHandler struct {
 
 	parallelism chan struct{}
 	closeWg     sync.WaitGroup
+
+	recv uint64
+	sent uint64
 }
 
 func NewFlowHandler(ctx *Context, name string, flow Flow) *FlowHandler {
@@ -92,6 +96,7 @@ func (fh *FlowHandler) Start() error {
 	if fh.parallelism != nil {
 		go func() {
 			for records := range fh.inCh {
+				atomic.AddUint64(&fh.recv, uint64(len(records)))
 				fh.closeWg.Add(1)
 				fh.parallelism <- struct{}{}
 				go func(r []Record) {
@@ -105,6 +110,7 @@ func (fh *FlowHandler) Start() error {
 					}
 					if len(r) > 0 {
 						fh.outCh <- r
+						atomic.AddUint64(&fh.sent, uint64(len(r)))
 					}
 				}(records)
 			}
@@ -113,12 +119,16 @@ func (fh *FlowHandler) Start() error {
 	} else {
 		go func() {
 			for records := range fh.inCh {
+				atomic.AddUint64(&fh.recv, uint64(len(records)))
 				r, err := fh.flow.Process(records)
 				if err != nil {
 					fh.ctx.LogError("failed to handle flow", "error", err.Error())
 				}
 				if len(r) > 0 {
 					fh.outCh <- r
+					atomic.AddUint64(&fh.sent, uint64(len(r)))
+				} else if _, ok := fh.flow.(*fanOutFlow); ok {
+					atomic.AddUint64(&fh.sent, uint64(len(records)))
 				}
 			}
 			fh.closeWg.Done()
@@ -136,6 +146,7 @@ func (fh *FlowHandler) Stop() error {
 	if err := fh.flow.Close(); err != nil {
 		return err
 	}
+	fh.ctx.LogDebug("flow stopped", "name", fh.name, "recv", fh.recv, "sent", fh.sent)
 	return nil
 }
 
