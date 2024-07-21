@@ -35,7 +35,7 @@ func NewWriter(w io.Writer, cfg Config) (*Writer, error) {
 		Timezone:     cfg.GetString("tz", "Local"),
 		Compress:     cfg.GetString("compress", ""),
 		Fields:       cfg.GetStringArray("fields", []string{}),
-		raw:          &NopCloser{w},
+		raw:          NopCloser(w),
 	}
 
 	reg := GetEncoder(ret.Format)
@@ -52,7 +52,7 @@ func NewWriter(w io.Writer, cfg Config) (*Writer, error) {
 	}
 
 	if ret.raw == nil {
-		ret.raw = &NopCloser{io.Writer(os.Stdout)}
+		ret.raw = NopCloser(os.Stdout)
 	}
 
 	comppress := GetCompressor(ret.Compress)
@@ -90,10 +90,14 @@ func (rw *Writer) Close() error {
 	return nil
 }
 
-type NopCloser struct {
+func NopCloser(w io.Writer) io.WriteCloser {
+	return &nopCloser{w}
+}
+
+type nopCloser struct {
 	io.Writer
 }
 
-func (nc *NopCloser) Close() error {
+func (nc *nopCloser) Close() error {
 	return nil
 }
