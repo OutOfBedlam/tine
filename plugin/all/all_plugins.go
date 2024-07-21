@@ -27,6 +27,7 @@ import (
 	_ "github.com/OutOfBedlam/tine/plugin/outlets/http"
 	_ "github.com/OutOfBedlam/tine/plugin/outlets/image"
 	_ "github.com/OutOfBedlam/tine/plugin/outlets/mqtt"
+	_ "github.com/OutOfBedlam/tine/plugin/outlets/template"
 
 	// flows
 	_ "github.com/OutOfBedlam/tine/plugin/flows/base"
