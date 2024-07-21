@@ -29,10 +29,12 @@ type Pipeline struct {
 
 	setContentTypeFunc     SetContentTypeCallback
 	setContentEncodingFunc SetContentEncodingCallback
+	setContentLengthFunc   SetContentLengthCallback
 }
 
 type SetContentTypeCallback func(contentType string)
 type SetContentEncodingCallback func(contentEncoding string)
+type SetContentLengthCallback func(contentLength int)
 
 type Option func(*Pipeline) error
 
@@ -103,6 +105,13 @@ func WithSetContentEncodingFunc(fn SetContentEncodingCallback) Option {
 	}
 }
 
+func WithSetContentLengthFunc(fn SetContentLengthCallback) Option {
+	return func(p *Pipeline) error {
+		p.setContentLengthFunc = fn
+		return nil
+	}
+}
+
 func New(opts ...Option) (*Pipeline, error) {
 	p := &Pipeline{}
 	// load default config
@@ -137,7 +146,11 @@ func HttpHandleFunc(config string) http.HandlerFunc {
 			WithSetContentEncodingFunc(func(contentEncoding string) {
 				w.Header().Set("Content-Encoding", contentEncoding)
 			}),
+			WithSetContentLengthFunc(func(contentLength int) {
+				w.Header().Set("Content-Length", fmt.Sprintf("%d", contentLength))
+			}),
 		)
+		w.Header().Set("Connection", "Close")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

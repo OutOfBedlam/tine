@@ -70,6 +70,12 @@ func (ctx *Context) SetContentEncoding(contentEncoding string) {
 	}
 }
 
+func (ctx *Context) SetContentLength(contentLength int) {
+	if ctx.pipeline.setContentLengthFunc != nil && contentLength > 0 {
+		ctx.pipeline.setContentLengthFunc(contentLength)
+	}
+}
+
 func (ctx *Context) Done() <-chan struct{} {
 	return ctx.base.Done()
 }

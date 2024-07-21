@@ -232,23 +232,28 @@ func (iout *imageOutlet) writeImageField(field *engine.Field) error {
 	}
 
 write_image:
+	var data []byte
 	if srcImg == nil {
 		// no need to convert
-		writer.Write(bv.Data())
+		data = bv.Data()
 	} else {
+		buff := &bytes.Buffer{}
 		switch iout.dstContentType {
 		case "image/png":
-			png.Encode(writer, srcImg)
+			png.Encode(buff, srcImg)
 		case "image/jpeg":
-			jpeg.Encode(writer, srcImg, &jpeg.Options{Quality: iout.jpegQuality})
+			jpeg.Encode(buff, srcImg, &jpeg.Options{Quality: iout.jpegQuality})
 		case "image/gif":
-			gif.Encode(writer, srcImg, nil)
+			gif.Encode(buff, srcImg, nil)
 		case "image/bmp":
-			bmp.Encode(writer, srcImg)
+			bmp.Encode(buff, srcImg)
 		default:
 			iout.ctx.LogError(fmt.Sprintf("unsupported image format [%s]", iout.dstContentType))
 		}
+		data = buff.Bytes()
 	}
+	iout.ctx.SetContentLength(len(data))
+	writer.Write(data)
 
 	return nil
 }
