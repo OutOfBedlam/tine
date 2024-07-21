@@ -329,6 +329,8 @@ func (f *Field) ToString() *Field {
 		return NewStringField(f.Name, strconv.FormatFloat(f.Value.(float64), 'f', -1, 64))
 	case TIME:
 		return NewStringField(f.Name, f.Value.(time.Time).Format(time.RFC3339))
+	case BINARY:
+		return NewStringField(f.Name, string(f.Value.(*BinaryValue).data))
 	}
 	return nil
 }
@@ -748,40 +750,6 @@ func CopyField(name string, other *Field) *Field {
 	}
 }
 
-func Map2Records(prefix string, obj map[string]any) []Record {
-	ret := []Record{}
-	for k, v := range obj {
-		r := NewRecord()
-		subrecs := []Record{}
-		switch v := v.(type) {
-		case float64:
-			r = r.Append(NewFloatField(prefix+k, v))
-		case int:
-			r = r.Append(NewIntField(prefix+k, int64(v)))
-		case int64:
-			r = r.Append(NewIntField(prefix+k, v))
-		case string:
-			r = r.Append(NewStringField(prefix+k, v))
-		case bool:
-			r = r.Append(NewBoolField(prefix+k, v))
-		case time.Time:
-			r = r.Append(NewTimeField(prefix+k, v))
-		case []byte:
-			r = r.Append(NewBinaryField(prefix+k, NewBinaryValue(v)))
-		case map[string]any:
-			subrecs = append(subrecs, Map2Records(prefix+k+".", v)...)
-		case []any:
-			// TODO: support array
-			continue
-		default:
-			continue
-		}
-		ret = append(ret, r)
-		ret = append(ret, subrecs...)
-	}
-	return ret
-}
-
 type BinaryValue struct {
 	data   []byte
 	header http.Header
@@ -817,89 +785,4 @@ func (bv *BinaryValue) SetHeader(key, value string) {
 
 func (bv *BinaryValue) GetHeaderValues(key string) []string {
 	return bv.header.Values(key)
-}
-
-type Timeformatter struct {
-	format string
-	loc    *time.Location
-}
-
-func NewTimeformatter(format string) *Timeformatter {
-	return &Timeformatter{format: format, loc: time.Local}
-}
-
-func NewTimeformatterWithLocation(format string, tz *time.Location) *Timeformatter {
-	return &Timeformatter{format: format, loc: tz}
-}
-
-var DefaultTimeformatter = &Timeformatter{format: time.RFC3339, loc: time.Local}
-
-func (tf *Timeformatter) IsEpoch() bool {
-	switch tf.format {
-	case "ns", "us", "ms", "s":
-		return true
-	default:
-		return false
-	}
-}
-
-func (tf *Timeformatter) Epoch(t time.Time) int64 {
-	switch tf.format {
-	case "ns":
-		return t.UnixNano()
-	case "us":
-		return t.UnixNano() / 1e3
-	case "ms":
-		return t.UnixNano() / 1e6
-	case "s":
-		return t.Unix()
-	default:
-		return t.Unix()
-	}
-}
-
-func (tf *Timeformatter) Format(t time.Time) string {
-	switch tf.format {
-	case "ns":
-		return strconv.FormatInt(t.UnixNano(), 10)
-	case "us":
-		return strconv.FormatInt(t.UnixNano()/1e3, 10)
-	case "ms":
-		return strconv.FormatInt(t.UnixNano()/1e6, 10)
-	case "s":
-		return strconv.FormatInt(t.Unix(), 10)
-	default:
-		return t.In(tf.loc).Format(tf.format)
-	}
-}
-
-func (tf *Timeformatter) Parse(str string) (time.Time, error) {
-	switch tf.format {
-	case "ns":
-		ns, err := strconv.ParseInt(str, 10, 64)
-		if err != nil {
-			return time.Time{}, err
-		}
-		return time.Unix(0, ns), nil
-	case "us":
-		us, err := strconv.ParseInt(str, 10, 64)
-		if err != nil {
-			return time.Time{}, err
-		}
-		return time.Unix(0, us*1e3), nil
-	case "ms":
-		ms, err := strconv.ParseInt(str, 10, 64)
-		if err != nil {
-			return time.Time{}, err
-		}
-		return time.Unix(0, ms*1e6), nil
-	case "s":
-		s, err := strconv.ParseInt(str, 10, 64)
-		if err != nil {
-			return time.Time{}, err
-		}
-		return time.Unix(s, 0), nil
-	default:
-		return time.Parse(tf.format, str)
-	}
 }

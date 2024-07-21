@@ -82,10 +82,44 @@ func (hi *httpInlet) Pull() ([]engine.Record, error) {
 			slog.Warn("inlet.http", "status", rsp.StatusCode, "unmarshal error", err.Error())
 			return nil, err
 		}
-		ret := engine.Map2Records("http.", obj)
+		ret := Map2Records("http.", obj)
 		return ret, nil
 	} else {
 		slog.Warn("inlet.http", "status", rsp.StatusCode, "unsupported content-type", contentType)
 		return nil, nil
 	}
+}
+
+func Map2Records(prefix string, obj map[string]any) []engine.Record {
+	ret := []engine.Record{}
+	for k, v := range obj {
+		r := engine.NewRecord()
+		subrecs := []engine.Record{}
+		switch v := v.(type) {
+		case float64:
+			r = r.Append(engine.NewFloatField(prefix+k, v))
+		case int:
+			r = r.Append(engine.NewIntField(prefix+k, int64(v)))
+		case int64:
+			r = r.Append(engine.NewIntField(prefix+k, v))
+		case string:
+			r = r.Append(engine.NewStringField(prefix+k, v))
+		case bool:
+			r = r.Append(engine.NewBoolField(prefix+k, v))
+		case time.Time:
+			r = r.Append(engine.NewTimeField(prefix+k, v))
+		case []byte:
+			r = r.Append(engine.NewBinaryField(prefix+k, engine.NewBinaryValue(v)))
+		case map[string]any:
+			subrecs = append(subrecs, Map2Records(prefix+k+".", v)...)
+		case []any:
+			// TODO: support array
+			continue
+		default:
+			continue
+		}
+		ret = append(ret, r)
+		ret = append(ret, subrecs...)
+	}
+	return ret
 }

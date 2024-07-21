@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -35,6 +36,9 @@ func TestBoolFeild(t *testing.T) {
 
 	tval := f.ToTime()
 	require.Nil(t, tval)
+
+	Bval := f.ToBinary()
+	require.Nil(t, Bval)
 }
 
 func TestInt(t *testing.T) {
@@ -67,6 +71,9 @@ func TestInt(t *testing.T) {
 	require.Equal(t, TIME, tval.Type)
 	require.Equal(t, int64(42), tval.Value.(time.Time).Unix())
 	require.Equal(t, "integer", tval.Name)
+
+	Bval := f.ToBinary()
+	require.Nil(t, Bval)
 }
 
 func TestUint(t *testing.T) {
@@ -99,6 +106,9 @@ func TestUint(t *testing.T) {
 	require.Equal(t, TIME, tval.Type)
 	require.Equal(t, int64(42), tval.Value.(time.Time).Unix())
 	require.Equal(t, "unsigned", tval.Name)
+
+	Bval := f.ToBinary()
+	require.Nil(t, Bval)
 }
 
 func TestFloat(t *testing.T) {
@@ -131,6 +141,9 @@ func TestFloat(t *testing.T) {
 	require.Equal(t, TIME, tval.Type)
 	require.Equal(t, int64(42.42*1e9), tval.Value.(time.Time).UnixNano())
 	require.Equal(t, "float", tval.Name)
+
+	Bval := f.ToBinary()
+	require.Nil(t, Bval)
 }
 
 func TestString(t *testing.T) {
@@ -166,4 +179,41 @@ func TestString(t *testing.T) {
 	tval = f.ToTime()
 	require.Equal(t, TIME, tval.Type)
 	require.Equal(t, "2024-01-01T00:00:00Z", tval.Value.(time.Time).Format(time.RFC3339))
+
+	Bval := f.ToBinary()
+	require.Equal(t, BINARY, Bval.Type)
+	require.Equal(t, "2024-01-01T00:00:00Z", string(Bval.Value.(*BinaryValue).data))
+}
+
+func TestBinary(t *testing.T) {
+	bv := NewBinaryValue([]byte("binary"))
+	bv.SetHeader("Content-Type", "text/plain")
+	bv.SetHeader("Content-Length", fmt.Sprintf("%d", len("binary")))
+
+	require.Equal(t, "text/plain", bv.GetHeader("content-type"))
+	require.Equal(t, fmt.Sprintf("%d", len("binary")), bv.GetHeader("content-length"))
+
+	f := NewBinaryField("bin", bv)
+	require.Equal(t, BINARY, f.Type)
+	require.Equal(t, "binary", string(f.Value.(*BinaryValue).data))
+	require.Equal(t, "bin", f.Name)
+
+	bval := f.ToBool()
+	require.Nil(t, bval)
+
+	ival := f.ToInt()
+	require.Nil(t, ival)
+
+	uval := f.ToUint()
+	require.Nil(t, uval)
+
+	fval := f.ToFloat()
+	require.Nil(t, fval)
+
+	tval := f.ToTime()
+	require.Nil(t, tval)
+
+	str := f.ToString()
+	require.Equal(t, STRING, str.Type)
+	require.Equal(t, "binary", str.Value)
 }
