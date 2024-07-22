@@ -1,0 +1,2 @@
+The plugins below this directory, requires external dependencies on BUILD time (not runtime).
+For example, plugin `./rrd` requires `librrd-dev` install in advance and build tag as `go build -tags rrd`.

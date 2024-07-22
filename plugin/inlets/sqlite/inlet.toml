@@ -1,0 +1,24 @@
+[[inlets.sqlite]]
+    path = ":memory:?mode=memory&cache=shared"
+    inits = [
+        """
+            CREATE TABLE IF NOT EXISTS load (
+                ts INTEGER PRIMARY KEY,
+                load1 REAL,
+                load5 REAL,
+                load15 REAL
+            )
+        """,
+    ]
+    actions = [
+        [
+            """ SELECT
+                    ts, load1, load5, load15
+                FROM
+                    load
+                ORDER BY
+                    ts
+            """,
+        ],
+    ]
+    
