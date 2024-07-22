@@ -1,0 +1,25 @@
+## Use flows.flatten to flatten to normalize records
+## into a tuple of (_ts, name, value)
+#[[flows.flatten]]
+
+[[outlets.sqlite]]
+    path = "file::memory:?mode=memory&cache=shared"
+    inits = [
+        """
+            CREATE TABLE IF NOT EXISTS metrics (
+                time  INTEGER,
+                name  TEXT,
+                value REAL,
+                UNIQUE(time, name)
+            )
+        """,
+    ]
+    actions = [
+        [
+            """ INSERT INTO metrics (time, name, value)
+                VALUES (?, ?, ?)
+            """, 
+            "_ts", "name", "value"
+        ],
+    ]
+    

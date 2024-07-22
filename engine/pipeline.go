@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"bytes"
 	_ "embed"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"path/filepath"
 	"sync"
 	"sync/atomic"
+	"text/template"
 
 	"github.com/BurntSushi/toml"
 	"github.com/OutOfBedlam/tine/util"
@@ -18,14 +20,15 @@ import (
 
 type Pipeline struct {
 	PipelineConfig
-	inputs       []*InletHandler
-	outputs      []*OutletHandler
-	flows        []*FlowHandler
-	ctx          *Context
-	logger       *slog.Logger
-	plumbingOnce sync.Once
-	stopOnce     sync.Once
-	rawWriter    io.Writer
+	inputs    []*InletHandler
+	outputs   []*OutletHandler
+	flows     []*FlowHandler
+	ctx       *Context
+	logger    *slog.Logger
+	buildOnce sync.Once
+	startOnce sync.Once
+	stopOnce  sync.Once
+	rawWriter io.Writer
 
 	setContentTypeFunc     SetContentTypeCallback
 	setContentEncodingFunc SetContentEncodingCallback
@@ -40,6 +43,7 @@ type Option func(*Pipeline) error
 
 var pipelineSerial int64
 
+// WithConfig loads a TOML configuration string into a PipelineConfig struct
 func WithConfig(conf string) Option {
 	return func(p *Pipeline) error {
 		if err := LoadConfig(conf, &p.PipelineConfig); err != nil {
@@ -53,6 +57,7 @@ func WithConfig(conf string) Option {
 	}
 }
 
+// WithConfigFile loads a TOML configuration file into a PipelineConfig struct
 func WithConfigFile(path string) Option {
 	return func(p *Pipeline) error {
 		if content, err := os.ReadFile(path); err != nil {
@@ -70,6 +75,39 @@ func WithConfigFile(path string) Option {
 	}
 }
 
+// WithConfigTemplate loads a TOML configuration template into a PipelineConfig struct
+func WithConfigTemplate(configTemplate string, data map[string][]string) Option {
+	return func(p *Pipeline) error {
+		params := map[string]any{}
+		for k, v := range data {
+			if len(v) == 0 {
+				params[k] = ""
+			} else if len(v) == 1 {
+				params[k] = v[0]
+			} else {
+				params[k] = v
+			}
+		}
+		tmpl, err := template.New("pipeline").Parse(configTemplate)
+		if err != nil {
+			return err
+		}
+		buff := &bytes.Buffer{}
+		if err := tmpl.Execute(buff, params); err != nil {
+			return err
+		}
+		if err := LoadConfig(buff.String(), &p.PipelineConfig); err != nil {
+			return err
+		}
+		if p.Name == "" {
+			serial := atomic.AddInt64(&pipelineSerial, 1)
+			p.Name = fmt.Sprintf("pipeline-%d", serial)
+		}
+		return nil
+	}
+}
+
+// WithName sets the name of the pipeline
 func WithName(name string) Option {
 	return func(p *Pipeline) error {
 		p.Name = name
@@ -77,6 +115,7 @@ func WithName(name string) Option {
 	}
 }
 
+// WithDefaults sets the default output writer for the pipeline
 func WithWriter(w io.Writer) Option {
 	return func(p *Pipeline) error {
 		p.rawWriter = w
@@ -84,6 +123,7 @@ func WithWriter(w io.Writer) Option {
 	}
 }
 
+// WithLogger sets the logger for the pipeline
 func WithLogger(logger *slog.Logger) Option {
 	return func(p *Pipeline) error {
 		p.logger = logger
@@ -91,6 +131,7 @@ func WithLogger(logger *slog.Logger) Option {
 	}
 }
 
+// WithSetContentTypeFunc sets the callback function to set the content type
 func WithSetContentTypeFunc(fn SetContentTypeCallback) Option {
 	return func(p *Pipeline) error {
 		p.setContentTypeFunc = fn
@@ -98,6 +139,7 @@ func WithSetContentTypeFunc(fn SetContentTypeCallback) Option {
 	}
 }
 
+// WithSetContentEncodingFunc sets the callback function to set the content encoding
 func WithSetContentEncodingFunc(fn SetContentEncodingCallback) Option {
 	return func(p *Pipeline) error {
 		p.setContentEncodingFunc = fn
@@ -105,6 +147,7 @@ func WithSetContentEncodingFunc(fn SetContentEncodingCallback) Option {
 	}
 }
 
+// WithSetContentLengthFunc sets the callback function to set the content length
 func WithSetContentLengthFunc(fn SetContentLengthCallback) Option {
 	return func(p *Pipeline) error {
 		p.setContentLengthFunc = fn
@@ -112,6 +155,7 @@ func WithSetContentLengthFunc(fn SetContentLengthCallback) Option {
 	}
 }
 
+// New creates a new pipeline with the given options
 func New(opts ...Option) (*Pipeline, error) {
 	p := &Pipeline{}
 	// load default config
@@ -135,10 +179,12 @@ func New(opts ...Option) (*Pipeline, error) {
 	return p, nil
 }
 
+// HttpHandleFunc is a convience function to create a http.HandlerFunc
+// from a pipeline configuration
 func HttpHandleFunc(config string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		p, err := New(
-			WithConfig(config),
+			WithConfigTemplate(config, r.URL.Query()),
 			WithWriter(w),
 			WithSetContentTypeFunc(func(contentType string) {
 				w.Header().Set("Content-Type", contentType)
@@ -172,10 +218,12 @@ func (p *Pipeline) logMsg(msg string) string {
 	}
 }
 
+// Context returns the context of the pipeline
 func (p *Pipeline) Context() *Context {
 	return p.ctx
 }
 
+// AddInlet adds an inlet to the pipeline
 func (p *Pipeline) AddInlet(name string, inlet Inlet) (*InletHandler, error) {
 	ret, err := NewInletHandler(p.ctx, name, inlet, p.flows[0].inCh)
 	if err != nil {
@@ -185,6 +233,7 @@ func (p *Pipeline) AddInlet(name string, inlet Inlet) (*InletHandler, error) {
 	return ret, nil
 }
 
+// AddOutlet adds an outlet to the pipeline
 func (p *Pipeline) AddOutlet(name string, outlet Outlet) (*OutletHandler, error) {
 	ret, err := NewOutletHandler(p.ctx, name, outlet)
 	if err != nil {
@@ -194,6 +243,7 @@ func (p *Pipeline) AddOutlet(name string, outlet Outlet) (*OutletHandler, error)
 	return ret, nil
 }
 
+// AddFlow adds a flow to the pipeline
 func (p *Pipeline) AddFlow(name string, flow Flow) (*FlowHandler, error) {
 	ret := NewFlowHandler(p.ctx, name, flow)
 	p.flows[len(p.flows)-1].Via(ret)
@@ -201,8 +251,9 @@ func (p *Pipeline) AddFlow(name string, flow Flow) (*FlowHandler, error) {
 	return ret, nil
 }
 
+// Build the pipeline, this will create all inlets, outlets and flows
 func (p *Pipeline) Build() (returnErr error) {
-	p.plumbingOnce.Do(func() {
+	p.buildOnce.Do(func() {
 		// inlets
 		for _, inletCfg := range p.Inlets {
 			if reg := GetInletRegistry(inletCfg.Plugin); reg != nil {
@@ -273,7 +324,15 @@ func (p *Pipeline) Start() {
 
 // Run the pipeline, this will start all inlets, outlets and flows
 // and wait until the pipeline is stopped
-func (p *Pipeline) Run() error {
+func (p *Pipeline) Run() (returnErr error) {
+	p.startOnce.Do(func() {
+		returnErr = p.run0()
+	})
+	return returnErr
+}
+
+// Do not call this method directly, use Run() and Start() instead
+func (p *Pipeline) run0() error {
 	// build pipeline
 	if err := p.Build(); err != nil {
 		p.ctx.LogError(p.logMsg("failed to build pipeline"), "error", err.Error())

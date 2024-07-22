@@ -153,9 +153,10 @@ func (f *Field) StringWithFormat(tf *Timeformatter, decimal int) string {
 }
 
 type Field struct {
-	Name  string `json:"name"`
-	Value any    `json:"value"`
-	Type  Type   `json:"-"`
+	Name   string `json:"name"`
+	Value  any    `json:"value"`
+	Type   Type   `json:"-"`
+	IsNull bool   `json:"null"`
 }
 
 func UnwrapFields(fields []*Field) []any {
@@ -171,6 +172,9 @@ func (f *Field) String() string {
 }
 
 func (f *Field) ToBool() *Field {
+	if f.IsNull {
+		return NewBoolFieldNull(f.Name)
+	}
 	if f.Type == BOOL {
 		return NewBoolField(f.Name, f.Value.(bool))
 	}
@@ -203,6 +207,9 @@ func (f *Field) GetBool() (bool, bool) {
 }
 
 func (f *Field) ToInt() *Field {
+	if f.IsNull {
+		return NewIntFieldNull(f.Name)
+	}
 	if f.Type == INT {
 		return NewIntField(f.Name, f.Value.(int64))
 	}
@@ -239,6 +246,9 @@ func (f *Field) GetInt() (int64, bool) {
 }
 
 func (f *Field) ToUint() *Field {
+	if f.IsNull {
+		return NewUintFieldNull(f.Name)
+	}
 	if f.Type == UINT {
 		return NewUintField(f.Name, f.Value.(uint64))
 	}
@@ -279,6 +289,9 @@ func (f *Field) GetUint() (uint64, bool) {
 }
 
 func (f *Field) ToFloat() *Field {
+	if f.IsNull {
+		return NewFloatFieldNull(f.Name)
+	}
 	if f.Type == FLOAT {
 		return NewFloatField(f.Name, f.Value.(float64))
 	}
@@ -315,6 +328,9 @@ func (f *Field) GetFloat() (float64, bool) {
 }
 
 func (f *Field) ToString() *Field {
+	if f.IsNull {
+		return NewStringFieldNull(f.Name)
+	}
 	if f.Type == STRING {
 		return NewStringField(f.Name, f.Value.(string))
 	}
@@ -347,6 +363,9 @@ func (f *Field) GetString() (string, bool) {
 }
 
 func (f *Field) ToTime() *Field {
+	if f.IsNull {
+		return NewTimeFieldNull(f.Name)
+	}
 	if f.Type == TIME {
 		return NewTimeField(f.Name, f.Value.(time.Time))
 	}
@@ -381,6 +400,9 @@ func (f *Field) GetTime() (time.Time, bool) {
 }
 
 func (f *Field) ToBinary() *Field {
+	if f.IsNull {
+		return NewBinaryFieldNull(f.Name)
+	}
 	switch f.Type {
 	case STRING:
 		return NewBinaryField(f.Name, NewBinaryValue([]byte(f.Value.(string))))
@@ -687,59 +709,59 @@ const (
 )
 
 func NewBoolField(name string, value bool) *Field {
-	return &Field{
-		Name:  name,
-		Value: value,
-		Type:  BOOL,
-	}
+	return &Field{Name: name, Value: value, Type: BOOL}
+}
+
+func NewBoolFieldNull(name string) *Field {
+	return &Field{Name: name, Value: false, Type: BOOL, IsNull: true}
 }
 
 func NewIntField(name string, value int64) *Field {
-	return &Field{
-		Name:  name,
-		Value: value,
-		Type:  INT,
-	}
+	return &Field{Name: name, Value: value, Type: INT}
+}
+
+func NewIntFieldNull(name string) *Field {
+	return &Field{Name: name, Value: int64(0), Type: INT, IsNull: true}
 }
 
 func NewUintField(name string, value uint64) *Field {
-	return &Field{
-		Name:  name,
-		Value: value,
-		Type:  UINT,
-	}
+	return &Field{Name: name, Value: value, Type: UINT}
+}
+
+func NewUintFieldNull(name string) *Field {
+	return &Field{Name: name, Value: uint64(0), Type: UINT, IsNull: true}
 }
 
 func NewFloatField(name string, value float64) *Field {
-	return &Field{
-		Name:  name,
-		Value: value,
-		Type:  FLOAT,
-	}
+	return &Field{Name: name, Value: value, Type: FLOAT}
+}
+
+func NewFloatFieldNull(name string) *Field {
+	return &Field{Name: name, Value: float64(0), Type: FLOAT, IsNull: true}
 }
 
 func NewStringField(name string, value string) *Field {
-	return &Field{
-		Name:  name,
-		Value: value,
-		Type:  STRING,
-	}
+	return &Field{Name: name, Value: value, Type: STRING}
+}
+
+func NewStringFieldNull(name string) *Field {
+	return &Field{Name: name, Value: "", Type: STRING, IsNull: true}
 }
 
 func NewTimeField(name string, value time.Time) *Field {
-	return &Field{
-		Name:  name,
-		Value: value,
-		Type:  TIME,
-	}
+	return &Field{Name: name, Value: value, Type: TIME}
+}
+
+func NewTimeFieldNull(name string) *Field {
+	return &Field{Name: name, Value: time.Time{}, Type: TIME, IsNull: true}
 }
 
 func NewBinaryField(name string, value *BinaryValue) *Field {
-	return &Field{
-		Name:  name,
-		Value: value,
-		Type:  BINARY,
-	}
+	return &Field{Name: name, Value: value, Type: BINARY}
+}
+
+func NewBinaryFieldNull(name string) *Field {
+	return &Field{Name: name, Value: NewBinaryValue(nil), Type: BINARY, IsNull: true}
 }
 
 func CopyField(name string, other *Field) *Field {

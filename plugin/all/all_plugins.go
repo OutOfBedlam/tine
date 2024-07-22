@@ -19,6 +19,7 @@ import (
 	_ "github.com/OutOfBedlam/tine/plugin/inlets/nats"
 	_ "github.com/OutOfBedlam/tine/plugin/inlets/psutil"
 	_ "github.com/OutOfBedlam/tine/plugin/inlets/screenshot"
+	_ "github.com/OutOfBedlam/tine/plugin/inlets/sqlite"
 	_ "github.com/OutOfBedlam/tine/plugin/inlets/syslog"
 
 	// outlets
@@ -27,10 +28,12 @@ import (
 	_ "github.com/OutOfBedlam/tine/plugin/outlets/http"
 	_ "github.com/OutOfBedlam/tine/plugin/outlets/image"
 	_ "github.com/OutOfBedlam/tine/plugin/outlets/mqtt"
+	_ "github.com/OutOfBedlam/tine/plugin/outlets/sqlite"
 	_ "github.com/OutOfBedlam/tine/plugin/outlets/template"
 
 	// flows
 	_ "github.com/OutOfBedlam/tine/plugin/flows/base"
+	_ "github.com/OutOfBedlam/tine/plugin/flows/ollama"
 )
 
 const A = ""

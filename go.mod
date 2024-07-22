@@ -13,6 +13,7 @@ require (
 	github.com/leodido/go-syslog/v4 v4.1.0
 	github.com/lmittmann/tint v1.0.4
 	github.com/magefile/mage v1.15.0
+	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/nats-io/nats-server/v2 v2.10.17
 	github.com/shirou/gopsutil/v4 v4.24.6
 	github.com/sleepinggenius2/gosmi v0.4.4

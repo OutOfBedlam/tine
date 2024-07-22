@@ -1,0 +1,4 @@
+[[flows.ollama]]
+    address = "http://127.0.0.1:11434"
+    model = "phi3"
+    timeout = "5s"
