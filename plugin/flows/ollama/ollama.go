@@ -2,12 +2,12 @@ package ollama
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 
@@ -30,6 +30,7 @@ type ollamaFlow struct {
 	addr   string
 	client *http.Client
 	model  string
+	stream bool
 }
 
 func (of *ollamaFlow) Open() error {
@@ -38,9 +39,10 @@ func (of *ollamaFlow) Open() error {
 		return fmt.Errorf("invalid address: %s", of.addr)
 	}
 	of.model = of.ctx.Config().GetString("model", "phi3")
-	timeout := of.ctx.Config().GetDuration("timeout", 5*time.Second)
+	of.stream = of.ctx.Config().GetBool("stream", false)
+	timeout := of.ctx.Config().GetDuration("timeout", 15*time.Second)
 
-	of.ctx.LogDebug("flows.ollama", "address", of.addr, "timeout", timeout)
+	of.ctx.LogDebug("flows.ollama", "address", of.addr, "timeout", timeout, "stream", of.stream)
 
 	transport := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
@@ -101,6 +103,7 @@ type GenerateOptions struct {
 }
 
 type GenerateResponse struct {
+	Error              string        `json:"error,omitempty"`
 	Model              string        `json:"model"`
 	Response           string        `json:"response"`
 	Done               bool          `json:"done"`
@@ -118,27 +121,68 @@ type GenerateResponse struct {
 func (of *ollamaFlow) Process(recs []engine.Record) ([]engine.Record, error) {
 	ret := make([]engine.Record, 0, len(recs))
 	for _, rec := range recs {
-		rt, err := of.process0(rec)
+		genReq := &GenerateRequest{Model: of.model, Stream: of.stream}
+		genReq.Prompt = "Where is the capital city of Australia?"
+
+		if promptField := rec.Field("prompt"); promptField != nil && !promptField.IsNull {
+			if v, ok := promptField.GetString(); ok {
+				genReq.Prompt = v
+			}
+		}
+		if imageField := rec.Field("image"); imageField != nil && !imageField.IsNull {
+			if imageField.Type == engine.STRING {
+				if v, ok := imageField.GetString(); ok {
+					genReq.Images = []string{v}
+				}
+			} else if imageField.Type == engine.BINARY {
+				if bv, ok := imageField.GetBinary(); ok {
+					genReq.Images = []string{base64.StdEncoding.EncodeToString(bv.Data())}
+				}
+			}
+		}
+		if modelField := rec.Field("model"); modelField != nil && !modelField.IsNull {
+			if v, ok := modelField.GetString(); ok {
+				genReq.Model = v
+			}
+		}
+		if streamField := rec.Field("stream"); streamField != nil && !streamField.IsNull {
+			if v, ok := streamField.GetBool(); ok {
+				genReq.Stream = v
+			}
+		}
+		if formatField := rec.Field("format"); formatField != nil && !formatField.IsNull {
+			if v, ok := formatField.GetString(); ok {
+				genReq.Format = v
+			}
+		}
+		of.ctx.LogDebug("flows.ollama", "model", genReq.Model, "prompt", genReq.Prompt, "stream", genReq.Stream, "images", len(genReq.Images))
+
+		rt, err := of.process0(genReq)
 		if err != nil {
 			return nil, err
 		}
+		reFields := make([]*engine.Field, 0, len(rec.Fields()))
+		for _, f := range rec.Fields() {
+			if f.Name == "prompt" || f.Name == "image" || f.Name == "model" || f.Name == "stream" || f.Name == "format" {
+				continue
+			}
+			reFields = append(reFields, f)
+		}
+		for i, rtRec := range rt {
+			rt[i] = rtRec.Append(reFields...)
+		}
+
 		ret = append(ret, rt...)
 	}
 	return ret, nil
 }
 
-func (of *ollamaFlow) process0(rec engine.Record) ([]engine.Record, error) {
+func (of *ollamaFlow) process0(genReq *GenerateRequest) ([]engine.Record, error) {
 	uri, err := url.JoinPath(of.addr, "/api/generate")
 	if err != nil {
 		return nil, err
 	}
 	successCode := 200
-	genReq := GenerateRequest{
-		Model:  "phi3",
-		Prompt: "Where is the capital city of Australia?",
-		//Format: "json",
-		Stream: true,
-	}
 	reqBody, err := json.Marshal(genReq)
 	if err != nil {
 		return nil, err
@@ -156,7 +200,8 @@ func (of *ollamaFlow) process0(rec engine.Record) ([]engine.Record, error) {
 
 	if rsp.StatusCode != successCode {
 		of.ctx.LogWarn("flows.ollama", "status", rsp.StatusCode, "body", string(body))
-		return nil, nil
+		rec := engine.NewRecord(engine.NewIntField("status", int64(rsp.StatusCode)))
+		return []engine.Record{rec}, nil
 	}
 
 	if contentType := rsp.Header.Get("Content-Type"); strings.Contains(contentType, "application/json") {
@@ -165,13 +210,11 @@ func (of *ollamaFlow) process0(rec engine.Record) ([]engine.Record, error) {
 			of.ctx.LogWarn("flows.ollama", "status", rsp.StatusCode, "unmarshal error", err.Error())
 			return nil, err
 		}
-		enc := json.NewEncoder(os.Stdout)
-		enc.SetIndent("", "  ")
-		enc.Encode(genRsp)
-		//of.ctx.LogInfo("flows.ollama", "response", genRsp)
+		rec := of.parseResponse(&genRsp)
 		return []engine.Record{rec}, nil
 	} else if strings.Contains(contentType, "application/x-ndjson") {
 		dec := json.NewDecoder(bytes.NewReader(body))
+		ret := make([]engine.Record, 0, 30)
 		for {
 			genRsp := GenerateResponse{}
 			if err := dec.Decode(&genRsp); err != nil {
@@ -181,14 +224,28 @@ func (of *ollamaFlow) process0(rec engine.Record) ([]engine.Record, error) {
 				of.ctx.LogWarn("flows.ollama", "status", rsp.StatusCode, "decode error", err.Error())
 				return nil, err
 			}
-			enc := json.NewEncoder(os.Stdout)
-			enc.SetIndent("", "  ")
-			enc.Encode(genRsp)
-			//of.ctx.LogInfo("flows.ollama", "response", genRsp)
+			rec := of.parseResponse(&genRsp)
+			ret = append(ret, rec)
 		}
-		return []engine.Record{rec}, nil
+		return ret, nil
 	} else {
 		of.ctx.LogWarn("flows.ollama", "status", rsp.StatusCode, "unsupported content-type", contentType)
 		return nil, nil
 	}
+}
+
+func (of *ollamaFlow) parseResponse(genRsp *GenerateResponse) engine.Record {
+	rec := engine.NewRecord()
+	if genRsp.Error != "" {
+		rec = rec.Append(engine.NewStringField("error", genRsp.Error))
+	} else {
+		rec = rec.Append(
+			engine.NewStringField("response", genRsp.Response),
+			engine.NewTimeField("created_at", genRsp.CreateAt),
+			engine.NewBoolField("done", genRsp.Done),
+			engine.NewStringField("done_reason", genRsp.DoneReason),
+			engine.NewIntField("total_duration", int64(genRsp.TotalDuration)),
+		)
+	}
+	return rec
 }

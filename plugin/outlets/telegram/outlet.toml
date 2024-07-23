@@ -1,0 +1,8 @@
+[[outlets.telegram]]
+    token = "<bot_token>"
+      ## If the input record has "chat_id" INT field it will be used,
+    ## otherwise the default chat_id will be used
+    ## If the input record doesn't have "chat_id" field,
+    ## and the default "chat_id" is not set, the record will be ignored
+    chat_id = "<chat_id>"
+    debug = false

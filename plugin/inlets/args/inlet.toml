@@ -1,0 +1,11 @@
+## Parse the command line arguments that following the `--` double dash.
+## It assumes all arguments after the `--` are formed as key=value pairs.
+## and pass them to the next plugin as a record
+## for example, if the command line arguments are `tine <any.toml> -- --key1 value1 --key2 value2`
+## then the record passed to the next plugin will be {key1="value1", key2="value2"}
+##
+## If value has prefix 'base64+' followed by 'http://', 'https://' and 'file://',
+## then the value is base64 encoded string of the content that are fetched from the URL or file.
+## If value has prefix 'binary+' followed by 'http://', 'https://' and 'file://',
+## then a BinaryField will be added instead of StringField within content that are fetched from the URL or file.
+[[inlets.args]]

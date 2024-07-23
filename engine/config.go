@@ -35,12 +35,23 @@ func LoadConfig(content string, cfg *PipelineConfig) error {
 	}
 	cfg.Defaults = vc.GetConfig("defaults", cfg.Defaults)
 
+	sameKeys := map[string]int{}
 	for _, keys := range meta.Keys() {
 		if len(keys) == 2 && (keys[0] == "inlets" || keys[0] == "outlets" || keys[0] == "flows") {
 			kind := keys[0]
 			pluginName := keys[1]
 			inletCfg := vc.GetConfig(kind, nil)
-			params := inletCfg.GetConfig(pluginName, nil)
+			paramsArr := inletCfg.GetConfigArray(pluginName, nil)
+			var params Config
+			if len(paramsArr) == 0 {
+				params = Config{}
+			} else if len(paramsArr) > 1 {
+				idx := sameKeys[pluginName]
+				params = paramsArr[idx]
+				sameKeys[pluginName]++
+			} else {
+				params = paramsArr[0]
+			}
 			flowCfgs := params.GetConfig("flows", nil)
 			params.Unset("flows")
 			flows := []FlowConfig{}

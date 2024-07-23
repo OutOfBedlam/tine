@@ -1,4 +1,13 @@
+## Ollama plugin configuration
+## It takes variables from the input record
+## The record should have the following keys:
+## "prompt" string field
+## "model" string field (e.g. "phi3")
+## "stream" boolean field (default is false)
 [[flows.ollama]]
+    ## Ollama server address
     address = "http://127.0.0.1:11434"
+    ## default model if the input record does not have the "model" field
     model = "phi3"
-    timeout = "5s"
+    ## timeout for waiting the response from the Ollama server
+    timeout = "15s"

@@ -1,7 +1,7 @@
 package sqlite
 
 import (
-	"github.com/OutOfBedlam/tine/driver/sqlite3"
+	"github.com/OutOfBedlam/tine/drivers/sqlite3"
 	"github.com/OutOfBedlam/tine/engine"
 )
 

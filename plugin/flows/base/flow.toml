@@ -31,6 +31,7 @@
     ## Rename fields in a record with the given prefix and suffix.
     prefix = "hello_"
     suffix = "_world"
+    replace = [ ["old_name", "new_name"], ["old_key", "new_key"] ]
 
 [[flows.flatten]]
     ## This flow flattens a record into multiple records,
