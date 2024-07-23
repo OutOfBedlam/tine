@@ -153,20 +153,28 @@ router.HandleFunc("GET /screenshot", engine.HttpHandleFunc(screenshotPipeline))
 http.ListenAndServe(":8080", router)
 ```
 
-## Examples
+## Examples & recipes
 
 - See more [examples](./example/).
 
 ## Plugin system
 
-### Format plugins
+**Inbound**
 
-|  Name       |    Description |
-|:------------|:---------------|
-| `csv`       | [csv](./plugin/codec/csv) encoder |
-| `json`      | [json](./plugin/codec/json) encoder |
+`data -> [inlet] -> [decompress] -> [decoder] -> records`
 
-### Compressor plugins
+**Outbound**
+
+`records -> [encoder] -> [compress] -> [outlet] -> data`
+
+### Codec
+
+|  Name       |    Description                      |
+|:------------|:------------------------------------|
+| `csv`       | [csv](./plugin/codec/csv) codec     |
+| `json`      | [json](./plugin/codec/json) encoder only |
+
+### Compressor
 
 |  Name                           |    Description |
 |:--------------------------------|:---------------|
@@ -174,7 +182,55 @@ http.ListenAndServe(":8080", router)
 | `snappy`                        | [snappy](./plugin/codec/snappy) encoder |
 
 
-### List plugins
+### Inlets
+
+|  Name        |    Description                             |
+|:-------------|:-------------------------------------------|
+| `args`       | Generates a record from os.Args            |
+| `exec`       | Execute external commands and reads stdout |
+| `file`       | Read a file                                |
+| `http`       | Retrieve from a http end point             |
+| `cpu`        | CPU usage percent                          |
+| `load`       | System load                                |
+| `mem`        | System memory usage percent                |
+| `disk`       | Disk usage percent                         |
+| `diskio`     | Disk IO stat                               |
+| `net`        | Network traffic stat                       |
+| `sensors`    | System sensors                             |
+| `host`       | Host stat                                  |
+| `screenshot` | Take screenshot of desktop                 |
+| `sqlite`     | sqlite query                               |
+| `syslog`     | Receive rsyslog messages via network       |
+| `telegram`   | Receive messages via Telegram              |
+| `nats`       | NATS server stat                           |
+
+### Outlets
+
+|  Name        |    Description                             |
+|:-------------|:-------------------------------------------|
+| `excel`      | Write am excel file                        |
+| `file`       | Write to a file                            |
+| `http`       | Post data to http endpoint                 |
+| `image`      | Save image files                           |
+| `sqlite`     | sqlite                                     |
+| `template`   | Apply template and write to a file         |
+| `telegram`   | Send message via Telegram                  |
+| `mqtt`       | Publish to MQTT broker                     |
+
+### Flows
+
+|  Name          |    Description                             |
+|:---------------|:-------------------------------------------|
+| set_field_name | Manipulate field name of records           |
+| set_field      | Forcely set a field                        |
+| fan-in         | Aggregate messages from multiple sources   |
+| fan-out        | Distribute messages to multiple sinks      |
+| merge          | Merge multiple records into a wide record  |
+| flatten        | Split a record into multiple records       |
+| damper         | Combine multiple records                   |
+| dump           | Log print records for debugging            |
+
+### Show plugin list
 
 ```sh
 $ tine --list

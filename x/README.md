@@ -1,2 +1,2 @@
-The plugins below this directory, requires external dependencies on BUILD time (not runtime).
-For example, plugin `./rrd` requires `librrd-dev` install in advance and build tag as `go build -tags rrd`.
+The plugins below this directory, requires external dependencies on BUILD time (or runtime).
+For instance, the `./rrd` plugin requires the `go build -tags rrd` build tag and relies on `librrd-dev` for building and running.
