@@ -1,0 +1,4 @@
+[[inlets.telegram]]
+    token = "<bot_token>"
+    debug = false
+    timeout = "3s"

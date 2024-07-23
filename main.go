@@ -59,12 +59,15 @@ func main() {
 	}
 
 	pipelineConfigs := []string{}
-	for _, pc := range flag.Args() {
-		if _, err := os.Stat(pc); err != nil {
-			fmt.Println("pipeline file not found:", pc)
+	for _, arg := range flag.Args() {
+		if arg == "--" {
+			break
+		}
+		if _, err := os.Stat(arg); err != nil {
+			fmt.Println("pipeline file not found:", arg)
 			os.Exit(1)
 		}
-		pipelineConfigs = append(pipelineConfigs, pc)
+		pipelineConfigs = append(pipelineConfigs, arg)
 	}
 
 	if len(pipelineConfigs) == 0 {

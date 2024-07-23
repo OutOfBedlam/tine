@@ -6,6 +6,7 @@ require (
 	github.com/BurntSushi/toml v1.4.0
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/expr-lang/expr v1.16.9
+	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/golang/snappy v0.0.4
 	github.com/google/cel-go v0.20.1
 	github.com/gosnmp/gosnmp v1.37.0

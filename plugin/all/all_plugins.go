@@ -13,6 +13,7 @@ import (
 	_ "github.com/OutOfBedlam/tine/plugin/codec/snappy"
 
 	// inlets
+	_ "github.com/OutOfBedlam/tine/plugin/inlets/args"
 	_ "github.com/OutOfBedlam/tine/plugin/inlets/exec"
 	_ "github.com/OutOfBedlam/tine/plugin/inlets/file"
 	_ "github.com/OutOfBedlam/tine/plugin/inlets/http"
@@ -21,6 +22,7 @@ import (
 	_ "github.com/OutOfBedlam/tine/plugin/inlets/screenshot"
 	_ "github.com/OutOfBedlam/tine/plugin/inlets/sqlite"
 	_ "github.com/OutOfBedlam/tine/plugin/inlets/syslog"
+	_ "github.com/OutOfBedlam/tine/plugin/inlets/telegram"
 
 	// outlets
 	_ "github.com/OutOfBedlam/tine/plugin/outlets/excel"
@@ -29,6 +31,7 @@ import (
 	_ "github.com/OutOfBedlam/tine/plugin/outlets/image"
 	_ "github.com/OutOfBedlam/tine/plugin/outlets/mqtt"
 	_ "github.com/OutOfBedlam/tine/plugin/outlets/sqlite"
+	_ "github.com/OutOfBedlam/tine/plugin/outlets/telegram"
 	_ "github.com/OutOfBedlam/tine/plugin/outlets/template"
 
 	// flows
