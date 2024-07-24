@@ -47,6 +47,22 @@ It generates CPU usage in CSV format which is default format of 'outlets.file'.
 1721635305,cpu,2.084201750601381
 ```
 
+And change output format to "json" from "csv".
+
+```toml
+## ..omit... ##
+[[outlets.file]]
+    path  = "-"
+    format = "json"
+```
+
+```json
+[{"_in":"cpu","_ts":1721780188,"total_percent":0.9166666666362681}]
+[{"_in":"cpu","_ts":1721780191,"total_percent":1.0403662089355488}]
+[{"_in":"cpu","_ts":1721780194,"total_percent":0.2507312996272184}]
+[{"_in":"cpu","_ts":1721780197,"total_percent":1.2093411175800368}]
+```
+
 ### Shebang
 
 1. Save this file as `load.toml`
@@ -72,7 +88,7 @@ chmod +x load.toml
 3. Run
 
 ```sh
-$ ./load.tml
+$ ./load.toml
 
 1721635438,load,0.03,0.08
 1721635441,load,0.03,0.08

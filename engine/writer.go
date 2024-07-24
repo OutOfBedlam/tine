@@ -64,13 +64,12 @@ func NewWriter(w io.Writer, cfg Config) (*Writer, error) {
 	}
 
 	ret.encoder = reg.Factory(EncoderConfig{
-		Writer:        ret.raw,
-		Subformat:     ret.Subformat,
-		Indent:        ret.OutputIndent,
-		Prefix:        ret.OutputPrefix,
-		Timeformatter: timeformatter,
-		Fields:        ret.Fields,
-		Decimal:       ret.Decimal,
+		Writer:       ret.raw,
+		Subformat:    ret.Subformat,
+		Indent:       ret.OutputIndent,
+		Prefix:       ret.OutputPrefix,
+		Fields:       ret.Fields,
+		FormatOption: FormatOption{Timeformat: timeformatter, Decimal: ret.Decimal},
 	})
 	ret.ContentType = reg.ContentType
 	if ret.ContentType == "" {

@@ -51,7 +51,7 @@ func ExprPredicate(code string) (engine.Predicate, error) {
 	// compile translated code
 	env := map[string]any{}
 	for _, rf := range referedFiedls {
-		env["_"+rf] = (*engine.Field)(nil)
+		env["_"+rf] = (*exprField)(nil)
 	}
 
 	prog, err := goexpr.Compile(ret.translatedCode, goexpr.Env(env), goexpr.AsBool())
@@ -71,6 +71,13 @@ type exprPredicate struct {
 	lastErr        error
 }
 
+type exprField struct {
+	Name   string
+	Type   string
+	IsNull bool
+	Value  any
+}
+
 func (ep *exprPredicate) Apply(record engine.Record) bool {
 	env := map[string]any{}
 	nonexists := []string{}
@@ -80,7 +87,13 @@ func (ep *exprPredicate) Apply(record engine.Record) bool {
 			nonexists = append(nonexists, rf)
 			continue
 		}
-		env["_"+rf] = f
+		ef := &exprField{
+			Name:   f.Name,
+			Type:   f.Type().String(),
+			IsNull: f.IsNull(),
+			Value:  f.Value.Raw(),
+		}
+		env["_"+rf] = ef
 	}
 	if len(nonexists) > 0 {
 		// TODO: If the record does not have the field, should we return false or error?

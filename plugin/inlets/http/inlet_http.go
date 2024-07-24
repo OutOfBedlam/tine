@@ -109,7 +109,7 @@ func Map2Records(prefix string, obj map[string]any) []engine.Record {
 		case time.Time:
 			r = r.Append(engine.NewTimeField(prefix+k, v))
 		case []byte:
-			r = r.Append(engine.NewBinaryField(prefix+k, engine.NewBinaryValue(v)))
+			r = r.Append(engine.NewBinaryField(prefix+k, v))
 		case map[string]any:
 			subrecs = append(subrecs, Map2Records(prefix+k+".", v)...)
 		case []any:

@@ -1,14 +1,10 @@
 package engine
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
-
-	"github.com/OutOfBedlam/tine/util"
 )
 
 type OpenCloser interface {
@@ -129,682 +125,268 @@ func (r sliceRecord) Names() []string {
 	return ret
 }
 
-func (f *Field) StringWithFormat(tf *Timeformatter, decimal int) string {
-	var strVal string
-	switch f.Type {
-	case BOOL:
-		strVal = strconv.FormatBool(f.Value.(bool))
-	case INT:
-		strVal = strconv.FormatInt(f.Value.(int64), 10)
-	case UINT:
-		strVal = strconv.FormatUint(f.Value.(uint64), 10)
-	case FLOAT:
-		strVal = strconv.FormatFloat(f.Value.(float64), 'f', decimal, 64)
-	case STRING:
-		strVal = f.Value.(string)
-	case TIME:
-		strVal = tf.Format(f.Value.(time.Time))
-	case BINARY:
-		strVal = fmt.Sprintf("BIN(%s)", util.FormatFileSize(f.Value.(*BinaryValue).Len()))
-	default:
-		panic("unsupported type-" + string(f.Type))
-	}
-	return strVal
-}
-
 type Field struct {
-	Name   string `json:"name"`
-	Value  any    `json:"value"`
-	Type   Type   `json:"-"`
-	IsNull bool   `json:"null"`
+	Name  string              `json:"name"`
+	Value *Value              `json:"value"`
+	Tags  map[string][]string `json:"tags,omitempty"`
 }
 
-func UnwrapFields(fields []*Field) []any {
+func (f *Field) Type() Type {
+	return f.Value.kind
+}
+
+func (f *Field) IsNull() bool {
+	return f.Value.isNull
+}
+
+// Clone returns a deep copy of the field
+func (v *Field) Clone() *Field {
+	ret := &Field{Name: v.Name, Value: v.Value.Clone()}
+	if v.Tags != nil {
+		ret.Tags = make(map[string][]string)
+		for k, v := range v.Tags {
+			ret.Tags[k] = append([]string(nil), v...)
+		}
+	}
+	return ret
+}
+
+// Copy returns a shallow copy of the field with a new name
+func (v *Field) Copy(newName string) *Field {
+	return &Field{
+		Name:  newName,
+		Value: v.Value,
+		Tags:  v.Tags,
+	}
+}
+
+func (v *Field) AddTag(key, value string) {
+	if v.Tags == nil {
+		v.Tags = make(map[string][]string)
+	}
+	http.Header(v.Tags).Add(key, value)
+}
+
+func (v *Field) DelTag(key string) {
+	if v.Tags == nil {
+		return
+	}
+	http.Header(v.Tags).Del(key)
+}
+
+func (v *Field) GetTag(key string) string {
+	if v.Tags == nil {
+		return ""
+	}
+	return http.Header(v.Tags).Get(key)
+}
+
+func (v *Field) SetTag(key, value string) {
+	if v.Tags == nil {
+		v.Tags = make(map[string][]string)
+	}
+	http.Header(v.Tags).Set(key, value)
+}
+
+func (v *Field) GetTagValues(key string) []string {
+	if v.Tags == nil {
+		return nil
+	}
+	return http.Header(v.Tags).Values(key)
+}
+
+func (v *Field) TagNames() []string {
+	if v.Tags == nil {
+		return nil
+	}
+	headers := make([]string, 0, len(v.Tags))
+	for key := range v.Tags {
+		headers = append(headers, key)
+	}
+	return headers
+}
+
+func UnboxFields(fields []*Field) []any {
 	ret := make([]any, len(fields))
 	for i, f := range fields {
-		ret[i] = f.Value
+		ret[i] = f.Value.raw
 	}
 	return ret
 }
 
 func (f *Field) String() string {
-	return f.Name + ":" + fmt.Sprintf("%s(%v)", string(f.Type), f.Value)
+	return fmt.Sprintf("%s:%s(%v)", f.Name, string(f.Value.kind), f.Value.raw)
 }
 
-func (f *Field) ToBool() *Field {
-	if f.IsNull {
-		return NewBoolFieldNull(f.Name)
-	}
-	if f.Type == BOOL {
-		return NewBoolField(f.Name, f.Value.(bool))
-	}
-	switch f.Type {
-	case INT:
-		return NewBoolField(f.Name, f.Value.(int64) != 0)
-	case UINT:
-		return NewBoolField(f.Name, f.Value.(uint64) != 0)
-	case FLOAT:
-		return NewBoolField(f.Name, f.Value.(float64) != 0)
-	case STRING:
-		if v, err := strconv.ParseBool(f.Value.(string)); err == nil {
-			return NewBoolField(f.Name, v)
-		}
-	case TIME:
-		return NewBoolField(f.Name, !f.Value.(time.Time).IsZero())
-	}
-	return nil
-}
-
-func (f *Field) GetBool() (bool, bool) {
-	if f.Type == BOOL {
-		return f.Value.(bool), true
-	}
-	if b := f.ToBool(); b == nil {
-		return false, false
+func (f *Field) BoolField() *Field {
+	if v, ok := f.Value.Bool(); ok {
+		return NewBoolField(f.Name, v)
 	} else {
-		return b.Value.(bool), true
-	}
-}
-
-func (f *Field) ToInt() *Field {
-	if f.IsNull {
-		return NewIntFieldNull(f.Name)
-	}
-	if f.Type == INT {
-		return NewIntField(f.Name, f.Value.(int64))
-	}
-	switch f.Type {
-	case BOOL:
-		if f.Value.(bool) {
-			return NewIntField(f.Name, 1)
-		} else {
-			return NewIntField(f.Name, 0)
-		}
-	case UINT:
-		return NewIntField(f.Name, int64(f.Value.(uint64)))
-	case FLOAT:
-		return NewIntField(f.Name, int64(f.Value.(float64)))
-	case STRING:
-		if v, err := strconv.ParseInt(f.Value.(string), 10, 64); err == nil {
-			return NewIntField(f.Name, v)
-		}
-	case TIME:
-		return NewIntField(f.Name, f.Value.(time.Time).Unix())
-	}
-	return nil
-}
-
-func (f *Field) GetInt() (int64, bool) {
-	if f.Type == INT {
-		return f.Value.(int64), true
-	}
-	if i := f.ToInt(); i == nil {
-		return 0, false
-	} else {
-		return i.Value.(int64), true
-	}
-}
-
-func (f *Field) ToUint() *Field {
-	if f.IsNull {
-		return NewUintFieldNull(f.Name)
-	}
-	if f.Type == UINT {
-		return NewUintField(f.Name, f.Value.(uint64))
-	}
-	switch f.Type {
-	case BOOL:
-		if f.Value.(bool) {
-			return NewUintField(f.Name, 1)
-		} else {
-			return NewUintField(f.Name, 0)
-		}
-	case INT:
-		if f.Value.(int64) >= 0 {
-			return NewUintField(f.Name, uint64(f.Value.(int64)))
-		}
-	case FLOAT:
-		if f.Value.(float64) >= 0 {
-			return NewUintField(f.Name, uint64(f.Value.(float64)))
-		}
-	case STRING:
-		if v, err := strconv.ParseUint(f.Value.(string), 10, 64); err == nil {
-			return NewUintField(f.Name, v)
-		}
-	case TIME:
-		return NewUintField(f.Name, uint64(f.Value.(time.Time).Unix()))
-	}
-	return nil
-}
-
-func (f *Field) GetUint() (uint64, bool) {
-	if f.Type == UINT {
-		return f.Value.(uint64), true
-	}
-	if u := f.ToUint(); u == nil {
-		return 0, false
-	} else {
-		return u.Value.(uint64), true
-	}
-}
-
-func (f *Field) ToFloat() *Field {
-	if f.IsNull {
-		return NewFloatFieldNull(f.Name)
-	}
-	if f.Type == FLOAT {
-		return NewFloatField(f.Name, f.Value.(float64))
-	}
-	switch f.Type {
-	case BOOL:
-		if f.Value.(bool) {
-			return NewFloatField(f.Name, 1)
-		}
-		return NewFloatField(f.Name, 0)
-	case INT:
-		return NewFloatField(f.Name, float64(f.Value.(int64)))
-	case UINT:
-		return NewFloatField(f.Name, float64(f.Value.(uint64)))
-	case STRING:
-		v, err := strconv.ParseFloat(f.Value.(string), 64)
-		if err == nil {
-			return NewFloatField(f.Name, v)
-		}
-	case TIME:
-		return NewFloatField(f.Name, float64(f.Value.(time.Time).Unix()))
-	}
-	return nil
-}
-
-func (f *Field) GetFloat() (float64, bool) {
-	if f.Type == FLOAT {
-		return f.Value.(float64), true
-	}
-	if fl := f.ToFloat(); fl == nil {
-		return 0, false
-	} else {
-		return fl.Value.(float64), true
-	}
-}
-
-func (f *Field) ToString() *Field {
-	if f.IsNull {
-		return NewStringFieldNull(f.Name)
-	}
-	if f.Type == STRING {
-		return NewStringField(f.Name, f.Value.(string))
-	}
-	switch f.Type {
-	case BOOL:
-		return NewStringField(f.Name, strconv.FormatBool(f.Value.(bool)))
-	case INT:
-		return NewStringField(f.Name, strconv.FormatInt(f.Value.(int64), 10))
-	case UINT:
-		return NewStringField(f.Name, strconv.FormatUint(f.Value.(uint64), 10))
-	case FLOAT:
-		return NewStringField(f.Name, strconv.FormatFloat(f.Value.(float64), 'f', -1, 64))
-	case TIME:
-		return NewStringField(f.Name, f.Value.(time.Time).Format(time.RFC3339))
-	case BINARY:
-		return NewStringField(f.Name, string(f.Value.(*BinaryValue).data))
-	}
-	return nil
-}
-
-func (f *Field) GetString() (string, bool) {
-	if f.Type == STRING {
-		return f.Value.(string), true
-	}
-	if s := f.ToString(); s == nil {
-		return "", false
-	} else {
-		return s.Value.(string), true
-	}
-}
-
-func (f *Field) ToTime() *Field {
-	if f.IsNull {
-		return NewTimeFieldNull(f.Name)
-	}
-	if f.Type == TIME {
-		return NewTimeField(f.Name, f.Value.(time.Time))
-	}
-	switch f.Type {
-	case STRING:
-		if t, err := time.Parse(time.RFC3339, f.Value.(string)); err == nil {
-			return NewTimeField(f.Name, t)
-		}
-	case INT:
-		return NewTimeField(f.Name, time.Unix(f.Value.(int64), 0))
-	case UINT:
-		return NewTimeField(f.Name, time.Unix(int64(f.Value.(uint64)), 0))
-	case FLOAT:
-		epoch := int64(f.Value.(float64))
-		fract := int64((f.Value.(float64) - float64(epoch)) * 1e9)
-		return NewTimeField(f.Name, time.Unix(epoch, fract))
-	case BOOL:
 		return nil
 	}
-	return nil
 }
 
-func (f *Field) GetTime() (time.Time, bool) {
-	if f.Type == TIME {
-		return f.Value.(time.Time), true
-	}
-	if t := f.ToTime(); t == nil {
-		return time.Time{}, false
+func (f *Field) IntField() *Field {
+	if v, ok := f.Value.Int64(); ok {
+		return NewIntField(f.Name, v)
 	} else {
-		return t.Value.(time.Time), true
+		return nil
 	}
 }
 
-func (f *Field) ToBinary() *Field {
-	if f.IsNull {
-		return NewBinaryFieldNull(f.Name)
-	}
-	switch f.Type {
-	case STRING:
-		return NewBinaryField(f.Name, NewBinaryValue([]byte(f.Value.(string))))
-	case BINARY:
-		return NewBinaryField(f.Name, f.Value.(*BinaryValue))
-	}
-	return nil
-}
-
-func (f *Field) GetBinary() (*BinaryValue, bool) {
-	if f.Type == BINARY {
-		return f.Value.(*BinaryValue), true
-	}
-	if b := f.ToBinary(); b == nil {
-		return nil, false
+func (f *Field) UintField() *Field {
+	if v, ok := f.Value.Uint64(); ok {
+		return NewUintField(f.Name, v)
 	} else {
-		return b.Value.(*BinaryValue), true
+		return nil
 	}
+}
 
+func (f *Field) FloatField() *Field {
+	if v, ok := f.Value.Float64(); ok {
+		return NewFloatField(f.Name, v)
+	} else {
+		return nil
+	}
+}
+
+func (f *Field) StringField() *Field {
+	if v, ok := f.Value.String(); ok {
+		return NewStringField(f.Name, v)
+	} else {
+		return nil
+	}
+}
+
+func (f *Field) TimeField() *Field {
+	if v, ok := f.Value.Time(); ok {
+		return NewTimeField(f.Name, v)
+	} else {
+		return nil
+	}
+}
+
+func (f *Field) BinaryField() *Field {
+	if v, ok := f.Value.Bytes(); ok {
+		return NewBinaryField(f.Name, v)
+	} else {
+		return nil
+	}
 }
 
 func (f *Field) Convert(to Type) *Field {
-	if f.Type == to {
+	if f.Type() == to {
 		return f
 	}
 	switch to {
 	case BOOL:
-		return f.ToBool()
+		return f.BoolField()
 	case INT:
-		return f.ToInt()
+		return f.IntField()
 	case UINT:
-		return f.ToUint()
+		return f.UintField()
 	case FLOAT:
-		return f.ToFloat()
+		return f.FloatField()
 	case STRING:
-		return f.ToString()
+		return f.StringField()
 	case TIME:
-		return f.ToTime()
+		return f.TimeField()
 	case BINARY:
-		return f.ToBinary()
+		return f.BinaryField()
 	}
 	return nil
 }
 
-// Compare this field with other primitive type
-func (f *Field) Eq(other any) bool {
-	if other == nil {
-		return false
-	}
-	switch f.Type {
-	case BOOL:
-		switch o := other.(type) {
-		case bool:
-			return f.Value.(bool) == o
-		}
-	case INT:
-		switch o := other.(type) {
-		case int:
-			return f.Value.(int64) == int64(o)
-		case int64:
-			return f.Value.(int64) == o
-		case float32:
-			return f.Value.(int64) == int64(o)
-		case float64:
-			return f.Value.(int64) == int64(o)
-		}
-	case UINT:
-		switch o := other.(type) {
-		case int:
-			return f.Value.(uint64) == uint64(o)
-		case int64:
-			return f.Value.(uint64) == uint64(o)
-		case uint:
-			return f.Value.(uint64) == uint64(o)
-		case uint64:
-			return f.Value.(uint64) == o
-		case float32:
-			return f.Value.(uint64) == uint64(o)
-		case float64:
-			return f.Value.(uint64) == uint64(o)
-		}
-	case FLOAT:
-		switch o := other.(type) {
-		case float64:
-			return f.Value.(float64) == o
-		case int:
-			return f.Value.(float64) == float64(o)
-		case int64:
-			return f.Value.(float64) == float64(o)
-		}
-	case STRING:
-		switch o := other.(type) {
-		case string:
-			return f.Value.(string) == o
-		}
-	case TIME:
-		switch o := other.(type) {
-		case time.Time:
-			return f.Value.(time.Time).Equal(o)
-		}
-	case BINARY:
-		switch o := other.(type) {
-		case *BinaryValue:
-			return bytes.Equal(f.Value.(*BinaryValue).data, o.data)
-		}
-	}
-	return false
-}
-
-func (f *Field) Gt(other any) bool {
-	if other == nil {
-		return false
-	}
-	switch f.Type {
-	case BOOL:
-		switch o := other.(type) {
-		case bool:
-			return f.Value.(bool) && !o
-		}
-	case INT:
-		switch o := other.(type) {
-		case int:
-			return f.Value.(int64) > int64(o)
-		case int64:
-			return f.Value.(int64) > o
-		case float32:
-			return f.Value.(int64) > int64(o)
-		case float64:
-			return f.Value.(int64) > int64(o)
-		}
-	case UINT:
-		switch o := other.(type) {
-		case int:
-			return f.Value.(uint64) > uint64(o)
-		case int64:
-			return f.Value.(uint64) > uint64(o)
-		case uint:
-			return f.Value.(uint64) > uint64(o)
-		case uint64:
-			return f.Value.(uint64) > o
-		case float32:
-			return f.Value.(uint64) > uint64(o)
-		case float64:
-			return f.Value.(uint64) > uint64(o)
-		}
-	case FLOAT:
-		switch o := other.(type) {
-		case float32:
-			return f.Value.(float64) > float64(o)
-		case float64:
-			return f.Value.(float64) > o
-		case int:
-			return f.Value.(float64) > float64(o)
-		case int64:
-			return f.Value.(float64) > float64(o)
-		}
-	case STRING:
-		switch o := other.(type) {
-		case string:
-			return f.Value.(string) > o
-		}
-	case TIME:
-		switch o := other.(type) {
-		case time.Time:
-			return f.Value.(time.Time).After(o)
-		}
-	}
-	return false
-}
-
-func (f *Field) Lt(other any) bool {
-	if other == nil {
-		return false
-	}
-
-	switch f.Type {
-	case BOOL:
-		switch o := other.(type) {
-		case bool:
-			return !f.Value.(bool) && o
-		}
-	case INT:
-		switch o := other.(type) {
-		case int:
-			return f.Value.(int64) < int64(o)
-		case int64:
-			return f.Value.(int64) < o
-		case float32:
-			return f.Value.(int64) < int64(o)
-		case float64:
-			return f.Value.(int64) < int64(o)
-		}
-	case UINT:
-		switch o := other.(type) {
-		case int:
-			return f.Value.(uint64) < uint64(o)
-		case int64:
-			return f.Value.(uint64) < uint64(o)
-		case uint:
-			return f.Value.(uint64) < uint64(o)
-		case uint64:
-			return f.Value.(uint64) < o
-		case float32:
-			return f.Value.(uint64) < uint64(o)
-		case float64:
-			return f.Value.(uint64) < uint64(o)
-		}
-	case FLOAT:
-		switch o := other.(type) {
-		case float32:
-			return f.Value.(float64) < float64(o)
-		case float64:
-			return f.Value.(float64) < o
-		case int:
-			return f.Value.(float64) < float64(o)
-		case int64:
-			return f.Value.(float64) < float64(o)
-		}
-	case STRING:
-		switch o := other.(type) {
-		case string:
-			return f.Value.(string) < o
-		}
-	case TIME:
-		switch o := other.(type) {
-		case time.Time:
-			return f.Value.(time.Time).Before(o)
-		}
-	}
-	return false
-}
-
-func (f *Field) In(other any) bool {
-	if other == nil {
-		return false
-	}
-	switch f.Type {
-	case BOOL:
-		if o, ok := other.([]bool); ok {
-			for _, v := range o {
-				if f.Value.(bool) == v {
-					return true
-				}
-			}
-		}
-	case INT:
-		if o, ok := other.([]int); ok {
-			for _, v := range o {
-				if f.Value.(int64) == int64(v) {
-					return true
-				}
-			}
-		}
-	case UINT:
-		if o, ok := other.([]uint); ok {
-			for _, v := range o {
-				if f.Value.(uint64) == uint64(v) {
-					return true
-				}
-			}
-		}
-	case FLOAT:
-		if o, ok := other.([]float64); ok {
-			for _, v := range o {
-				if f.Value.(float64) == v {
-					return true
-				}
-			}
-		}
-	case STRING:
-		if o, ok := other.([]string); ok {
-			for _, v := range o {
-				if f.Value.(string) == v {
-					return true
-				}
-			}
-		}
-	case TIME:
-		if o, ok := other.([]time.Time); ok {
-			for _, v := range o {
-				if f.Value.(time.Time).Equal(v) {
-					return true
-				}
-			}
-		}
-	}
-	return false
-}
-
 func (f *Field) Func(fn func(any) bool) bool {
-	return fn(f.Value)
+	return fn(f.Value.raw)
 }
 
 type Type byte
 
 const (
-	BOOL   Type = 'b' // bool
-	INT    Type = 'i' // int64
-	UINT   Type = 'u' // uint64
-	FLOAT  Type = 'f' // float64
-	STRING Type = 's' // string
-	TIME   Type = 't' // time.Time
-	BINARY Type = 'B' // *BinaryType
+	UNTYPED Type = 0
+	BOOL    Type = 'b' // bool
+	INT     Type = 'i' // int64
+	UINT    Type = 'u' // uint64
+	FLOAT   Type = 'f' // float64
+	STRING  Type = 's' // string
+	TIME    Type = 't' // time.Time
+	BINARY  Type = 'B' // *BinaryType
 )
 
-func NewBoolField(name string, value bool) *Field {
-	return &Field{Name: name, Value: value, Type: BOOL}
-}
-
-func NewBoolFieldNull(name string) *Field {
-	return &Field{Name: name, Value: false, Type: BOOL, IsNull: true}
-}
-
-func NewIntField(name string, value int64) *Field {
-	return &Field{Name: name, Value: value, Type: INT}
-}
-
-func NewIntFieldNull(name string) *Field {
-	return &Field{Name: name, Value: int64(0), Type: INT, IsNull: true}
-}
-
-func NewUintField(name string, value uint64) *Field {
-	return &Field{Name: name, Value: value, Type: UINT}
-}
-
-func NewUintFieldNull(name string) *Field {
-	return &Field{Name: name, Value: uint64(0), Type: UINT, IsNull: true}
-}
-
-func NewFloatField(name string, value float64) *Field {
-	return &Field{Name: name, Value: value, Type: FLOAT}
-}
-
-func NewFloatFieldNull(name string) *Field {
-	return &Field{Name: name, Value: float64(0), Type: FLOAT, IsNull: true}
-}
-
-func NewStringField(name string, value string) *Field {
-	return &Field{Name: name, Value: value, Type: STRING}
-}
-
-func NewStringFieldNull(name string) *Field {
-	return &Field{Name: name, Value: "", Type: STRING, IsNull: true}
-}
-
-func NewTimeField(name string, value time.Time) *Field {
-	return &Field{Name: name, Value: value, Type: TIME}
-}
-
-func NewTimeFieldNull(name string) *Field {
-	return &Field{Name: name, Value: time.Time{}, Type: TIME, IsNull: true}
-}
-
-func NewBinaryField(name string, value *BinaryValue) *Field {
-	return &Field{Name: name, Value: value, Type: BINARY}
-}
-
-func NewBinaryFieldNull(name string) *Field {
-	return &Field{Name: name, Value: NewBinaryValue(nil), Type: BINARY, IsNull: true}
-}
-
-func CopyField(name string, other *Field) *Field {
-	return &Field{
-		Name:  name,
-		Value: other.Value,
-		Type:  other.Type,
+func (typ Type) String() string {
+	switch typ {
+	case BOOL:
+		return "BOOL"
+	case INT:
+		return "INT"
+	case UINT:
+		return "UINT"
+	case FLOAT:
+		return "FLOAT"
+	case STRING:
+		return "STRING"
+	case TIME:
+		return "TIME"
+	case BINARY:
+		return "BINARY"
+	default:
+		return "UNTYPED"
 	}
 }
 
-type BinaryValue struct {
-	data   []byte
-	header http.Header
+func NewBoolField(name string, value bool) *Field {
+	return &Field{Name: name, Value: NewValue(value)}
 }
 
-func NewBinaryValue(data []byte) *BinaryValue {
-	return &BinaryValue{data: data, header: http.Header{}}
+func NewBoolFieldNull(name string) *Field {
+	return &Field{Name: name, Value: NewNullValue(BOOL)}
 }
 
-func (bv *BinaryValue) Data() []byte {
-	return bv.data
+func NewIntField(name string, value int64) *Field {
+	return &Field{Name: name, Value: NewValue(value)}
 }
 
-func (bv *BinaryValue) Len() int64 {
-	return int64(len(bv.data))
+func NewIntFieldNull(name string) *Field {
+	return &Field{Name: name, Value: NewNullValue(INT)}
 }
 
-func (bv *BinaryValue) AddHeader(key, value string) {
-	bv.header.Add(key, value)
+func NewUintField(name string, value uint64) *Field {
+	return &Field{Name: name, Value: NewValue(value)}
 }
 
-func (bv *BinaryValue) DelHeader(key string) {
-	bv.header.Del(key)
+func NewUintFieldNull(name string) *Field {
+	return &Field{Name: name, Value: NewNullValue(UINT)}
 }
 
-func (bv *BinaryValue) GetHeader(key string) string {
-	return bv.header.Get(key)
+func NewFloatField(name string, value float64) *Field {
+	return &Field{Name: name, Value: NewValue(value)}
 }
 
-func (bv *BinaryValue) SetHeader(key, value string) {
-	bv.header.Set(key, value)
+func NewFloatFieldNull(name string) *Field {
+	return &Field{Name: name, Value: NewNullValue(FLOAT)}
 }
 
-func (bv *BinaryValue) GetHeaderValues(key string) []string {
-	return bv.header.Values(key)
+func NewStringField(name string, value string) *Field {
+	return &Field{Name: name, Value: NewValue(value)}
+}
+
+func NewStringFieldNull(name string) *Field {
+	return &Field{Name: name, Value: NewNullValue(STRING)}
+}
+
+func NewTimeField(name string, value time.Time) *Field {
+	return &Field{Name: name, Value: NewValue(value)}
+}
+
+func NewTimeFieldNull(name string) *Field {
+	return &Field{Name: name, Value: NewNullValue(TIME)}
+}
+
+func NewBinaryField(name string, value []byte) *Field {
+	return &Field{Name: name, Value: NewValue(value)}
+}
+
+func NewBinaryFieldNull(name string) *Field {
+	return &Field{Name: name, Value: NewNullValue(BINARY)}
 }

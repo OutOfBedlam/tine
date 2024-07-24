@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	// Create engine
+	// Create a pipeline
 	pipeline, err := engine.New(engine.WithName("custom_flow"))
 	if err != nil {
 		panic(err)
@@ -37,7 +37,7 @@ func main() {
 		ret := make([]engine.Record, 0, len(recs))
 		for _, r := range recs {
 			if field := r.Field("load1"); field != nil {
-				load, _ := field.GetFloat()
+				load, _ := field.Value.Float64()
 				percent := (load * 100) / float64(cpuNum)
 				r = r.Append(engine.NewStringField("load1_percent", fmt.Sprintf("%.1f%%", percent)))
 			}
@@ -47,7 +47,7 @@ func main() {
 	}
 	pipeline.AddFlow("custom", engine.FlowWithFunc(custom, engine.WithFlowFuncParallelism(1)))
 
-	// Start the engine
+	// Start the pipeline
 	go pipeline.Start()
 
 	// wait Ctrl+C
@@ -55,6 +55,6 @@ func main() {
 	signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)
 	<-done
 
-	// Stop the engine
+	// Stop the pipeline
 	pipeline.Stop()
 }

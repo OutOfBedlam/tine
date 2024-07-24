@@ -109,7 +109,7 @@ func (eo *excelOutlet) writeFile(records []engine.Record) error {
 		}
 
 		for i, field := range row.Fields(cols...) {
-			if field == nil || field.Type == engine.BINARY {
+			if field == nil || field.Type() == engine.BINARY {
 				continue
 			}
 			// A: 65, Z: 90

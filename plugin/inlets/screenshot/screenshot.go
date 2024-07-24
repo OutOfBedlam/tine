@@ -87,42 +87,41 @@ func (si *screenshotInlet) Pull() ([]engine.Record, error) {
 		if err != nil {
 			return nil, err
 		}
-		var bin *engine.BinaryValue
+		var name = fmt.Sprintf("display_%d", disp)
+		var bin *engine.Field
 		switch si.format {
 		default: // "rgba"
-			bin = engine.NewBinaryValue(img.Pix)
-			bin.SetHeader("Content-Type", "image/vnd.rgba")
-			bin.SetHeader("X-RGBA-Stride", fmt.Sprintf("%d", img.Stride))
-			bin.SetHeader("X-RGBA-Rectangle", fmt.Sprintf("%d,%d,%d,%d", img.Rect.Min.X, img.Rect.Min.Y, img.Rect.Max.X, img.Rect.Max.Y))
+			bin = engine.NewBinaryField(name, img.Pix)
+			bin.SetTag("Content-Type", "image/vnd.rgba")
+			bin.SetTag("X-RGBA-Stride", fmt.Sprintf("%d", img.Stride))
+			bin.SetTag("X-RGBA-Rectangle", fmt.Sprintf("%d,%d,%d,%d", img.Rect.Min.X, img.Rect.Min.Y, img.Rect.Max.X, img.Rect.Max.Y))
 		case "png":
 			buf := &bytes.Buffer{}
 			if err := png.Encode(buf, img); err != nil {
 				return nil, err
 			}
-			bin = engine.NewBinaryValue(buf.Bytes())
-			bin.SetHeader("Content-Type", "image/png")
+			bin = engine.NewBinaryField(name, buf.Bytes())
+			bin.SetTag("Content-Type", "image/png")
 		case "jpeg":
 			buf := &bytes.Buffer{}
 			if err := jpeg.Encode(buf, img, nil); err != nil {
 				return nil, err
 			}
-			bin = engine.NewBinaryValue(buf.Bytes())
-			bin.SetHeader("Content-Type", "image/jpeg")
+			bin = engine.NewBinaryField(name, buf.Bytes())
+			bin.SetTag("Content-Type", "image/jpeg")
 		case "gif":
 			buf := &bytes.Buffer{}
 			if err := gif.Encode(buf, img, nil); err != nil {
 				return nil, err
 			}
-			bin = engine.NewBinaryValue(buf.Bytes())
-			bin.SetHeader("Content-Type", "image/gif")
+			bin = engine.NewBinaryField(name, buf.Bytes())
+			bin.SetTag("Content-Type", "image/gif")
 		}
 		if bin == nil {
 			continue
 		}
-		bin.SetHeader("X-Screenshot-Display", fmt.Sprintf("%d", disp))
-		rec = rec.Append(
-			engine.NewBinaryField(fmt.Sprintf("display_%d", disp), bin),
-		)
+		bin.SetTag("X-Screenshot-Display", fmt.Sprintf("%d", disp))
+		rec = rec.Append(bin)
 	}
 
 	ret := []engine.Record{rec}

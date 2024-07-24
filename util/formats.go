@@ -4,6 +4,10 @@ import "fmt"
 
 var byteSizes = []string{"B", "KB", "MB", "GB", "TB", "PB", "EB"}
 
+func FormatFileSizeInt(bytes int) string {
+	return FormatFileSize(int64(bytes))
+}
+
 // ByteSize returns a human-readable byte size string.
 func FormatFileSize(bytes int64) string {
 	if bytes == 0 {

@@ -182,13 +182,11 @@ func generate(ctx *engine.Context) ([]engine.Record, error) {
 	}
 
 	ctx.LogDebug("inlets.rrd_graph", "info", fmt.Sprintf("%+v", nfo))
-	bv := engine.NewBinaryValue(buf)
-	bv.SetHeader("Content-Type", "image/png")
+	bv := engine.NewBinaryField("graph", buf)
+	bv.SetTag("Content-Type", "image/png")
 
 	recs := []engine.Record{
-		engine.NewRecord(
-			engine.NewBinaryField("graph", bv),
-		),
+		engine.NewRecord(bv),
 	}
 	return recs, nil
 }

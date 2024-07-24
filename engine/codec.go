@@ -13,13 +13,12 @@ type EncoderReg struct {
 }
 
 type EncoderConfig struct {
-	Writer        io.Writer
-	Subformat     string
-	Indent        string
-	Prefix        string
-	Timeformatter *Timeformatter
-	Decimal       int
-	Fields        []string
+	Writer       io.Writer
+	Subformat    string
+	Indent       string
+	Prefix       string
+	Fields       []string
+	FormatOption FormatOption
 }
 
 var encoders = make(map[string]*EncoderReg)
