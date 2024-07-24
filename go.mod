@@ -4,6 +4,7 @@ go 1.22
 
 require (
 	github.com/BurntSushi/toml v1.4.0
+	github.com/containerd/console v1.0.4
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/expr-lang/expr v1.16.9
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
@@ -18,6 +19,7 @@ require (
 	github.com/nats-io/nats-server/v2 v2.10.17
 	github.com/shirou/gopsutil/v4 v4.24.6
 	github.com/sleepinggenius2/gosmi v0.4.4
+	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
 	github.com/xuri/excelize/v2 v2.8.1
 	golang.org/x/image v0.14.0
@@ -31,6 +33,7 @@ require (
 	github.com/gen2brain/shm v0.0.0-20230802011745-f2460f5984f7 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jezek/xgb v1.1.0 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/leodido/ragel-machinery v0.0.0-20190525184631-5f46317e436b // indirect
@@ -46,6 +49,7 @@ require (
 	github.com/richardlehane/mscfb v1.0.4 // indirect
 	github.com/richardlehane/msoleps v1.0.3 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stoewer/go-strcase v1.2.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect

@@ -13,19 +13,20 @@ import (
 )
 
 func main() {
+	baseDir := ".."
 	fmt.Print(engine.DefaultConfigString)
 	fmt.Print("\n#\n# inets and outlets\n#\n\n")
 
-	_, err := os.ReadDir("plugin")
+	_, err := os.ReadDir(filepath.Join(baseDir, "plugin"))
 	if err != nil {
 		panic(err)
 	}
 	dirFor(
 		[]string{
-			filepath.Join("plugin", "inlets"),
-			filepath.Join("plugin", "flows"),
-			filepath.Join("plugin", "outlets"),
-			"x",
+			filepath.Join(baseDir, "plugin", "inlets"),
+			filepath.Join(baseDir, "plugin", "flows"),
+			filepath.Join(baseDir, "plugin", "outlets"),
+			filepath.Join(baseDir, "x"),
 		},
 		[]string{"inlet.toml", "flow.toml", "outlet.toml"})
 

@@ -3,6 +3,6 @@
 
 //go:generate cmd.exe /c "go run tools/genconf/genconf.go > tine.toml"
 
-package main
+package cmd
 
 import _ "time/tzdata"

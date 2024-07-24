@@ -33,9 +33,9 @@ func (so *sqliteOutlet) Handle(recs []engine.Record) error {
 				switch field.Type() {
 				case engine.TIME:
 					// convert to unix epoch
-					args[i] = field.IntField().Value
+					args[i], _ = field.Value.Int64()
 				default:
-					args[i] = field.Value
+					args[i] = field.Value.Raw()
 				}
 			}
 			result, err := so.DB.ExecContext(so.Ctx, act.SqlText, args...)

@@ -35,7 +35,7 @@ Set the pipline's inputs and outputs.
 ### Run
 
 ```bash
-tine  <config.toml>
+tine run <config.toml>
 ```
 
 It generates CPU usage in CSV format which is default format of 'outlets.file'.
@@ -68,7 +68,7 @@ And change output format to "json" from "csv".
 1. Save this file as `load.toml`
 
 ```toml
-#!/path/to/tine
+#!/path/to/tine run
 [log]
     level = "WARN"
 [defaults]
@@ -249,7 +249,7 @@ http.ListenAndServe(":8080", router)
 ### Show plugin list
 
 ```sh
-$ tine --list
+$ tine list
 
 Input: data -> [inlet] -> [decompress] -> [decoder] -> records
   Decoders    csv
