@@ -115,12 +115,12 @@ func (o *rrdOutlet) Handle(recs []engine.Record) error {
 				o.ctx.LogWarn("outlets.rrd update, field not found", "field", fieldNames[i])
 				goto next_record
 			}
-			if field.Type == engine.TIME {
-				values[i], _ = field.GetTime()
-			} else if field.Type == engine.FLOAT {
-				values[i], _ = field.GetFloat()
-			} else if field.Type == engine.INT {
-				values[i], _ = field.GetInt()
+			if field.Type() == engine.TIME {
+				values[i], _ = field.Value.Time()
+			} else if field.Type() == engine.FLOAT {
+				values[i], _ = field.Value.Float64()
+			} else if field.Type() == engine.INT {
+				values[i], _ = field.Value.Int64()
 			} else {
 				o.ctx.LogWarn("outlets.rrd update, unsupported field type", "field", fieldNames[i])
 				return nil

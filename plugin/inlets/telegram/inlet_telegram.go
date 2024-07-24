@@ -82,27 +82,27 @@ func (ti *telegramInlet) Push(cb func([]engine.Record, error)) {
 				ti.ctx.LogWarn("inetls.telegram fetch photo", "error", err)
 				continue
 			} else {
-				bv := engine.NewBinaryValue(bin)
+				bv := engine.NewBinaryField("photo", bin)
 				// since telegram server returns "application/octet-stream"
 				// we need to set the content type manually
 				switch strings.ToLower(filepath.Ext(tfile.FilePath)) {
 				case ".png":
-					bv.SetHeader("Content-Type", "image/png")
+					bv.SetTag("Content-Type", "image/png")
 				case ".jpg", ".jpeg":
-					bv.SetHeader("Content-Type", "image/jpeg")
+					bv.SetTag("Content-Type", "image/jpeg")
 				case ".gif":
-					bv.SetHeader("Content-Type", "image/gif")
+					bv.SetTag("Content-Type", "image/gif")
 				default:
 					ti.ctx.LogWarn("inetls.telegram fetch photo unknown file type", "file", tfile.FilePath)
 					continue
 				}
 				ti.ctx.LogDebug("inlets.telegram", "photo", tfile.FilePath, "size", photo.FileSize)
-				rec = rec.Append(engine.NewBinaryField("photo", bv))
-				if field := rec.Field("text"); field.Value.(string) == "" {
+				rec = rec.Append(bv)
+				if field := rec.Field("text"); field.Value.Raw().(string) == "" {
 					if txt := update.Message.Caption; txt == "" {
-						field.Value = "Explain this photo."
+						field.Value = engine.NewValue("Explain this photo.")
 					} else {
-						field.Value = txt
+						field.Value = engine.NewValue(txt)
 					}
 				}
 			}

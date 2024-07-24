@@ -30,10 +30,10 @@ func (so *sqliteOutlet) Handle(recs []engine.Record) error {
 				if field == nil {
 					continue
 				}
-				switch field.Type {
+				switch field.Type() {
 				case engine.TIME:
 					// convert to unix epoch
-					args[i] = field.ToInt().Value
+					args[i] = field.IntField().Value
 				default:
 					args[i] = field.Value
 				}

@@ -55,11 +55,11 @@ func (cw *CSVEncoder) encodeDefault(recs []engine.Record) error {
 				values = append(values, "")
 				continue
 			}
-			if field.Type == engine.BINARY {
+			if field.Type() == engine.BINARY {
 				values = append(values, "[BINARY]")
 				continue
 			}
-			values = append(values, field.StringWithFormat(cw.Timeformatter, cw.Decimal))
+			values = append(values, field.Value.Format(cw.FormatOption))
 		}
 		cw.enc.Write(values)
 		values = values[:0]
@@ -74,32 +74,36 @@ func (cw *CSVEncoder) encodeNameTimeValue(recs []engine.Record, timeFirst bool) 
 		if tsf := rec.Field(engine.FIELD_TIMESTAMP); tsf == nil {
 			ts = time.Now()
 		} else {
-			ts = tsf.Value.(time.Time)
+			if v, ok := tsf.Value.Time(); ok {
+				ts = v
+			} else {
+				ts = time.Now()
+			}
 		}
 		var namePrefix string
-		if inf := rec.Field(engine.FIELD_INLET); inf == nil {
-			namePrefix = ""
-		} else {
-			namePrefix = inf.Value.(string) + "."
+		if inf := rec.Field(engine.FIELD_INLET); inf != nil {
+			if v, ok := inf.Value.String(); ok {
+				namePrefix = v + "."
+			}
 		}
 		for _, field := range rec.Fields(cw.Fields...) {
 			if field == nil || field.Name == engine.FIELD_TIMESTAMP || field.Name == engine.FIELD_INLET {
 				continue
 			}
-			if field.Type == engine.BINARY {
+			if field.Type() == engine.BINARY {
 				continue
 			}
 			if timeFirst {
 				cw.enc.Write([]string{
-					cw.Timeformatter.Format(ts),
+					cw.FormatOption.FormatTime(ts),
 					fmt.Sprintf("%s%s", namePrefix, field.Name),
-					field.StringWithFormat(cw.Timeformatter, cw.Decimal),
+					field.Value.Format(cw.FormatOption),
 				})
 			} else {
 				cw.enc.Write([]string{
 					fmt.Sprintf("%s%s", namePrefix, field.Name),
-					cw.Timeformatter.Format(ts),
-					field.StringWithFormat(cw.Timeformatter, cw.Decimal),
+					cw.FormatOption.FormatTime(ts),
+					field.Value.Format(cw.FormatOption),
 				})
 			}
 		}
@@ -115,7 +119,7 @@ func StringFields(r engine.Record) []string {
 func StringFieldsWithFormat(r engine.Record, tf *engine.Timeformatter, decimal int) []string {
 	ret := []string{}
 	for _, f := range r.Fields() {
-		strVal := f.StringWithFormat(tf, decimal)
+		strVal := f.Value.Format(engine.FormatOption{Timeformat: tf, Decimal: decimal})
 		ret = append(ret, f.Name, strVal)
 	}
 	return ret

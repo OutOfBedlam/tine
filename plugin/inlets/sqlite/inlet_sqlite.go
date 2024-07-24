@@ -156,8 +156,8 @@ func doAction(db *sql.DB, ctx context.Context, act sqlite3.Action, cb func([]eng
 			case *float64:
 				rec = rec.Append(engine.NewFloatField(colNames[i], *val))
 			case *[]byte:
-				bv := engine.NewBinaryValue(*val)
-				rec = rec.Append(engine.NewBinaryField(colNames[i], bv))
+				bf := engine.NewBinaryField(colNames[i], *val)
+				rec = rec.Append(bf)
 			}
 		}
 		cb([]engine.Record{rec}, nil)

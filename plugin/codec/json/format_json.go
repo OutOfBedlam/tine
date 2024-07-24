@@ -55,17 +55,18 @@ func (jw *JSONEncoder) encodeDefault(recs []engine.Record) error {
 			if f == nil {
 				continue
 			}
-			if f.Type == engine.TIME {
-				if jw.Timeformatter.IsEpoch() {
-					r[f.Name] = jw.Timeformatter.Epoch(f.Value.(time.Time))
+			if f.Type() == engine.TIME {
+				ts, _ := f.Value.Time()
+				if jw.FormatOption.Timeformat.IsEpoch() {
+					r[f.Name] = jw.FormatOption.Timeformat.Epoch(ts)
 				} else {
-					r[f.Name] = jw.Timeformatter.Format(f.Value.(time.Time))
+					r[f.Name] = jw.FormatOption.Timeformat.Format(ts)
 				}
 			} else {
-				if f.Type == engine.BINARY {
+				if f.Type() == engine.BINARY {
 					r[f.Name] = "[BINARY]"
 				} else {
-					r[f.Name] = f.Value
+					r[f.Name] = f.Value.Raw()
 				}
 			}
 		}
@@ -82,30 +83,33 @@ func (jw *JSONEncoder) encodeNameTimeValue(recs []engine.Record, timeFirst bool)
 		if tsf := rec.Field(engine.FIELD_TIMESTAMP); tsf == nil {
 			ts = time.Now()
 		} else {
-			ts = tsf.Value.(time.Time)
+			if v, ok := tsf.Value.Time(); ok {
+				ts = v
+			} else {
+				ts = time.Now()
+			}
 		}
 		var timestamp any
-		if jw.Timeformatter.IsEpoch() {
-			timestamp = jw.Timeformatter.Epoch(ts)
+		if jw.FormatOption.Timeformat.IsEpoch() {
+			timestamp = jw.FormatOption.Timeformat.Epoch(ts)
 		} else {
-			timestamp = jw.Timeformatter.Format(ts)
+			timestamp = jw.FormatOption.Timeformat.Format(ts)
 		}
 		var namePrefix string
-		if inf := rec.Field(engine.FIELD_INLET); inf == nil {
-			namePrefix = ""
-		} else {
-			namePrefix = inf.Value.(string) + "."
+		if inf := rec.Field(engine.FIELD_INLET); inf != nil {
+			if v, ok := inf.Value.String(); ok {
+				namePrefix = v + "."
+			}
 		}
 		for _, field := range rec.Fields(jw.Fields...) {
 			if field == nil || field.Name == engine.FIELD_TIMESTAMP || field.Name == engine.FIELD_INLET {
 				continue
 			}
-
 			r := []any{}
 			if timeFirst {
-				r = append(r, timestamp, fmt.Sprintf("%s%s", namePrefix, field.Name), field.Value)
+				r = append(r, timestamp, fmt.Sprintf("%s%s", namePrefix, field.Name), field.Value.Raw())
 			} else {
-				r = append(r, fmt.Sprintf("%s%s", namePrefix, field.Name), timestamp, field.Value)
+				r = append(r, fmt.Sprintf("%s%s", namePrefix, field.Name), timestamp, field.Value.Raw())
 			}
 			rs = append(rs, r)
 		}

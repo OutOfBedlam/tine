@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/OutOfBedlam/tine/engine"
@@ -9,6 +10,7 @@ import (
 )
 
 func main() {
+	addr := "127.0.0.1:8080"
 	// start data collector that save metrics to rrd file
 	collect, _ := engine.New(engine.WithConfig(collectorPipleine))
 	collect.Start()
@@ -17,7 +19,8 @@ func main() {
 	router.HandleFunc("GET /", getView)
 	router.HandleFunc("GET /graph/load", engine.HttpHandleFunc(graphLoadPipeline))
 	router.HandleFunc("GET /graph/cpu", engine.HttpHandleFunc(graphCpuPipeline))
-	http.ListenAndServe("127.0.0.1:8080", router)
+	fmt.Printf("\nlistener start at http://%s\n", addr)
+	http.ListenAndServe(addr, router)
 
 	// stop data collector
 	collect.Stop()

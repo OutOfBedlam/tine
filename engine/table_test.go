@@ -28,18 +28,18 @@ func TestTable(t *testing.T) {
 	require.Equal(t, 1, tb.Len())
 	require.Equal(t, 1, len(tb.rows))
 	require.Equal(t, 3, len(tb.rows[ts1.Unix()].Fields))
-	require.Equal(t, ts1, tb.rows[ts1.Unix()].Fields[0].Value)
-	require.Equal(t, "foo", tb.rows[ts1.Unix()].Fields[1].Value)
-	require.Equal(t, int64(20), tb.rows[ts1.Unix()].Fields[2].Value)
+	require.Equal(t, ts1, tb.rows[ts1.Unix()].Fields[0].Value.raw)
+	require.Equal(t, "foo", tb.rows[ts1.Unix()].Fields[1].Value.raw)
+	require.Equal(t, int64(20), tb.rows[ts1.Unix()].Fields[2].Value.raw)
 
 	ts2 := ts1.Add(1 * time.Second)
 	tb.Set(ts2.Unix(), NewTimeField("ts", ts2), NewStringField("name", "bar"), NewIntField("age", 21))
 	require.Equal(t, 2, tb.Len())
-	require.Equal(t, []any{ts1, ts2}, UnwrapFields(tb.Series("ts")))
-	require.Equal(t, []any{"foo", "bar"}, UnwrapFields(tb.Series("name")))
-	require.Equal(t, []any{int64(20), int64(21)}, UnwrapFields(tb.Series("age")))
-	require.Equal(t, []any{ts1, "foo", int64(20)}, UnwrapFields(tb.Get(ts1.Unix()).Fields))
-	require.Equal(t, []any{ts2, "bar", int64(21)}, UnwrapFields(tb.Get(ts2.Unix()).Fields))
+	require.Equal(t, []any{ts1, ts2}, UnboxFields(tb.Series("ts")))
+	require.Equal(t, []any{"foo", "bar"}, UnboxFields(tb.Series("name")))
+	require.Equal(t, []any{int64(20), int64(21)}, UnboxFields(tb.Series("age")))
+	require.Equal(t, []any{ts1, "foo", int64(20)}, UnboxFields(tb.Get(ts1.Unix()).Fields))
+	require.Equal(t, []any{ts2, "bar", int64(21)}, UnboxFields(tb.Get(ts2.Unix()).Fields))
 	require.Nil(t, tb.Get(12345))
 
 	sel, err := tb.Select([]string{"name"})
@@ -47,16 +47,16 @@ func TestTable(t *testing.T) {
 	require.Equal(t, []string{"NAME"}, sel.Columns())
 	require.Equal(t, []Type{STRING}, sel.Types())
 	require.Equal(t, 2, sel.Len())
-	require.Equal(t, []any{"foo"}, UnwrapFields(sel.Get(ts1.Unix()).Fields))
-	require.Equal(t, []any{"bar"}, UnwrapFields(sel.Get(ts2.Unix()).Fields))
+	require.Equal(t, []any{"foo"}, UnboxFields(sel.Get(ts1.Unix()).Fields))
+	require.Equal(t, []any{"bar"}, UnboxFields(sel.Get(ts2.Unix()).Fields))
 
 	sel, err = tb.Select([]string{"name", "age"})
 	require.NoError(t, err)
 	require.Equal(t, []string{"NAME", "AGE"}, sel.Columns())
 	require.Equal(t, []Type{STRING, INT}, sel.Types())
 	require.Equal(t, 2, sel.Len())
-	require.Equal(t, []any{"foo", int64(20)}, UnwrapFields(sel.Get(ts1.Unix()).Fields))
-	require.Equal(t, []any{"bar", int64(21)}, UnwrapFields(sel.Get(ts2.Unix()).Fields))
+	require.Equal(t, []any{"foo", int64(20)}, UnboxFields(sel.Get(ts1.Unix()).Fields))
+	require.Equal(t, []any{"bar", int64(21)}, UnboxFields(sel.Get(ts2.Unix()).Fields))
 
 	sel, err = tb.Filter(F{"age", GT, 20}).
 		Select([]string{"name"})
@@ -65,7 +65,7 @@ func TestTable(t *testing.T) {
 	require.Equal(t, []string{"NAME"}, sel.Columns())
 	require.Equal(t, []Type{STRING}, sel.Types())
 	require.Equal(t, 1, sel.Len())
-	require.Equal(t, []any{"bar"}, UnwrapFields(sel.Get(ts2.Unix()).Fields))
+	require.Equal(t, []any{"bar"}, UnboxFields(sel.Get(ts2.Unix()).Fields))
 
 	sel, err = tb.Filter(OR{F{"name", EQ, "foo"}, F{"age", EQ, 21}}).
 		Select([]string{"name"})
@@ -74,8 +74,8 @@ func TestTable(t *testing.T) {
 	require.Equal(t, []string{"NAME"}, sel.Columns())
 	require.Equal(t, []Type{STRING}, sel.Types())
 	require.Equal(t, 2, sel.Len())
-	require.Equal(t, []any{"foo"}, UnwrapFields(sel.Get(ts1.Unix()).Fields))
-	require.Equal(t, []any{"bar"}, UnwrapFields(sel.Get(ts2.Unix()).Fields))
+	require.Equal(t, []any{"foo"}, UnboxFields(sel.Get(ts1.Unix()).Fields))
+	require.Equal(t, []any{"bar"}, UnboxFields(sel.Get(ts2.Unix()).Fields))
 
 	sel, err = tb.Filter(F{"name", IN, []string{"foo", "bar", "long"}}).
 		Select([]string{"name"})
@@ -84,8 +84,8 @@ func TestTable(t *testing.T) {
 	require.Equal(t, []string{"NAME"}, sel.Columns())
 	require.Equal(t, []Type{STRING}, sel.Types())
 	require.Equal(t, 2, sel.Len())
-	require.Equal(t, []any{"foo"}, UnwrapFields(sel.Get(ts1.Unix()).Fields))
-	require.Equal(t, []any{"bar"}, UnwrapFields(sel.Get(ts2.Unix()).Fields))
+	require.Equal(t, []any{"foo"}, UnboxFields(sel.Get(ts1.Unix()).Fields))
+	require.Equal(t, []any{"bar"}, UnboxFields(sel.Get(ts2.Unix()).Fields))
 
 	sel, err = tb.Filter(AND{F{"name", EQ, "bar"}, F{"age", GTE, 21}}).
 		Select([]string{"age"})
@@ -94,13 +94,13 @@ func TestTable(t *testing.T) {
 	require.Equal(t, []string{"AGE"}, sel.Columns())
 	require.Equal(t, []Type{INT}, sel.Types())
 	require.Equal(t, 1, sel.Len())
-	require.Equal(t, []any{int64(21)}, UnwrapFields(sel.Get(ts2.Unix()).Fields))
+	require.Equal(t, []any{int64(21)}, UnboxFields(sel.Get(ts2.Unix()).Fields))
 
 	sel = tb.Filter(F{"name", EQ, "foo"}).Compact()
 	require.Equal(t, []string{"TS", "NAME", "AGE"}, sel.Columns())
 	require.Equal(t, []Type{TIME, STRING, INT}, sel.Types())
 	require.Equal(t, 1, sel.Len())
-	require.Equal(t, []any{ts1, "foo", int64(20)}, UnwrapFields(sel.Get(ts1.Unix()).Fields))
+	require.Equal(t, []any{ts1, "foo", int64(20)}, UnboxFields(sel.Get(ts1.Unix()).Fields))
 
 	tb.Clear()
 	require.Equal(t, 0, len(tb.rows))
@@ -139,11 +139,11 @@ func TestTableMergeRecords(t *testing.T) {
 	tb := NewTable[int64]()
 
 	for _, rec := range recsA {
-		k, _ := rec.Field("_ts").GetTime()
+		k, _ := rec.Field("_ts").Value.Time()
 		tb.Set(k.Unix(), rec.Fields()...)
 	}
 	for _, rec := range recsB {
-		k, _ := rec.Field("_ts").GetTime()
+		k, _ := rec.Field("_ts").Value.Time()
 		tb.Set(k.Unix(), rec.Fields()...)
 	}
 

@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	// Create engine
+	// Create a pipeline
 	pipeline, _ := engine.New(engine.WithName("custom_out"))
 
 	// Add inlet getting cpu usage
@@ -27,14 +27,14 @@ func main() {
 	pipeline.AddOutlet("custom", engine.OutletWithFunc(func(recs []engine.Record) error {
 		for _, r := range recs {
 			if field := r.Field("total_percent"); field != nil {
-				cpu, _ := field.GetFloat()
+				cpu, _ := field.Value.Float64()
 				fmt.Printf("cpu usage: %.2f%%\n", cpu)
 			}
 		}
 		return nil
 	}))
 
-	// Start the engine
+	// Start the pipeline
 	go pipeline.Start()
 
 	// wait Ctrl+C
@@ -42,6 +42,6 @@ func main() {
 	signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)
 	<-done
 
-	// Stop the engine
+	// Stop the pipeline
 	pipeline.Stop()
 }

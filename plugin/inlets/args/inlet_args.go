@@ -75,9 +75,9 @@ func (ai *argsInlet) Push(cb func([]engine.Record, error)) {
 				cb(nil, err)
 				return
 			}
-			bv := engine.NewBinaryValue(body)
-			bv.SetHeader("Content-Type", contentType)
-			rec = rec.Append(engine.NewBinaryField(name, bv))
+			bv := engine.NewBinaryField(name, body)
+			bv.SetTag("Content-Type", contentType)
+			rec = rec.Append(bv)
 		} else if strings.HasPrefix(value, "binary+http://") || strings.HasPrefix(value, "binary+https://") {
 			value = value[7:]
 			body, contentType, err := ai.fetchHttp(value)
@@ -85,9 +85,9 @@ func (ai *argsInlet) Push(cb func([]engine.Record, error)) {
 				cb(nil, err)
 				return
 			}
-			bv := engine.NewBinaryValue(body)
-			bv.SetHeader("Content-Type", contentType)
-			rec = rec.Append(engine.NewBinaryField(name, bv))
+			bv := engine.NewBinaryField(name, body)
+			bv.SetTag("Content-Type", contentType)
+			rec = rec.Append(bv)
 		} else if strings.HasPrefix(value, "base64+file://") {
 			value = value[14:]
 			body, err := os.ReadFile(value)

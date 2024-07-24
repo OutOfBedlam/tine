@@ -85,7 +85,7 @@ func (tb *Table[T]) Set(k T, fields ...*Field) {
 		if colIdx >= 0 {
 			continue
 		}
-		tb.AddColumn(f.Name, f.Type)
+		tb.AddColumn(f.Name, f.Type())
 		row.Fields = append(row.Fields, f)
 	}
 	tb.rows[row.Key] = row

@@ -46,8 +46,8 @@ func (to *telegramOutlet) Handle(record []engine.Record) error {
 	for _, r := range record {
 		var chatId int64
 		idField := r.Field("chat_id")
-		if idField != nil && idField.Type == engine.INT && !idField.IsNull {
-			chatId, _ = idField.GetInt()
+		if idField != nil && idField.Type() == engine.INT && !idField.IsNull() {
+			chatId, _ = idField.Value.Int64()
 		} else {
 			if to.chatId == 0 {
 				to.ctx.LogDebug("outlets.telegram", "invalid record no chat_id", r)
@@ -57,11 +57,11 @@ func (to *telegramOutlet) Handle(record []engine.Record) error {
 			}
 		}
 		textField := r.Field("text")
-		if textField == nil || textField.Type != engine.STRING || textField.IsNull {
+		if textField == nil || textField.Type() != engine.STRING || textField.IsNull() {
 			to.ctx.LogDebug("outlets.telegram", "invalid record no text", r)
 			continue
 		}
-		text, _ := textField.GetString()
+		text, _ := textField.Value.String()
 		if text == "" {
 			text = "???"
 		}

@@ -17,21 +17,21 @@ func (f F) Apply(r Record) bool {
 	}
 	switch f.Comparator {
 	case EQ:
-		return field.Eq(f.Comparando)
+		return field.Value.Eq(f.Comparando)
 	case NEQ:
-		return !field.Eq(f.Comparando)
+		return !field.Value.Eq(f.Comparando)
 	case GT:
-		return field.Gt(f.Comparando)
+		return field.Value.Gt(f.Comparando)
 	case GTE:
-		return field.Gt(f.Comparando) || field.Eq(f.Comparando)
+		return field.Value.Gt(f.Comparando) || field.Value.Eq(f.Comparando)
 	case LT:
-		return field.Lt(f.Comparando)
+		return field.Value.Lt(f.Comparando)
 	case LTE:
-		return field.Lt(f.Comparando) || field.Eq(f.Comparando)
+		return field.Value.Lt(f.Comparando) || field.Value.Eq(f.Comparando)
 	case IN:
-		return field.In(f.Comparando)
+		return field.Value.In(f.Comparando)
 	case NOT_IN:
-		return !field.In(f.Comparando)
+		return !field.Value.In(f.Comparando)
 	case CompFunc:
 		if fn, ok := f.Comparando.(func(any) bool); ok {
 			return field.Func(fn)

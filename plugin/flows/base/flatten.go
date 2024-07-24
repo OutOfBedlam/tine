@@ -32,14 +32,15 @@ func (ff *flattenFlow) Process(recs []engine.Record) ([]engine.Record, error) {
 			}
 			fields := []*engine.Field{}
 			if ts != nil {
-				fields = append(fields, engine.CopyField("_ts", ts))
+				fields = append(fields, ts.Copy("_ts"))
 			}
 			if in != nil {
-				fields = append(fields, engine.NewStringField("name", fmt.Sprintf("%s%s%s", in.Value, ff.nameInfix, f.Name)))
+				inStr, _ := in.Value.String()
+				fields = append(fields, engine.NewStringField("name", fmt.Sprintf("%s%s%s", inStr, ff.nameInfix, f.Name)))
 			} else {
 				fields = append(fields, engine.NewStringField("name", f.Name))
 			}
-			fields = append(fields, engine.CopyField("value", f))
+			fields = append(fields, f.Copy("value"))
 			ret = append(ret, engine.NewRecord(fields...))
 		}
 	}

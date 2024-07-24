@@ -2,6 +2,7 @@ package engine
 
 import (
 	"testing"
+	"time"
 
 	"github.com/OutOfBedlam/tine/util"
 	"github.com/stretchr/testify/require"
@@ -129,4 +130,24 @@ func TestLoadConfig(t *testing.T) {
 		}
 		require.Equal(t, tc.expect, actual)
 	}
+}
+
+func TestConfigArrayItem(t *testing.T) {
+	content := `
+	[defaults]
+		interval = "1s"
+	[[inlets.cpu]]
+		sval = [ "s1", "s2", "s3" ]
+		ival = [ 1, 2, 3]
+	`
+	actual := PipelineConfig{}
+
+	if err := LoadConfig(content, &actual); err != nil {
+		t.Log("ERROR", err.Error())
+		t.Fail()
+	}
+	require.Equal(t, []any{"s1", "s2", "s3"}, actual.Inlets[0].Params["sval"])
+	require.Equal(t, []any{int64(1), int64(2), int64(3)}, actual.Inlets[0].Params["ival"])
+	conf := makeConfig(actual.Inlets[0].Params, actual.Defaults)
+	require.Equal(t, time.Second, conf.GetDuration("interval", 0))
 }

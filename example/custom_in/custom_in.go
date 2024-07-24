@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	// Create engine
+	// Create pipeline
 	pipeline, err := engine.New(engine.WithName("custom_in"))
 	if err != nil {
 		panic(err)
@@ -42,7 +42,7 @@ func main() {
 	}
 	pipeline.AddInlet("custom", engine.InletWithPullFunc(custom, engine.WithInterval(interval)))
 
-	// Start the engine
+	// Start the pipeline
 	go pipeline.Start()
 
 	// wait Ctrl+C
@@ -50,6 +50,6 @@ func main() {
 	signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)
 	<-done
 
-	// Stop the engine
+	// Stop the pipeline
 	pipeline.Stop()
 }

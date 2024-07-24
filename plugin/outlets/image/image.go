@@ -111,11 +111,10 @@ func (iout *imageOutlet) Handle(recs []engine.Record) error {
 
 func (iout *imageOutlet) encodeRec(rec engine.Record) error {
 	for _, field := range rec.Fields(iout.srcFields...) {
-		if field == nil || field.Type != engine.BINARY {
+		if field == nil || field.Type() != engine.BINARY {
 			continue
 		}
-		bv := field.Value.(*engine.BinaryValue)
-		srcContentType := bv.GetHeader("Content-Type")
+		srcContentType := field.GetTag("Content-Type")
 		if !strings.HasPrefix(srcContentType, "image/") {
 			continue
 		}
@@ -127,17 +126,17 @@ func (iout *imageOutlet) encodeRec(rec engine.Record) error {
 }
 
 func (iout *imageOutlet) writeImageField(field *engine.Field) error {
-	if field.Type != engine.BINARY {
+	if field.Type() != engine.BINARY {
 		return fmt.Errorf("field %q is not binary", field.Name)
 	}
-	bv := field.Value.(*engine.BinaryValue)
-	srcContentType := bv.GetHeader("Content-Type")
+	srcContentType := field.GetTag("Content-Type")
 	if srcContentType == "" {
 		return fmt.Errorf("field %q Content-Type is not specified", field.Name)
 	}
 	srcContentType = strings.Split(srcContentType, ";")[0]
 	srcContentType = strings.TrimSpace(srcContentType)
 	srcContentType = strings.ToLower(srcContentType)
+	bv, _ := field.Value.Bytes()
 
 	var srcImg image.Image
 	switch srcContentType {
@@ -145,7 +144,7 @@ func (iout *imageOutlet) writeImageField(field *engine.Field) error {
 		return fmt.Errorf("field %q has unsupported Content-Type %q", field.Name, srcContentType)
 	case "image/png":
 		if iout.dstContentType != "image/png" {
-			if img, err := png.Decode(bytes.NewReader(bv.Data())); err != nil {
+			if img, err := png.Decode(bytes.NewReader(bv)); err != nil {
 				return err
 			} else {
 				srcImg = img
@@ -153,7 +152,7 @@ func (iout *imageOutlet) writeImageField(field *engine.Field) error {
 		}
 	case "image/jpeg":
 		if iout.dstContentType != "image/jpeg" {
-			if img, err := jpeg.Decode(bytes.NewReader(bv.Data())); err != nil {
+			if img, err := jpeg.Decode(bytes.NewReader(bv)); err != nil {
 				return err
 			} else {
 				srcImg = img
@@ -161,7 +160,7 @@ func (iout *imageOutlet) writeImageField(field *engine.Field) error {
 		}
 	case "image/gif":
 		if iout.dstContentType != "image/gif" {
-			if img, err := gif.Decode(bytes.NewReader(bv.Data())); err != nil {
+			if img, err := gif.Decode(bytes.NewReader(bv)); err != nil {
 				return err
 			} else {
 				srcImg = img
@@ -169,16 +168,15 @@ func (iout *imageOutlet) writeImageField(field *engine.Field) error {
 		}
 	case "image/bmp":
 		if iout.dstContentType != "image/bmp" {
-			if img, err := bmp.Decode(bytes.NewReader(bv.Data())); err != nil {
+			if img, err := bmp.Decode(bytes.NewReader(bv)); err != nil {
 				return err
 			} else {
 				srcImg = img
 			}
 		}
 	case "image/vnd.rgba":
-		bin := field.Value.(*engine.BinaryValue)
-		strStride := bin.GetHeader("X-RGBA-Stride")
-		strRect := bin.GetHeader("X-RGBA-Rectangle")
+		strStride := field.GetTag("X-RGBA-Stride")
+		strRect := field.GetTag("X-RGBA-Rectangle")
 		stride, err := strconv.ParseInt(strStride, 10, 64)
 		if err != nil {
 			return fmt.Errorf("field %q has invalid X-RGBA-Stride %q", field.Name, strStride)
@@ -187,7 +185,7 @@ func (iout *imageOutlet) writeImageField(field *engine.Field) error {
 		if err != nil {
 			return fmt.Errorf("field %q has invalid X-RGBA-Rectangle, %s", field.Name, err.Error())
 		}
-		srcImg = &image.RGBA{Pix: bin.Data(), Stride: int(stride), Rect: rect}
+		srcImg = &image.RGBA{Pix: bv, Stride: int(stride), Rect: rect}
 	}
 
 	var writer io.Writer
@@ -235,7 +233,7 @@ write_image:
 	var data []byte
 	if srcImg == nil {
 		// no need to convert
-		data = bv.Data()
+		data = bv
 	} else {
 		buff := &bytes.Buffer{}
 		switch iout.dstContentType {

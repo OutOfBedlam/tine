@@ -39,13 +39,14 @@ func (mf *mergeFlow) Process(records []engine.Record) ([]engine.Record, error) {
 		if k == nil {
 			continue
 		}
-		ts, ok := k.GetTime()
+		ts, ok := k.Value.Time()
 		if !ok {
 			continue
 		}
 
 		np := rec.Field(mf.namePrefixField)
-		if np != nil {
+		if np != nil && !np.IsNull() {
+			namePrefix, _ := np.Value.String()
 			fields := []*engine.Field{}
 			for _, f := range rec.Fields() {
 				if strings.EqualFold(f.Name, mf.namePrefixField) {
@@ -54,7 +55,7 @@ func (mf *mergeFlow) Process(records []engine.Record) ([]engine.Record, error) {
 				if strings.EqualFold(f.Name, mf.joinField) {
 					fields = append(fields, f)
 				} else {
-					f.Name = fmt.Sprintf("%v.%s", np.Value, f.Name)
+					f.Name = fmt.Sprintf("%v.%s", namePrefix, f.Name)
 					fields = append(fields, f)
 				}
 			}

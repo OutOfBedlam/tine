@@ -124,34 +124,34 @@ func (of *ollamaFlow) Process(recs []engine.Record) ([]engine.Record, error) {
 		genReq := &GenerateRequest{Model: of.model, Stream: of.stream}
 		genReq.Prompt = "Where is the capital city of Australia?"
 
-		if promptField := rec.Field("prompt"); promptField != nil && !promptField.IsNull {
-			if v, ok := promptField.GetString(); ok {
+		if promptField := rec.Field("prompt"); promptField != nil && !promptField.IsNull() {
+			if v, ok := promptField.Value.String(); ok {
 				genReq.Prompt = v
 			}
 		}
-		if imageField := rec.Field("image"); imageField != nil && !imageField.IsNull {
-			if imageField.Type == engine.STRING {
-				if v, ok := imageField.GetString(); ok {
+		if imageField := rec.Field("image"); imageField != nil && !imageField.IsNull() {
+			if imageField.Type() == engine.STRING {
+				if v, ok := imageField.Value.String(); ok {
 					genReq.Images = []string{v}
 				}
-			} else if imageField.Type == engine.BINARY {
-				if bv, ok := imageField.GetBinary(); ok {
-					genReq.Images = []string{base64.StdEncoding.EncodeToString(bv.Data())}
+			} else if imageField.Type() == engine.BINARY {
+				if bv, ok := imageField.Value.Bytes(); ok {
+					genReq.Images = []string{base64.StdEncoding.EncodeToString(bv)}
 				}
 			}
 		}
-		if modelField := rec.Field("model"); modelField != nil && !modelField.IsNull {
-			if v, ok := modelField.GetString(); ok {
+		if modelField := rec.Field("model"); modelField != nil && !modelField.IsNull() {
+			if v, ok := modelField.Value.String(); ok {
 				genReq.Model = v
 			}
 		}
-		if streamField := rec.Field("stream"); streamField != nil && !streamField.IsNull {
-			if v, ok := streamField.GetBool(); ok {
+		if streamField := rec.Field("stream"); streamField != nil && !streamField.IsNull() {
+			if v, ok := streamField.Value.Bool(); ok {
 				genReq.Stream = v
 			}
 		}
-		if formatField := rec.Field("format"); formatField != nil && !formatField.IsNull {
-			if v, ok := formatField.GetString(); ok {
+		if formatField := rec.Field("format"); formatField != nil && !formatField.IsNull() {
+			if v, ok := formatField.Value.String(); ok {
 				genReq.Format = v
 			}
 		}

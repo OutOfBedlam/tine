@@ -760,7 +760,7 @@ func TestGatherSysUptime(t *testing.T) {
 		for _, f := range r.Fields() {
 			switch f.Name {
 			case "sysUpTime":
-				require.Greater(t, f.Value.(uint64), uint64(0))
+				require.Greater(t, f.Value.Raw().(uint64), uint64(0))
 			}
 		}
 	}
