@@ -27,7 +27,7 @@ func NewCmd() *cobra.Command {
 
 	rootCmd := &cobra.Command{
 		Use:           "tine [command] [flags] [args]",
-		Short:         "TINE is not ETL, but pipeline runner",
+		Short:         "TINE is not ETL",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		CompletionOptions: cobra.CompletionOptions{
@@ -44,6 +44,14 @@ func NewCmd() *cobra.Command {
 		RunE:  ListHandler,
 	}
 
+	versionCmd := &cobra.Command{
+		Use:   "version",
+		Short: "Print the version number of TINE",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(engine.DisplayVersion())
+		},
+	}
+
 	runCmd := &cobra.Command{
 		Use:   "run [flags] FILE [, FILE ...]",
 		Short: "Run tine pipelines from the specified one or more files",
@@ -55,9 +63,9 @@ func NewCmd() *cobra.Command {
 	rootCmd.AddCommand(
 		runCmd,
 		listCmd,
+		versionCmd,
 	)
 	return rootCmd
-
 }
 
 func ListHandler(cmd *cobra.Command, args []string) error {

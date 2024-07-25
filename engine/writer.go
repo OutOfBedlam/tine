@@ -69,7 +69,7 @@ func NewWriter(w io.Writer, cfg Config) (*Writer, error) {
 		Indent:       ret.OutputIndent,
 		Prefix:       ret.OutputPrefix,
 		Fields:       ret.Fields,
-		FormatOption: FormatOption{Timeformat: timeformatter, Decimal: ret.Decimal},
+		FormatOption: ValueFormat{Timeformat: timeformatter, Decimal: ret.Decimal},
 	})
 	ret.ContentType = reg.ContentType
 	if ret.ContentType == "" {

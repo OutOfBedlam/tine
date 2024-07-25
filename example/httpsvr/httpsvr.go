@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/OutOfBedlam/tine/engine"
@@ -8,11 +9,14 @@ import (
 )
 
 func main() {
+	addr := "127.0.0.1:8080"
 	router := http.NewServeMux()
 	router.HandleFunc("GET /helloworld", engine.HttpHandleFunc(helloWorldPipeline))
 	router.HandleFunc("GET /screenshot", engine.HttpHandleFunc(screenshotPipeline))
 	router.HandleFunc("GET /template", engine.HttpHandleFunc(templatePipeline))
-	http.ListenAndServe("127.0.0.1:8080", router)
+
+	fmt.Printf("\nstart server http://%s\n\n", addr)
+	http.ListenAndServe(addr, router)
 }
 
 const helloWorldPipeline = `
@@ -34,6 +38,8 @@ const screenshotPipeline = `
 `
 
 const templatePipeline = `
+[log]
+	level = "debug"
 [[inlets.load]]
 	count = 1
 [[outlets.template]]

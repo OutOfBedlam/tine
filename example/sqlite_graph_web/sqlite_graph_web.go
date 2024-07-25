@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/OutOfBedlam/tine/engine"
@@ -14,11 +15,40 @@ func main() {
 
 	router := http.NewServeMux()
 	router.HandleFunc("GET /", getView)
-	router.HandleFunc("GET /query", engine.HttpHandleFunc(queryPipeline))
+	router.HandleFunc("GET /query", HttpHandler(queryPipeline))
 	http.ListenAndServe("127.0.0.1:8080", router)
 
 	// stop data collector
 	collect.Stop()
+}
+
+func HttpHandler(config string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		p, err := engine.New(
+			engine.WithConfigTemplate(config, r.URL.Query()),
+			engine.WithWriter(w),
+			engine.WithSetContentTypeFunc(func(contentType string) {
+				w.Header().Set("Content-Type", contentType)
+			}),
+			engine.WithSetContentEncodingFunc(func(contentEncoding string) {
+				w.Header().Set("Content-Encoding", contentEncoding)
+			}),
+			engine.WithSetContentLengthFunc(func(contentLength int) {
+				w.Header().Set("Content-Length", fmt.Sprintf("%d", contentLength))
+			}),
+		)
+		w.Header().Set("Connection", "Close")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = p.Run()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		p.Stop()
+	}
 }
 
 func getView(w http.ResponseWriter, r *http.Request) {

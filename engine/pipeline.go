@@ -184,7 +184,7 @@ func New(opts ...Option) (*Pipeline, error) {
 func HttpHandleFunc(config string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		p, err := New(
-			WithConfigTemplate(config, r.URL.Query()),
+			WithConfig(config),
 			WithWriter(w),
 			WithSetContentTypeFunc(func(contentType string) {
 				w.Header().Set("Content-Type", contentType)

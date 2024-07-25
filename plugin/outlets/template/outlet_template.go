@@ -83,7 +83,7 @@ func (to *templateOutlet) Handle(recs []engine.Record) error {
 		fields := rec.Fields()
 		obj := map[string]any{}
 		for _, f := range fields {
-			obj[f.Name] = f.Value
+			obj[f.Name] = f.Value.Raw()
 		}
 		arr = append(arr, obj)
 	}

@@ -3,6 +3,7 @@ package engine
 import (
 	"bytes"
 	"fmt"
+	"math"
 	"reflect"
 	"strconv"
 	"time"
@@ -19,7 +20,7 @@ var reflectTimeType = reflect.TypeOf(time.Time{})
 func NewValue[T RawValue](data T) *Value {
 	rType := reflect.TypeOf(data)
 	if rType == nil {
-		return &Value{isNull: true}
+		return &Value{kind: UNTYPED, isNull: true}
 	}
 	switch rType.Kind() {
 	case reflect.String:
@@ -75,41 +76,50 @@ func (v *Value) Clone() *Value {
 	return ret
 }
 
-type FormatOption struct {
+type ValueFormat struct {
 	Timeformat *Timeformatter
 	Decimal    int
+	NullString string
+	NullInt    int
+	NullFloat  float64
+	NullTime   time.Time
+	NullBool   bool
 }
 
-func (fo FormatOption) FormatTime(tm time.Time) string {
+func (fo ValueFormat) FormatTime(tm time.Time) string {
 	return fo.Timeformat.Format(tm)
 }
 
-func DefaultFormatOption() FormatOption {
-	return FormatOption{
+func DefaultValueFormat() ValueFormat {
+	return ValueFormat{
 		Timeformat: &Timeformatter{format: time.RFC3339, loc: time.Local},
 		Decimal:    -1,
+		NullString: "NULL",
 	}
 }
 
-func (f *Value) Format(opt FormatOption) string {
+func (val *Value) Format(vf ValueFormat) string {
+	if val.isNull {
+		return vf.NullString
+	}
 	var strVal string
-	switch f.Type() {
+	switch val.Type() {
 	case BOOL:
-		strVal = strconv.FormatBool(f.Raw().(bool))
+		strVal = strconv.FormatBool(val.raw.(bool))
 	case INT:
-		strVal = strconv.FormatInt(f.Raw().(int64), 10)
+		strVal = strconv.FormatInt(val.raw.(int64), 10)
 	case UINT:
-		strVal = strconv.FormatUint(f.Raw().(uint64), 10)
+		strVal = strconv.FormatUint(val.raw.(uint64), 10)
 	case FLOAT:
-		strVal = strconv.FormatFloat(f.Raw().(float64), 'f', opt.Decimal, 64)
+		strVal = strconv.FormatFloat(val.raw.(float64), 'f', vf.Decimal, 64)
 	case STRING:
-		strVal = f.Raw().(string)
+		strVal = val.raw.(string)
 	case TIME:
-		strVal = opt.Timeformat.Format(f.Raw().(time.Time))
+		strVal = vf.Timeformat.Format(val.raw.(time.Time))
 	case BINARY:
-		strVal = fmt.Sprintf("BIN(%s)", util.FormatFileSizeInt(len((f.Raw().([]byte)))))
+		strVal = fmt.Sprintf("BINARY(%s)", util.FormatFileSizeInt(len((val.raw.([]byte)))))
 	default:
-		panic("unsupported type-" + string(f.Type()))
+		panic("unsupported type-" + string(val.Type()))
 	}
 	return strVal
 }
@@ -372,68 +382,135 @@ func (val *Value) Bytes() ([]byte, bool) {
 	}
 }
 
+func convtToComparable(other any, kind Type, ignoreFloatFraction bool) (any, bool) {
+	if other == nil {
+		return nil, false
+	}
+	if ov, ok := other.(*Value); ok {
+		other = ov.raw
+	}
+	switch kind {
+	case BOOL:
+		switch o := other.(type) {
+		case bool:
+			return o, true
+		case string:
+			if v, err := strconv.ParseBool(o); err == nil {
+				return v, true
+			}
+		}
+	case INT:
+		switch o := other.(type) {
+		case int:
+			return int64(o), true
+		case int16:
+			return int64(o), true
+		case int32:
+			return int64(o), true
+		case int64:
+			return o, true
+		case float32:
+			if ignoreFloatFraction {
+				return int64(o), true
+			}
+			if _, frac := math.Modf(float64(o)); frac == 0 {
+				return int64(o), true
+			}
+		case float64:
+			if ignoreFloatFraction {
+				return int64(o), true
+			}
+			if _, frac := math.Modf(float64(o)); frac == 0 {
+				return int64(o), true
+			}
+		}
+	case UINT:
+		switch o := other.(type) {
+		case int:
+			return uint64(o), o >= 0
+		case int64:
+			return uint64(o), o >= 0
+		case uint:
+			return uint64(o), true
+		case uint64:
+			return o, true
+		case float32:
+			if v, frac := math.Modf(float64(o)); frac == 0 && v >= 0 {
+				return int64(v), true
+			}
+		case float64:
+			if v, frac := math.Modf(float64(o)); frac == 0 && v >= 0 {
+				return int64(v), true
+			}
+		}
+	case FLOAT:
+		switch o := other.(type) {
+		case float64:
+			return o, true
+		case int:
+			return float64(o), true
+		case int64:
+			return float64(o), true
+		case string:
+			if v, err := strconv.ParseFloat(o, 64); err == nil {
+				return v, true
+			}
+		}
+	case STRING:
+		switch o := other.(type) {
+		case string:
+			return o, true
+		case float64:
+			return strconv.FormatFloat(o, 'f', -1, 64), true
+		}
+	case TIME:
+		switch o := other.(type) {
+		case time.Time:
+			return o, true
+		case int64:
+			return time.Unix(o, 0), true
+		case string:
+			if v, err := strconv.ParseInt(o, 10, 64); err == nil {
+				return time.Unix(v, 0), true
+			}
+		}
+	case BINARY:
+		switch o := other.(type) {
+		case []byte:
+			return o, true
+		}
+	}
+	return nil, false
+}
+
 // Compare this value with other primitive type
 // If other is nil, the result is not defined.
 func (val *Value) Eq(other any) bool {
 	if other == nil {
 		return false
 	}
+	if ov, ok := other.(*Value); ok {
+		other = ov.raw
+	}
+	o, ok := convtToComparable(other, val.Type(), false)
+	if !ok {
+		return false
+	}
 	switch val.Type() {
 	case BOOL:
-		switch o := other.(type) {
-		case bool:
-			return val.raw.(bool) == o
-		}
+		return val.raw.(bool) == o.(bool)
 	case INT:
-		switch o := other.(type) {
-		case int:
-			return val.raw.(int64) == int64(o)
-		case int64:
-			return val.raw.(int64) == o
-		case float32:
-			return val.raw.(int64) == int64(o)
-		case float64:
-			return val.raw.(int64) == int64(o)
-		}
+		return val.raw.(int64) == o.(int64)
 	case UINT:
-		switch o := other.(type) {
-		case int:
-			return val.raw.(uint64) == uint64(o)
-		case int64:
-			return val.raw.(uint64) == uint64(o)
-		case uint:
-			return val.raw.(uint64) == uint64(o)
-		case uint64:
-			return val.raw.(uint64) == o
-		case float32:
-			return val.raw.(uint64) == uint64(o)
-		case float64:
-			return val.raw.(uint64) == uint64(o)
-		}
+		return val.raw.(uint64) == o.(uint64)
 	case FLOAT:
-		switch o := other.(type) {
-		case float64:
-			return val.raw.(float64) == o
-		case int:
-			return val.raw.(float64) == float64(o)
-		case int64:
-			return val.raw.(float64) == float64(o)
-		}
+		return val.raw.(float64) == o.(float64)
 	case STRING:
-		switch o := other.(type) {
-		case string:
-			return val.raw.(string) == o
-		}
+		return val.raw.(string) == o.(string)
 	case TIME:
-		switch o := other.(type) {
-		case time.Time:
-			return val.raw.(time.Time).Equal(o)
-		}
+		return val.raw.(time.Time).Equal(o.(time.Time))
 	case BINARY:
-		switch o := other.(type) {
-		case []byte:
-			return bytes.Equal(val.raw.([]byte), o)
-		}
+		return bytes.Equal(val.raw.([]byte), o.([]byte))
 	}
 	return false
 }
@@ -444,59 +521,28 @@ func (val *Value) Gt(other any) bool {
 	if other == nil {
 		return false
 	}
+	if ov, ok := other.(*Value); ok {
+		other = ov.raw
+	}
+	o, ok := convtToComparable(other, val.Type(), true)
+	if !ok {
+		return false
+	}
 	switch val.Type() {
 	case BOOL:
-		switch o := other.(type) {
-		case bool:
-			return val.raw.(bool) && !o
-		}
+		return val.raw.(bool) && !o.(bool)
 	case INT:
-		switch o := other.(type) {
-		case int:
-			return val.raw.(int64) > int64(o)
-		case int64:
-			return val.raw.(int64) > o
-		case float32:
-			return val.raw.(int64) > int64(o)
-		case float64:
-			return val.raw.(int64) > int64(o)
-		}
+		return val.raw.(int64) > o.(int64)
 	case UINT:
-		switch o := other.(type) {
-		case int:
-			return val.raw.(uint64) > uint64(o)
-		case int64:
-			return val.raw.(uint64) > uint64(o)
-		case uint:
-			return val.raw.(uint64) > uint64(o)
-		case uint64:
-			return val.raw.(uint64) > o
-		case float32:
-			return val.raw.(uint64) > uint64(o)
-		case float64:
-			return val.raw.(uint64) > uint64(o)
-		}
+		return val.raw.(uint64) > o.(uint64)
 	case FLOAT:
-		switch o := other.(type) {
-		case float32:
-			return val.raw.(float64) > float64(o)
-		case float64:
-			return val.raw.(float64) > o
-		case int:
-			return val.raw.(float64) > float64(o)
-		case int64:
-			return val.raw.(float64) > float64(o)
-		}
+		return val.raw.(float64) > o.(float64)
 	case STRING:
-		switch o := other.(type) {
-		case string:
-			return val.raw.(string) > o
-		}
+		return val.raw.(string) > o.(string)
 	case TIME:
-		switch o := other.(type) {
-		case time.Time:
-			return val.raw.(time.Time).After(o)
-		}
+		return val.raw.(time.Time).After(o.(time.Time))
+	case BINARY:
+		return bytes.Compare(val.raw.([]byte), o.([]byte)) > 0
 	}
 	return false
 }
@@ -507,59 +553,28 @@ func (val *Value) Lt(other any) bool {
 	if other == nil {
 		return false
 	}
+	if ov, ok := other.(*Value); ok {
+		other = ov.raw
+	}
+	o, ok := convtToComparable(other, val.Type(), true)
+	if !ok {
+		return false
+	}
 	switch val.Type() {
 	case BOOL:
-		switch o := other.(type) {
-		case bool:
-			return !val.raw.(bool) && o
-		}
+		return val.raw.(bool) && o.(bool)
 	case INT:
-		switch o := other.(type) {
-		case int:
-			return val.raw.(int64) < int64(o)
-		case int64:
-			return val.raw.(int64) < o
-		case float32:
-			return val.raw.(int64) < int64(o)
-		case float64:
-			return val.raw.(int64) < int64(o)
-		}
+		return val.raw.(int64) < o.(int64)
 	case UINT:
-		switch o := other.(type) {
-		case int:
-			return val.raw.(uint64) < uint64(o)
-		case int64:
-			return val.raw.(uint64) < uint64(o)
-		case uint:
-			return val.raw.(uint64) < uint64(o)
-		case uint64:
-			return val.raw.(uint64) < o
-		case float32:
-			return val.raw.(uint64) < uint64(o)
-		case float64:
-			return val.raw.(uint64) < uint64(o)
-		}
+		return val.raw.(uint64) < o.(uint64)
 	case FLOAT:
-		switch o := other.(type) {
-		case float32:
-			return val.raw.(float64) < float64(o)
-		case float64:
-			return val.raw.(float64) < o
-		case int:
-			return val.raw.(float64) < float64(o)
-		case int64:
-			return val.raw.(float64) < float64(o)
-		}
+		return val.raw.(float64) < o.(float64)
 	case STRING:
-		switch o := other.(type) {
-		case string:
-			return val.raw.(string) < o
-		}
+		return val.raw.(string) < o.(string)
 	case TIME:
-		switch o := other.(type) {
-		case time.Time:
-			return val.raw.(time.Time).Before(o)
-		}
+		return val.raw.(time.Time).Before(o.(time.Time))
+	case BINARY:
+		return bytes.Compare(val.raw.([]byte), o.([]byte)) < 0
 	}
 	return false
 }

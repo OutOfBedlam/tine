@@ -119,7 +119,7 @@ func StringFields(r engine.Record) []string {
 func StringFieldsWithFormat(r engine.Record, tf *engine.Timeformatter, decimal int) []string {
 	ret := []string{}
 	for _, f := range r.Fields() {
-		strVal := f.Value.Format(engine.FormatOption{Timeformat: tf, Decimal: decimal})
+		strVal := f.Value.Format(engine.ValueFormat{Timeformat: tf, Decimal: decimal})
 		ret = append(ret, f.Name, strVal)
 	}
 	return ret
