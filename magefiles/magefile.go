@@ -67,6 +67,7 @@ func BuildX(tag string, commit string) error {
 		"-X", fmt.Sprintf("%s/engine.tineSha=%s", mod, gitSHA),
 		"-X", fmt.Sprintf("%s/engine.goVersion=%s", mod, goVersion),
 		"-X", fmt.Sprintf("%s/engine.timeVersion=%s", mod, timestamp),
+		"-s",
 	}, " ")
 	args = append(args, "-ldflags", ldflags)
 
