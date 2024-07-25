@@ -223,6 +223,7 @@ http.ListenAndServe(":8080", router)
 | `syslog`     | Receive rsyslog messages via network       |
 | `telegram`   | Receive messages via Telegram              |
 | `nats`       | NATS server stat                           |
+| `rrd-graph`  | rrd graph (required rebuild `go build -tags rrd`) |
 
 ### Outlets
 
@@ -236,6 +237,7 @@ http.ListenAndServe(":8080", router)
 | `template`   | Apply template and write to a file         |
 | `telegram`   | Send message via Telegram                  |
 | `mqtt`       | Publish to MQTT broker                     |
+| `rrd`        | rrd (required rebuild `go build -tags rrd` ) |
 
 ### Flows
 
