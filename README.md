@@ -1,5 +1,6 @@
 # TINE
 
+[![latest](https://img.shields.io/github/v/release/OutOfBedlam/tine?sort=semver)](https://github.com/OutOfBedlam/tine/releases)
 ![CI](https://github.com/OutOfBedlam/tine/actions/workflows/ci.yml/badge.svg)
 [![codecov](https://codecov.io/gh/OutOfBedlam/tine/graph/badge.svg?token=5XSG9M9P8E)](https://codecov.io/gh/OutOfBedlam/tine)
 

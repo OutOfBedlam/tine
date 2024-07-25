@@ -45,7 +45,7 @@ jobs:
         retention-days: 5
 
     - name: Release files
-      uses: svenstaro/upload-release-action@2.7.0
+      uses: svenstaro/upload-release-action@2.9.0
       if: ${{ startsWith(github.ref, 'refs/tags/v') }}
       with:
         repo_token: ${{ secrets.GIT_PASS }}
