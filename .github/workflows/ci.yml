@@ -24,7 +24,7 @@ jobs:
 
     - name: Build
       run: |
-          go run magefiles/mage.go buildx ${ github.ref }} ${{ github.sha }}  package
+          go run magefiles/mage.go buildx ${{ github.ref }} ${{ github.sha }}  package
 
     - name: Test
       run: |
