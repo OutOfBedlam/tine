@@ -1,3 +1,6 @@
+//go:build rrd
+// +build rrd
+
 package rrd
 
 import (

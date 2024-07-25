@@ -39,7 +39,7 @@ func (df *dumpFlow) Close() error     { return nil }
 func (df *dumpFlow) Parallelism() int { return 1 }
 
 func (df *dumpFlow) Process(recs []engine.Record) ([]engine.Record, error) {
-	formatOpt := engine.FormatOption{Timeformat: df.tf, Decimal: df.precision}
+	formatOpt := engine.ValueFormat{Timeformat: df.tf, Decimal: df.precision}
 	for idx, r := range recs {
 		list := make([]any, 0, len(r.Fields())*2)
 		for _, f := range r.Fields() {

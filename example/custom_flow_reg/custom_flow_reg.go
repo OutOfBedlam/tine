@@ -16,6 +16,7 @@ import (
 
 const config = `
 [[inlets.load]]
+	loads = [ 1 ]
 	interval = "3s"
 
 [[flows.custom]]

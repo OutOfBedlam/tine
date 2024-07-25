@@ -1,8 +1,12 @@
 # TINE
 
+![CI](https://github.com/OutOfBedlam/tine/actions/workflows/ci.yml/badge.svg)
+[![codecov](https://codecov.io/gh/OutOfBedlam/tine/graph/badge.svg?token=5XSG9M9P8E)](https://codecov.io/gh/OutOfBedlam/tine)
+
+
 ![TINE is not ETL](./docs/images/tine-drop-circlex256.png)
 
-A straightforward data pipeline processor.
+TINE a data pipeline runner.
 
 ## Install
 
@@ -50,7 +54,7 @@ It generates CPU usage in CSV format which is default format of 'outlets.file'.
 And change output format to "json" from "csv".
 
 ```toml
-## ..omit... ##
+...omit...
 [[outlets.file]]
     path  = "-"
     format = "json"

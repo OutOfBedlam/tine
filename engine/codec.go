@@ -18,7 +18,7 @@ type EncoderConfig struct {
 	Indent       string
 	Prefix       string
 	Fields       []string
-	FormatOption FormatOption
+	FormatOption ValueFormat
 }
 
 var encoders = make(map[string]*EncoderReg)
