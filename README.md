@@ -104,7 +104,7 @@ $ ./load.toml
 
 Create an pipeline and add inlets and outlets.
 
-See the full code from the directory [./example/custom_in](./example/helloworld/custom_in.go).
+See the full code from the directory [./example/custom_in](./example/custom_in/custom_in.go).
 
 **Create a pipeline**
 

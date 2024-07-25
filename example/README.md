@@ -25,7 +25,8 @@
 
 - [rrd_graph_web](./rrd_graph_web/rrd_graph_web.go)
 
-![image](./rrd_graph_web/rrd_graph_web.png)
+<!-- ![image](./rrd_graph_web/rrd_graph_web.png) -->
+<img src="./rrd_graph_web/rrd_graph_web.png" alt="image" width="300" height="auto">
 
 ## How to collect metrics into Sqlite and display it on web page
 
