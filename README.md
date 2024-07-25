@@ -1,5 +1,6 @@
 # TINE
 
+[![latest](https://img.shields.io/github/v/release/OutOfBedlam/tine?sort=semver)](https://github.com/OutOfBedlam/tine/releases)
 ![CI](https://github.com/OutOfBedlam/tine/actions/workflows/ci.yml/badge.svg)
 [![codecov](https://codecov.io/gh/OutOfBedlam/tine/graph/badge.svg?token=5XSG9M9P8E)](https://codecov.io/gh/OutOfBedlam/tine)
 
@@ -223,6 +224,7 @@ http.ListenAndServe(":8080", router)
 | `syslog`     | Receive rsyslog messages via network       |
 | `telegram`   | Receive messages via Telegram              |
 | `nats`       | NATS server stat                           |
+| `rrd-graph`  | rrd graph (required rebuild `go build -tags rrd`) |
 
 ### Outlets
 
@@ -236,6 +238,7 @@ http.ListenAndServe(":8080", router)
 | `template`   | Apply template and write to a file         |
 | `telegram`   | Send message via Telegram                  |
 | `mqtt`       | Publish to MQTT broker                     |
+| `rrd`        | rrd (required rebuild `go build -tags rrd` ) |
 
 ### Flows
 

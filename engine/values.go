@@ -90,12 +90,18 @@ func (fo ValueFormat) FormatTime(tm time.Time) string {
 	return fo.Timeformat.Format(tm)
 }
 
+var defaultValueFormat = ValueFormat{
+	Timeformat: &Timeformatter{format: time.RFC3339, loc: time.Local},
+	Decimal:    -1,
+	NullString: "NULL",
+}
+
 func DefaultValueFormat() ValueFormat {
-	return ValueFormat{
-		Timeformat: &Timeformatter{format: time.RFC3339, loc: time.Local},
-		Decimal:    -1,
-		NullString: "NULL",
-	}
+	return defaultValueFormat
+}
+
+func SetDefaultValueFormat(vf ValueFormat) {
+	defaultValueFormat = vf
 }
 
 func (val *Value) Format(vf ValueFormat) string {
