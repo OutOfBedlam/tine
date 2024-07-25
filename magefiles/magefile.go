@@ -8,13 +8,9 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 
-	"github.com/Masterminds/semver/v3"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/object"
 	_ "github.com/magefile/mage/mage"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
@@ -22,17 +18,42 @@ import (
 
 var Default = Build
 
-var vLastVersion string
 var vLastCommit string
-var vIsNightly bool
 var vBuildVersion string
 
 func Build() error {
-	mg.Deps(CheckTmp, GetVersion)
+	mg.Deps(CheckTmp)
+	sha, err := CheckGitSha()
+	if err != nil {
+		return err
+	}
+	return BuildX("snapshot", sha)
+}
+
+func BuildX(tag string, commit string) error {
+	mg.Deps(CheckTmp)
+	if tag != "" {
+		if strings.HasPrefix(tag, "v") {
+			vBuildVersion = tag
+		} else if strings.HasPrefix(tag, "refs/tags/v") {
+			vBuildVersion = strings.TrimPrefix(tag, "refs/tags/")
+		} else {
+			vBuildVersion = "snapshot"
+		}
+	} else {
+		vBuildVersion = "snapshot"
+	}
+	if commit != "" {
+		vLastCommit = commit
+	}
+	gitSHA := vLastCommit
+
 	mod := "github.com/OutOfBedlam/tine"
 	target := "tine"
 	timestamp := time.Now().Format("2006-01-02T15:04:05")
-	gitSHA := vLastCommit[0:8]
+	if len(gitSHA) > 8 {
+		gitSHA = gitSHA[0:8]
+	}
 	goVersion := strings.TrimPrefix(runtime.Version(), "go")
 
 	fmt.Println("Build", "version", vBuildVersion, "sha", gitSHA, "go", goVersion, "time", timestamp)
@@ -58,7 +79,7 @@ func Build() error {
 	// source directory
 	args = append(args, ".")
 
-	if err := sh.RunV("go", "mod", "tidy"); err != nil {
+	if err := sh.RunV("go", "mod", "download"); err != nil {
 		return err
 	}
 
@@ -78,72 +99,6 @@ func CheckTmp() error {
 		return nil
 	}
 	return err
-}
-
-func GetVersion() error {
-	repo, err := git.PlainOpen(".")
-	if err != nil {
-		return err
-	}
-	headRef, err := repo.Head()
-	if err != nil {
-		return err
-	}
-
-	headCommit, err := repo.CommitObject(headRef.Hash())
-	if err != nil {
-		return err
-	}
-
-	var lastTag *object.Tag
-	iter, err := repo.TagObjects()
-	if err != nil {
-		return err
-	}
-	iter.ForEach(func(tagObj *object.Tag) error {
-		if !strings.HasPrefix(tagObj.Name, "v") {
-			return nil
-		}
-		if lastTag == nil {
-			lastTag = tagObj
-		} else {
-			lastCommit, _ := lastTag.Commit()
-			tagCommit, _ := tagObj.Commit()
-			if tagCommit.Author.When.Sub(lastCommit.Author.When) > 0 {
-				lastTag = tagObj
-			}
-		}
-		return nil
-	})
-
-	lastTagCommit, err := lastTag.Commit()
-	if err != nil {
-		return err
-	}
-	vLastVersion = lastTag.Name
-	vLastCommit = headCommit.Hash.String()
-	vIsNightly = lastTagCommit.Hash.String() != vLastCommit
-	lastTagSemVer, err := semver.NewVersion(vLastVersion)
-	if err != nil {
-		return err
-	}
-
-	if lastTagSemVer.Prerelease() == "" {
-		if vIsNightly {
-			vBuildVersion = fmt.Sprintf("v%d.%d.%d-snapshot", lastTagSemVer.Major(), lastTagSemVer.Minor(), lastTagSemVer.Patch()+1)
-		} else {
-			vBuildVersion = fmt.Sprintf("v%d.%d.%d", lastTagSemVer.Major(), lastTagSemVer.Minor(), lastTagSemVer.Patch())
-		}
-	} else {
-		suffix := lastTagSemVer.Prerelease()
-		if vIsNightly && strings.HasPrefix(suffix, "rc") {
-			n, _ := strconv.Atoi(suffix[2:])
-			suffix = fmt.Sprintf("rc%d-snapshot", n+1)
-		}
-		vBuildVersion = fmt.Sprintf("v%d.%d.%d-%s", lastTagSemVer.Major(), lastTagSemVer.Minor(), lastTagSemVer.Patch(), suffix)
-	}
-
-	return nil
 }
 
 func CheckVersion() (string, error) {
@@ -174,7 +129,12 @@ func Test() error {
 		"test",
 		"-cover",
 		"-coverprofile", "./tmp/coverage.out",
-		"./...",
+		"./cmd/...",
+		"./engine/...",
+		"./drivers/...",
+		"./engine/...",
+		"./plugin/...",
+		"./util/...",
 	}
 
 	if err := sh.RunWithV(env, "go", testArgs...); err != nil {
@@ -194,7 +154,16 @@ func Package() error {
 }
 
 func PackageX(targetOS string, targetArch string) error {
-	mg.Deps(CleanPackage, GetVersion, CheckTmp)
+	mg.Deps(CleanPackage, CheckTmp)
+	binExe := "tine"
+	if targetOS == "windows" {
+		binExe = "tine.exe"
+	}
+	if output, err := sh.Output(filepath.Join("./tmp", binExe), "version"); err != nil {
+		return err
+	} else {
+		vBuildVersion = output
+	}
 	bdir := fmt.Sprintf("tine-%s-%s-%s", vBuildVersion, targetOS, targetArch)
 	_, err := os.Stat("dist")
 	if err != os.ErrNotExist {
@@ -202,14 +171,8 @@ func PackageX(targetOS string, targetArch string) error {
 	}
 	os.MkdirAll(filepath.Join("dist", bdir), 0755)
 
-	if targetOS == "windows" {
-		if err := os.Rename(filepath.Join("tmp", "tine.exe"), filepath.Join("dist", bdir, "tine.exe")); err != nil {
-			return err
-		}
-	} else {
-		if err := os.Rename(filepath.Join("tmp", "tine"), filepath.Join("./dist", bdir, "tine")); err != nil {
-			return err
-		}
+	if err := os.Rename(filepath.Join("tmp", binExe), filepath.Join("./dist", bdir, binExe)); err != nil {
+		return err
 	}
 
 	err = archivePackage(fmt.Sprintf("./dist/%s.zip", bdir), filepath.Join("./dist", bdir))

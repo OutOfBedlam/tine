@@ -1,11 +1,21 @@
-package engine
+package engine_test
 
 import (
 	"encoding/hex"
 	"fmt"
 	"testing"
 	"time"
+
+	. "github.com/OutOfBedlam/tine/engine"
 )
+
+func init() {
+	SetDefaultValueFormat(ValueFormat{
+		Timeformat: NewTimeformatterWithLocation(time.RFC3339, time.UTC),
+		Decimal:    -1,
+		NullString: "NULL",
+	})
+}
 
 func TestValues(t *testing.T) {
 	tests := []struct {
@@ -72,7 +82,7 @@ func ExampleNewValue() {
 	// 123 NULL
 	// 3.141592 NULL
 	// true NULL
-	// 2024-07-25T08:50:54+09:00 NULL
+	// 2024-07-24T23:50:54Z NULL
 	// BINARY(6 B) NULL
 }
 
@@ -80,7 +90,7 @@ func ExampleDefaultValueFormat() {
 	tm := time.Unix(1721865054, 0)
 	vf := DefaultValueFormat()
 	fmt.Println(NewValue(tm).Format(vf), NewValue(3.141592).Format(vf))
-	// Output: 2024-07-25T08:50:54+09:00 3.141592
+	// Output: 2024-07-24T23:50:54Z 3.141592
 }
 
 func ExampleValueFormat_epoch() {
@@ -95,10 +105,10 @@ func ExampleValueFormat_epoch() {
 func ExampleValueFormat() {
 	tm := time.Unix(1721865054, 0)
 	vf := DefaultValueFormat()
-	vf.Timeformat = NewTimeformatter("2006-01-02 15:04:05")
+	vf.Timeformat = NewTimeformatterWithLocation("2006-01-02 15:04:05", time.UTC)
 	vf.Decimal = 2
 	fmt.Println(NewValue(tm).Format(vf), NewValue(3.141592).Format(vf))
-	// Output: 2024-07-25 08:50:54 3.14
+	// Output: 2024-07-24 23:50:54 3.14
 }
 
 func ExampleValue_BoolValue() {
@@ -175,7 +185,7 @@ func ExampleValue_TimeValue() {
 	v := NewValue(int64(1721865054))
 	tv := v.TimeValue()
 	fmt.Println(tv.Format(DefaultValueFormat()))
-	// Output: 2024-07-25T08:50:54+09:00
+	// Output: 2024-07-24T23:50:54Z
 }
 
 func ExampleValue_Time() {
