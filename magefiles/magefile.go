@@ -165,7 +165,7 @@ func PackageX(targetOS string, targetArch string) error {
 	} else {
 		vBuildVersion = output
 	}
-	bdir := fmt.Sprintf("tine-%s-%s-%s", vBuildVersion, targetOS, targetArch)
+	bdir := fmt.Sprintf("tine-v%s-%s-%s", vBuildVersion, targetOS, targetArch)
 	_, err := os.Stat("dist")
 	if err != os.ErrNotExist {
 		os.RemoveAll(filepath.Join("dist", bdir))
