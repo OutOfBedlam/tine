@@ -13,8 +13,8 @@ func init() {
 
 func ExecInlet(ctx *engine.Context) engine.Inlet {
 	conf := ctx.Config()
-	commands := conf.GetStringArray("commands", []string{})
-	environments := conf.GetStringArray("environments", []string{})
+	commands := conf.GetStringSlice("commands", []string{})
+	environments := conf.GetStringSlice("environments", []string{})
 	namePrefix := conf.GetString("prefix", "")
 	interval := conf.GetDuration("batch_interval", 0)
 	if interval > 0 {

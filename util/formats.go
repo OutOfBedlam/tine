@@ -26,3 +26,17 @@ func FormatFileSize(bytes int64) string {
 	}
 	return fmt.Sprintf(f, s, byteSizes[i])
 }
+
+type CountUnit [2]string
+
+var (
+	CountUnitLines CountUnit = [2]string{"line", "lines"}
+)
+
+func FormatCount(count int, unit CountUnit) string {
+	if count <= 1 {
+		return fmt.Sprintf("%d %s", count, unit[0])
+	} else {
+		return fmt.Sprintf("%d %s", count, unit[1])
+	}
+}

@@ -1,7 +1,7 @@
-package report
+package csv
 
 import (
-	"encoding/csv"
+	gocsv "encoding/csv"
 	"fmt"
 	"io"
 	"strconv"
@@ -29,12 +29,12 @@ func NewCSVEncoder(c engine.EncoderConfig) engine.Encoder {
 
 type CSVEncoder struct {
 	engine.EncoderConfig
-	enc *csv.Writer
+	enc *gocsv.Writer
 }
 
 func (cw *CSVEncoder) Encode(recs []engine.Record) error {
 	if cw.enc == nil {
-		cw.enc = csv.NewWriter(cw.Writer)
+		cw.enc = gocsv.NewWriter(cw.Writer)
 	}
 
 	switch strings.ToLower(cw.Subformat) {
@@ -140,12 +140,12 @@ type CSVDecoder struct {
 	types  []engine.Type
 	tf     *engine.Timeformatter
 
-	dec *csv.Reader
+	dec *gocsv.Reader
 }
 
 func (cr *CSVDecoder) Decode() ([]engine.Record, error) {
 	if cr.dec == nil {
-		cr.dec = csv.NewReader(cr.raw)
+		cr.dec = gocsv.NewReader(cr.raw)
 	}
 	var ret = []engine.Record{}
 	var retErr error

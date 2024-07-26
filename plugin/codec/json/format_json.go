@@ -1,7 +1,7 @@
-package report
+package json
 
 import (
-	"encoding/json"
+	gojson "encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -25,12 +25,12 @@ func NewJSONEncoder(c engine.EncoderConfig) engine.Encoder {
 
 type JSONEncoder struct {
 	engine.EncoderConfig
-	enc *json.Encoder
+	enc *gojson.Encoder
 }
 
 func (jw *JSONEncoder) Encode(recs []engine.Record) error {
 	if jw.enc == nil {
-		jw.enc = json.NewEncoder(jw.Writer)
+		jw.enc = gojson.NewEncoder(jw.Writer)
 		jw.enc.SetIndent(jw.Prefix, jw.Indent)
 	}
 	switch strings.ToLower(jw.Subformat) {

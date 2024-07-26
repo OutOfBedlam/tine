@@ -24,7 +24,7 @@ func init() {
 func ScreenshotInlet(ctx *engine.Context) engine.Inlet {
 	interval := ctx.Config().GetDuration("interval", 10*time.Second)
 	count := ctx.Config().GetInt("count", 0)
-	displays := ctx.Config().GetIntArray("displays", nil)
+	displays := ctx.Config().GetIntSlice("displays", nil)
 	format := ctx.Config().GetString("format", "rgba")
 
 	return &screenshotInlet{

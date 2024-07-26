@@ -261,6 +261,8 @@ func (p *Pipeline) Build() (returnErr error) {
 				inlet := reg.Factory(p.ctx.WithConfig(c))
 				if inletHandler, err := p.AddInlet(inletCfg.Plugin, inlet); err != nil {
 					p.ctx.LogError("failed to add inlet", "inlet", inletCfg.Plugin, "error", err.Error())
+					returnErr = err
+					return
 				} else {
 					var lastFlow *FlowHandler
 					for _, flowCfg := range inletCfg.Flows {
@@ -313,7 +315,7 @@ func (p *Pipeline) Build() (returnErr error) {
 			}
 		}
 	})
-	return returnErr
+	return
 }
 
 // Start the pipeline, this will start all inlets, outlets and flows

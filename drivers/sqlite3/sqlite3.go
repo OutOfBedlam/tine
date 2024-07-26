@@ -56,7 +56,7 @@ func (sb *SqliteBase) Open() error {
 		sb.DB = db
 	}
 
-	for _, sqlText := range sb.Ctx.Config().GetStringArray("inits", []string{}) {
+	for _, sqlText := range sb.Ctx.Config().GetStringSlice("inits", []string{}) {
 		_, err := sb.DB.ExecContext(sb.Ctx, sqlText)
 		if err != nil {
 			return err

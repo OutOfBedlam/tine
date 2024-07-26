@@ -18,12 +18,14 @@ func SetFieldFlow(ctx *engine.Context) engine.Flow {
 }
 
 func (sf *setFieldFlow) Open() error {
-	set := sf.ctx.Config().GetConfigArray("set", nil)
+	set := sf.ctx.Config().GetConfigSlice("set", nil)
 	if len(set) == 0 {
 		return fmt.Errorf("set_field: no set field")
 	}
 	for _, s := range set {
 		for key, val := range s {
+			// TODO: the configuration only yields string values
+			// if caller wants to replace _ts field via pipeline DSL, it is impossible for now
 			switch v := val.(type) {
 			case string:
 				sf.fields = append(sf.fields, engine.NewStringField(key, v))

@@ -27,7 +27,7 @@ func init() {
 
 func ImageOutlet(ctx *engine.Context) engine.Outlet {
 	path := ctx.Config().GetString("path", "")
-	fields := ctx.Config().GetStringArray("fields", []string{})
+	fields := ctx.Config().GetStringSlice("fields", []string{})
 	dstContentType := ctx.Config().GetString("content_type", "image/png")
 	jpegQuality := ctx.Config().GetInt("jpeg_quality", 75)
 	overwrite := ctx.Config().GetBool("overwrite", false)

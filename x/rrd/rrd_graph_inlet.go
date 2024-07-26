@@ -85,7 +85,7 @@ func generate(ctx *engine.Context) ([]engine.Record, error) {
 	if vLabel := conf.GetString("v_label", ""); vLabel != "" {
 		g.SetVLabel(vLabel)
 	}
-	if size := conf.GetIntArray("size", []int{800, 300}); len(size) == 2 && size[0]*size[1] > 0 {
+	if size := conf.GetIntSlice("size", []int{800, 300}); len(size) == 2 && size[0]*size[1] > 0 {
 		g.SetSize(uint(size[0]), uint(size[1]))
 	} else {
 		ctx.LogWarn("inlets.rrd_graph", "invalid size", size)
@@ -122,7 +122,7 @@ func generate(ctx *engine.Context) ([]engine.Record, error) {
 	g.SetColor("FONT", strings.TrimPrefix(theme.Font, "#"))
 
 	seriesNameMaxLen := 0
-	series := conf.GetConfigArray("fields", nil)
+	series := conf.GetConfigSlice("fields", nil)
 	for _, ser := range series {
 		ds := ser.GetString("ds", "")
 		vname := ser.GetString("vname", ds)

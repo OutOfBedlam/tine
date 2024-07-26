@@ -1,11 +1,15 @@
 package file
 
 import (
+	"bytes"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
+	"strings"
 
 	"github.com/OutOfBedlam/tine/engine"
+	"github.com/OutOfBedlam/tine/util"
 )
 
 func init() {
@@ -28,19 +32,25 @@ type fileInlet struct {
 var _ = engine.PushInlet((*fileInlet)(nil))
 
 func (fi *fileInlet) Open() error {
-	path := fi.ctx.Config().GetString("path", "-")
+	path := fi.ctx.Config().GetString("path", "")
 	readerConf := fi.ctx.Config().GetConfig("reader", engine.Config{"format": "csv"})
-
-	slog.Debug("inlet.file", "path", path, "reader", readerConf)
-
-	var in io.Reader
-	if f, err := os.Open(path); err != nil {
-		return err
-	} else {
-		in = f
-		fi.closer = f
+	data := fi.ctx.Config().GetStringSlice("data", nil)
+	slog.Debug("inlet.file", "path", path, "data", util.FormatCount(len(data), util.CountUnitLines), "reader", readerConf)
+	if path == "" && len(data) == 0 {
+		return fmt.Errorf("no path or data specified")
 	}
 
+	var in io.Reader
+	if len(data) > 0 {
+		in = bytes.NewBufferString(strings.Join(data, "\n"))
+	} else {
+		if f, err := os.Open(path); err != nil {
+			return err
+		} else {
+			in = f
+			fi.closer = f
+		}
+	}
 	r, err := engine.NewReader(
 		engine.WithReader(in),
 		engine.WithReaderConfig(readerConf),

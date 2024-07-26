@@ -89,10 +89,10 @@ func (si *snmpInlet) Open() error {
 	si.clientConf.EngineBoots = conf.GetUint32("engine_boots", 0)
 	si.clientConf.EngineTime = conf.GetUint32("engine_time", 0)
 	//si.clientConf.Path = conf.GetStringArray("path", []string{"/usr/share/snmp/mibs"})
-	si.clientConf.Path = conf.GetStringArray("path", []string{})
+	si.clientConf.Path = conf.GetStringSlice("path", []string{})
 	si.clientConf.Translator = conf.GetString("translator", "gosmi")
 
-	si.agents = conf.GetStringArray("agent", nil)
+	si.agents = conf.GetStringSlice("agent", nil)
 	if len(si.agents) == 0 {
 		return fmt.Errorf("no SNMP agent specified")
 	}

@@ -28,8 +28,8 @@ type templateOutlet struct {
 
 func (to *templateOutlet) Open() error {
 	conf := to.ctx.Config()
-	templates := conf.GetStringArray("templates", []string{})
-	templateFiles := conf.GetStringArray("template_files", []string{})
+	templates := conf.GetStringSlice("templates", []string{})
+	templateFiles := conf.GetStringSlice("template_files", []string{})
 
 	to.tmpl = gotmpl.New("template")
 	var err error

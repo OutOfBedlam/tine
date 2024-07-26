@@ -305,9 +305,15 @@ const FIELD_TIMESTAMP = "_ts"
 func prependInletNameTimestamp(recs []Record, name string) []Record {
 	for i, r := range recs {
 		recs[i] = NewRecord(
-			NewTimeField(FIELD_TIMESTAMP, time.Now()),
+			NewTimeField(FIELD_TIMESTAMP, Now()),
 			NewStringField(FIELD_INLET, name),
 		).Append(r.Fields()...)
 	}
 	return recs
 }
+
+// Now is a function that returns the current time
+// It is used to generate the timestamp for each record
+// The default value is time.Now
+// Set this to a fixed time in the purpose of testing
+var Now = time.Now

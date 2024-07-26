@@ -34,7 +34,7 @@ func NewWriter(w io.Writer, cfg Config) (*Writer, error) {
 		Timeformat:   cfg.GetString("timeformat", "s"),
 		Timezone:     cfg.GetString("tz", "Local"),
 		Compress:     cfg.GetString("compress", ""),
-		Fields:       cfg.GetStringArray("fields", []string{}),
+		Fields:       cfg.GetStringSlice("fields", []string{}),
 		raw:          NopCloser(w),
 	}
 

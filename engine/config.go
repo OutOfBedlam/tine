@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"fmt"
+	"slices"
 	"strconv"
 	"time"
 
@@ -16,6 +18,8 @@ type PipelineConfig struct {
 	Outlets  []OutletConfig
 	Flows    []FlowConfig
 }
+
+var topLevelKeys = []string{"inlets", "outlets", "flows", "defaults", "log", "name"}
 
 func LoadConfig(content string, cfg *PipelineConfig) error {
 	vc := NewConfig()
@@ -41,7 +45,7 @@ func LoadConfig(content string, cfg *PipelineConfig) error {
 			kind := keys[0]
 			pluginName := keys[1]
 			inletCfg := vc.GetConfig(kind, nil)
-			paramsArr := inletCfg.GetConfigArray(pluginName, nil)
+			paramsArr := inletCfg.GetConfigSlice(pluginName, nil)
 			var params Config
 			if len(paramsArr) == 0 {
 				params = Config{}
@@ -88,6 +92,12 @@ func LoadConfig(content string, cfg *PipelineConfig) error {
 					Params: params,
 				})
 			}
+		} else if len(keys) > 0 {
+			if !slices.Contains(topLevelKeys, keys[0]) {
+				return fmt.Errorf("unexpected keys %s", keys)
+			}
+		} else {
+			return fmt.Errorf("unexpected key %s", keys)
 		}
 	}
 	return nil
@@ -140,7 +150,7 @@ func (c Config) GetConfig(key string, defaultVal Config) Config {
 	return defaultVal
 }
 
-func (c Config) GetConfigArray(key string, defaultVal []Config) []Config {
+func (c Config) GetConfigSlice(key string, defaultVal []Config) []Config {
 	if v, ok := c[key]; ok {
 		switch val := v.(type) {
 		case map[string]any:
@@ -210,7 +220,7 @@ func (c Config) GetString(key string, defaultVal string) string {
 	return defaultVal
 }
 
-func (c Config) GetStringArray(key string, defaultVal []string) []string {
+func (c Config) GetStringSlice(key string, defaultVal []string) []string {
 	if v, ok := c[key]; ok {
 		switch val := v.(type) {
 		case []string:
@@ -298,7 +308,7 @@ func (c Config) GetFloat(key string, defaultVal float64) float64 {
 	return defaultVal
 }
 
-func (c Config) GetIntArray(key string, defaultVal []int) []int {
+func (c Config) GetIntSlice(key string, defaultVal []int) []int {
 	if v, ok := c[key]; ok {
 		switch val := v.(type) {
 		case []int:

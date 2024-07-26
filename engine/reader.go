@@ -33,8 +33,8 @@ func WithReaderConfig(cfg Config) ReaderOption {
 		rd.timeformat = cfg.GetString("timeformat", "s")
 		rd.timezone = cfg.GetString("tz", "Local")
 		rd.compress = cfg.GetString("compress", "")
-		rd.fields = cfg.GetStringArray("fields", nil)
-		rd.types = cfg.GetStringArray("types", nil)
+		rd.fields = cfg.GetStringSlice("fields", nil)
+		rd.types = cfg.GetStringSlice("types", nil)
 	}
 }
 

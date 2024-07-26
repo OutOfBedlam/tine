@@ -43,7 +43,7 @@ func (o *rrdOutlet) Open() error {
 
 	c := xrrd.NewCreator(o.path, time.Now().Add(-1*time.Second), step)
 
-	fieldsCfg := o.ctx.Config().GetConfigArray("fields", nil)
+	fieldsCfg := o.ctx.Config().GetConfigSlice("fields", nil)
 	for _, fc := range fieldsCfg {
 		// field
 		field := fc.GetString("field", "")
@@ -66,7 +66,7 @@ func (o *rrdOutlet) Open() error {
 		}
 	}
 
-	rralst := o.ctx.Config().GetConfigArray("rra", nil)
+	rralst := o.ctx.Config().GetConfigSlice("rra", nil)
 	for _, rra := range rralst {
 		var args = []any{}
 		// CF

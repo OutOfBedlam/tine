@@ -106,7 +106,7 @@ func CpuInlet(ctx *engine.Context) engine.Inlet {
 
 func LoadInlet(ctx *engine.Context) engine.Inlet {
 	conf := ctx.Config()
-	loads := conf.GetIntArray("loads", []int{1, 5, 15})
+	loads := conf.GetIntSlice("loads", []int{1, 5, 15})
 	interval := conf.GetDuration("interval", defaultInterval)
 	count := conf.GetInt64("count", 0)
 	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
@@ -150,8 +150,8 @@ func MemInlet(ctx *engine.Context) engine.Inlet {
 
 func DiskInlet(ctx *engine.Context) engine.Inlet {
 	conf := ctx.Config()
-	mountpoints := conf.GetStringArray("mount_points", []string{})
-	ignorefs := conf.GetStringArray("ignore_fs", []string{})
+	mountpoints := conf.GetStringSlice("mount_points", []string{})
+	ignorefs := conf.GetStringSlice("ignore_fs", []string{})
 	interval := conf.GetDuration("interval", defaultInterval)
 	count := conf.GetInt64("count", 0)
 	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
@@ -206,7 +206,7 @@ func DiskInlet(ctx *engine.Context) engine.Inlet {
 
 func DiskioInlet(ctx *engine.Context) engine.Inlet {
 	conf := ctx.Config()
-	devPatterns := conf.GetStringArray("devices", []string{})
+	devPatterns := conf.GetStringSlice("devices", []string{})
 	interval := conf.GetDuration("interval", defaultInterval)
 	count := conf.GetInt64("count", 0)
 	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
@@ -252,7 +252,7 @@ func DiskioInlet(ctx *engine.Context) engine.Inlet {
 
 func NetInlet(ctx *engine.Context) engine.Inlet {
 	conf := ctx.Config()
-	nicPatterns := conf.GetStringArray("devices", []string{"*"})
+	nicPatterns := conf.GetStringSlice("devices", []string{"*"})
 	interval := conf.GetDuration("interval", defaultInterval)
 	count := conf.GetInt64("count", 0)
 	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
@@ -295,7 +295,7 @@ func NetInlet(ctx *engine.Context) engine.Inlet {
 
 func NetstatInlet(ctx *engine.Context) engine.Inlet {
 	conf := ctx.Config()
-	protos := conf.GetStringArray("protocols", []string{})
+	protos := conf.GetStringSlice("protocols", []string{})
 	interval := conf.GetDuration("interval", defaultInterval)
 	count := conf.GetInt64("count", 0)
 	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
