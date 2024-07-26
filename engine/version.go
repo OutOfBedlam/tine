@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Masterminds/semver/v3"
 )
@@ -44,7 +45,12 @@ func DisplayVersion() string {
 }
 
 func VersionString() string {
-	return fmt.Sprintf("%s (%v %v)", tineVersion, tineSha, timeVersion)
+	// this version string output is used by the version command
+	// and it is used by post-install test.
+	//
+	// test $(tine version | cut -d" " -f 1) = {{version}}
+	//
+	return fmt.Sprintf("%s %v %v", strings.TrimPrefix(tineVersion, "v"), tineSha, timeVersion)
 }
 
 func BuildCompiler() string {

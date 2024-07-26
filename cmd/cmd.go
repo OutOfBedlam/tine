@@ -48,7 +48,7 @@ func NewCmd() *cobra.Command {
 		Use:   "version",
 		Short: "Print the version number of TINE",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(engine.DisplayVersion())
+			fmt.Println(engine.VersionString())
 		},
 	}
 
