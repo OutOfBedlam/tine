@@ -14,6 +14,10 @@ type Flow interface {
 	Parallelism() int
 }
 
+type BufferedFlow interface {
+	Flush() []Record
+}
+
 type FlowReg struct {
 	Name    string
 	Factory func(ctx *Context) Flow
@@ -68,6 +72,11 @@ func NewFlowHandler(ctx *Context, name string, flow Flow) *FlowHandler {
 	parallelism := flow.Parallelism()
 	if parallelism < 1 {
 		parallelism = 1
+	} else if parallelism > 1 {
+		if _, ok := flow.(BufferedFlow); ok {
+			ctx.LogWarn("flows.%s is buffered, parallelism is forced to 1", name)
+			parallelism = 1
+		}
 	}
 	ret := &FlowHandler{
 		ctx:  ctx,
@@ -129,6 +138,13 @@ func (fh *FlowHandler) Start() error {
 					atomic.AddUint64(&fh.sent, uint64(len(r)))
 				} else if _, ok := fh.flow.(*fanOutFlow); ok {
 					atomic.AddUint64(&fh.sent, uint64(len(records)))
+				}
+			}
+			if buffered, ok := fh.flow.(BufferedFlow); ok {
+				r := buffered.Flush()
+				if len(r) > 0 {
+					fh.outCh <- r
+					atomic.AddUint64(&fh.sent, uint64(len(r)))
 				}
 			}
 			fh.closeWg.Done()

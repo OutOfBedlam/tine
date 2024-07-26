@@ -33,6 +33,14 @@ func (mf *mergeFlow) Open() error      { return nil }
 func (mf *mergeFlow) Close() error     { return nil }
 func (mf *mergeFlow) Parallelism() int { return 1 }
 
+func (mf *mergeFlow) Flush() []engine.Record {
+	ret := []engine.Record{}
+	for _, r := range mf.table.Rows() {
+		ret = append(ret, engine.NewRecord(r...))
+	}
+	return ret
+}
+
 func (mf *mergeFlow) Process(records []engine.Record) ([]engine.Record, error) {
 	for _, rec := range records {
 		k := rec.Field(mf.joinField)
@@ -65,7 +73,7 @@ func (mf *mergeFlow) Process(records []engine.Record) ([]engine.Record, error) {
 		}
 	}
 
-	til := time.Now().Add(-mf.waitLimit)
+	til := engine.Now().Add(-mf.waitLimit)
 
 	selected, remains := mf.table.Split(engine.F{ColName: mf.joinField, Comparator: engine.LT, Comparando: til})
 	mf.table = remains
