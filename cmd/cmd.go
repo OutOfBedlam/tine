@@ -48,9 +48,15 @@ func NewCmd() *cobra.Command {
 		Use:   "version",
 		Short: "Print the version number of TINE",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(engine.VersionString())
+			short, _ := cmd.Flags().GetBool("short")
+			if short {
+				fmt.Println(engine.DisplayVersion())
+			} else {
+				fmt.Println(engine.VersionString())
+			}
 		},
 	}
+	versionCmd.Flags().BoolP("short", "s", false, "print the version only")
 
 	runCmd := &cobra.Command{
 		Use:   "run [flags] FILE [, FILE ...]",

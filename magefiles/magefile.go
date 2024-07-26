@@ -160,7 +160,7 @@ func PackageX(targetOS string, targetArch string) error {
 	if targetOS == "windows" {
 		binExe = "tine.exe"
 	}
-	if output, err := sh.Output(filepath.Join("./tmp", binExe), "version"); err != nil {
+	if output, err := sh.Output(filepath.Join("./tmp", binExe), "version", "--short"); err != nil {
 		return err
 	} else {
 		vBuildVersion = output
