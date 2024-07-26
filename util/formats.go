@@ -20,9 +20,9 @@ func FormatFileSize(bytes int64) string {
 		i++
 	}
 
-	f := "%.0f %s"
-	if i > 1 {
-		f = "%.2f %s"
+	f := "%.0f%s"
+	if i >= 1 {
+		f = "%.2f%s"
 	}
 	return fmt.Sprintf(f, s, byteSizes[i])
 }
@@ -34,7 +34,7 @@ var (
 )
 
 func FormatCount(count int, unit CountUnit) string {
-	if count <= 1 {
+	if count == 1 {
 		return fmt.Sprintf("%d %s", count, unit[0])
 	} else {
 		return fmt.Sprintf("%d %s", count, unit[1])
