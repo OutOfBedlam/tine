@@ -35,45 +35,45 @@ func TestPredict(t *testing.T) {
 		{
 			true,
 			`${load1} < 2.5 // float compare with float`,
-			engine.NewRecord(engine.NewFloatField("load1", 2.0)),
+			engine.NewRecord(engine.NewField("load1", 2.0)),
 		},
 		{
 			true,
 			`${load1} == 2 // int compare with int`,
-			engine.NewRecord(engine.NewIntField("load1", 2)),
+			engine.NewRecord(engine.NewField("load1", int64(2))),
 		},
 		{
 			false,
 			`${load1} == "2" // int compare with string`,
-			engine.NewRecord(engine.NewFloatField("load1", 2.1)),
+			engine.NewRecord(engine.NewField("load1", 2.1)),
 		},
 		{
 			false,
 			`${load1} == 2.1 // string compare with float`,
-			engine.NewRecord(engine.NewStringField("load1", "2.1")),
+			engine.NewRecord(engine.NewField("load1", "2.1")),
 		},
 		{
 			true,
 			`${a} + ${b} == 3.0 // float compare with float`,
 			engine.NewRecord(
-				engine.NewIntField("A", 1),
-				engine.NewIntField("B", 2),
+				engine.NewField("A", int64(1)),
+				engine.NewField("B", int64(2)),
 			),
 		},
 		{
 			true,
 			`${a} == 1 && ${b} == 2`,
 			engine.NewRecord(
-				engine.NewIntField("A", 1),
-				engine.NewIntField("B", 2),
+				engine.NewField("A", int64(1)),
+				engine.NewField("B", int64(2)),
 			),
 		},
 		{
 			false,
 			`${a} == 1 && ${b} != 2`,
 			engine.NewRecord(
-				engine.NewIntField("A", 1),
-				engine.NewIntField("B", 2),
+				engine.NewField("A", int64(1)),
+				engine.NewField("B", int64(2)),
 			),
 		},
 		// OR test

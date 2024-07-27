@@ -165,7 +165,7 @@ func (si *syslogInlet) handleDiagram() {
 				return
 			}
 			if r := records(message, si.separator); r != nil {
-				r = r.Append(engine.NewStringField("remote_host", addr.(*net.UDPAddr).IP.String()))
+				r = r.Append(engine.NewField("remote_host", addr.(*net.UDPAddr).IP.String()))
 				si.pushCh <- Data{reccords: []engine.Record{r}}
 			}
 		}()
@@ -209,26 +209,26 @@ func records(msg syslog.Message, separator string) engine.Record {
 		slog.Warn("inlet-syslog", "unsupported message type", fmt.Sprintf("%T", msg))
 	case *rfc3164.SyslogMessage:
 		ret = ret.Append(
-			engine.NewIntField("facility_code", int64(*msg.Facility)),
-			engine.NewIntField("severity_code", int64(*msg.Severity)),
+			engine.NewField("facility_code", int64(*msg.Facility)),
+			engine.NewField("severity_code", int64(*msg.Severity)),
 		)
 		if msg.Timestamp != nil {
-			ret = ret.Append(engine.NewTimeField("timestamp", *msg.Timestamp))
+			ret = ret.Append(engine.NewField("timestamp", *msg.Timestamp))
 		}
 		if msg.Hostname != nil {
-			ret = ret.Append(engine.NewStringField("hostname", *msg.Hostname))
+			ret = ret.Append(engine.NewField("hostname", *msg.Hostname))
 		}
 		if msg.Appname != nil {
-			ret = ret.Append(engine.NewStringField("appname", *msg.Appname))
+			ret = ret.Append(engine.NewField("appname", *msg.Appname))
 		}
 		if msg.ProcID != nil {
-			ret = ret.Append(engine.NewStringField("procid", *msg.ProcID))
+			ret = ret.Append(engine.NewField("procid", *msg.ProcID))
 		}
 		if msg.MsgID != nil {
-			ret = ret.Append(engine.NewStringField("msgid", *msg.MsgID))
+			ret = ret.Append(engine.NewField("msgid", *msg.MsgID))
 		}
 		if msg.Message != nil {
-			ret = ret.Append(engine.NewStringField(
+			ret = ret.Append(engine.NewField(
 				"message",
 				strings.TrimRightFunc(*msg.Message, func(r rune) bool {
 					return unicode.IsSpace(r)
@@ -237,27 +237,27 @@ func records(msg syslog.Message, separator string) engine.Record {
 	case *rfc5424.SyslogMessage:
 		// <PRI>VERSION TIMESTAMP HOSTNAME APP-NAME PROCID MSGID [SD-ID STRUCTURED-DATA] MESSAGE
 		ret = ret.Append(
-			engine.NewIntField("facility_code", int64(*msg.Facility)),
-			engine.NewIntField("severity_code", int64(*msg.Severity)),
-			engine.NewIntField("version", int64(msg.Version)),
+			engine.NewField("facility_code", int64(*msg.Facility)),
+			engine.NewField("severity_code", int64(*msg.Severity)),
+			engine.NewField("version", int64(msg.Version)),
 		)
 		if msg.Timestamp != nil {
-			ret = ret.Append(engine.NewTimeField("timestamp", *msg.Timestamp))
+			ret = ret.Append(engine.NewField("timestamp", *msg.Timestamp))
 		}
 		if msg.Hostname != nil {
-			ret = ret.Append(engine.NewStringField("hostname", *msg.Hostname))
+			ret = ret.Append(engine.NewField("hostname", *msg.Hostname))
 		}
 		if msg.Appname != nil {
-			ret = ret.Append(engine.NewStringField("appname", *msg.Appname))
+			ret = ret.Append(engine.NewField("appname", *msg.Appname))
 		}
 		if msg.ProcID != nil {
-			ret = ret.Append(engine.NewStringField("procid", *msg.ProcID))
+			ret = ret.Append(engine.NewField("procid", *msg.ProcID))
 		}
 		if msg.MsgID != nil {
-			ret = ret.Append(engine.NewStringField("msgid", *msg.MsgID))
+			ret = ret.Append(engine.NewField("msgid", *msg.MsgID))
 		}
 		if msg.Message != nil {
-			ret = ret.Append(engine.NewStringField(
+			ret = ret.Append(engine.NewField(
 				"message",
 				strings.TrimRightFunc(*msg.Message, func(r rune) bool {
 					return unicode.IsSpace(r)
@@ -267,11 +267,11 @@ func records(msg syslog.Message, separator string) engine.Record {
 			for sdid, sdparams := range *msg.StructuredData {
 				if len(sdparams) == 0 {
 					// When SD-ID does not have params we indicate its presence with a bool
-					ret = ret.Append(engine.NewBoolField(sdid, true))
+					ret = ret.Append(engine.NewField(sdid, true))
 					continue
 				}
 				for k, v := range sdparams {
-					ret = ret.Append(engine.NewStringField(sdid+separator+k, v))
+					ret = ret.Append(engine.NewField(sdid+separator+k, v))
 				}
 			}
 		}

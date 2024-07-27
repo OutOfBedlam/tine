@@ -211,21 +211,21 @@ func (si *snmpInlet) gatherTable(gs Conn, table Table, topTags map[string]string
 			recName = recName + "." + name
 			switch v := value.(type) {
 			case string:
-				rec.Append(engine.NewStringField(recName, v))
+				rec.Append(engine.NewField(recName, v))
 			case float64:
-				rec.Append(engine.NewFloatField(recName, v))
+				rec.Append(engine.NewField(recName, v))
 			case int64:
-				rec.Append(engine.NewIntField(recName, v))
+				rec.Append(engine.NewField(recName, v))
 			case bool:
-				rec.Append(engine.NewBoolField(recName, v))
+				rec.Append(engine.NewField(recName, v))
 			case float32:
-				rec.Append(engine.NewFloatField(recName, float64(v)))
+				rec.Append(engine.NewField(recName, float64(v)))
 			case int:
-				rec.Append(engine.NewIntField(recName, int64(v)))
+				rec.Append(engine.NewField(recName, int64(v)))
 			case uint32:
-				rec.Append(engine.NewUintField(recName, uint64(v)))
+				rec.Append(engine.NewField(recName, uint64(v)))
 			case uint:
-				rec.Append(engine.NewUintField(recName, uint64(v)))
+				rec.Append(engine.NewField(recName, uint64(v)))
 			default:
 				slog.Warn("inlet_snmp drop record", "name", recName, "type", fmt.Sprintf("%T", v), "value", fmt.Sprintf("%v", v))
 			}

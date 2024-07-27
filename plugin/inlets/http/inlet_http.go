@@ -97,19 +97,19 @@ func Map2Records(prefix string, obj map[string]any) []engine.Record {
 		subrecs := []engine.Record{}
 		switch v := v.(type) {
 		case float64:
-			r = r.Append(engine.NewFloatField(prefix+k, v))
+			r = r.Append(engine.NewField(prefix+k, v))
 		case int:
-			r = r.Append(engine.NewIntField(prefix+k, int64(v)))
+			r = r.Append(engine.NewField(prefix+k, int64(v)))
 		case int64:
-			r = r.Append(engine.NewIntField(prefix+k, v))
+			r = r.Append(engine.NewField(prefix+k, v))
 		case string:
-			r = r.Append(engine.NewStringField(prefix+k, v))
+			r = r.Append(engine.NewField(prefix+k, v))
 		case bool:
-			r = r.Append(engine.NewBoolField(prefix+k, v))
+			r = r.Append(engine.NewField(prefix+k, v))
 		case time.Time:
-			r = r.Append(engine.NewTimeField(prefix+k, v))
+			r = r.Append(engine.NewField(prefix+k, v))
 		case []byte:
-			r = r.Append(engine.NewBinaryField(prefix+k, v))
+			r = r.Append(engine.NewField(prefix+k, v))
 		case map[string]any:
 			subrecs = append(subrecs, Map2Records(prefix+k+".", v)...)
 		case []any:

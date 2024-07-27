@@ -200,7 +200,7 @@ func (of *ollamaFlow) process0(genReq *GenerateRequest) ([]engine.Record, error)
 
 	if rsp.StatusCode != successCode {
 		of.ctx.LogWarn("flows.ollama", "status", rsp.StatusCode, "body", string(body))
-		rec := engine.NewRecord(engine.NewIntField("status", int64(rsp.StatusCode)))
+		rec := engine.NewRecord(engine.NewField("status", int64(rsp.StatusCode)))
 		return []engine.Record{rec}, nil
 	}
 
@@ -237,14 +237,14 @@ func (of *ollamaFlow) process0(genReq *GenerateRequest) ([]engine.Record, error)
 func (of *ollamaFlow) parseResponse(genRsp *GenerateResponse) engine.Record {
 	rec := engine.NewRecord()
 	if genRsp.Error != "" {
-		rec = rec.Append(engine.NewStringField("error", genRsp.Error))
+		rec = rec.Append(engine.NewField("error", genRsp.Error))
 	} else {
 		rec = rec.Append(
-			engine.NewStringField("response", genRsp.Response),
-			engine.NewTimeField("created_at", genRsp.CreateAt),
-			engine.NewBoolField("done", genRsp.Done),
-			engine.NewStringField("done_reason", genRsp.DoneReason),
-			engine.NewIntField("total_duration", int64(genRsp.TotalDuration)),
+			engine.NewField("response", genRsp.Response),
+			engine.NewField("created_at", genRsp.CreateAt),
+			engine.NewField("done", genRsp.Done),
+			engine.NewField("done_reason", genRsp.DoneReason),
+			engine.NewField("total_duration", int64(genRsp.TotalDuration)),
 		)
 	}
 	return rec

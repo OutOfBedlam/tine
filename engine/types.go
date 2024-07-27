@@ -3,7 +3,6 @@ package engine
 import (
 	"fmt"
 	"strings"
-	"time"
 )
 
 type OpenCloser interface {
@@ -124,6 +123,14 @@ func (r sliceRecord) Names() []string {
 	return ret
 }
 
+func NewField[T RawValue](name string, value T) *Field {
+	return &Field{Name: name, Value: NewValue(value)}
+}
+
+func NewFieldWithValue(name string, value *Value) *Field {
+	return &Field{Name: name, Value: value}
+}
+
 type Field struct {
 	Name  string `json:"name"`
 	Value *Value `json:"value"`
@@ -166,7 +173,7 @@ func (f *Field) String() string {
 
 func (f *Field) BoolField() *Field {
 	if v, ok := f.Value.Bool(); ok {
-		return NewBoolField(f.Name, v)
+		return NewField(f.Name, v)
 	} else {
 		return nil
 	}
@@ -174,7 +181,7 @@ func (f *Field) BoolField() *Field {
 
 func (f *Field) IntField() *Field {
 	if v, ok := f.Value.Int64(); ok {
-		return NewIntField(f.Name, v)
+		return NewField(f.Name, v)
 	} else {
 		return nil
 	}
@@ -182,7 +189,7 @@ func (f *Field) IntField() *Field {
 
 func (f *Field) UintField() *Field {
 	if v, ok := f.Value.Uint64(); ok {
-		return NewUintField(f.Name, v)
+		return NewField(f.Name, v)
 	} else {
 		return nil
 	}
@@ -190,7 +197,7 @@ func (f *Field) UintField() *Field {
 
 func (f *Field) FloatField() *Field {
 	if v, ok := f.Value.Float64(); ok {
-		return NewFloatField(f.Name, v)
+		return NewField(f.Name, v)
 	} else {
 		return nil
 	}
@@ -198,7 +205,7 @@ func (f *Field) FloatField() *Field {
 
 func (f *Field) StringField() *Field {
 	if v, ok := f.Value.String(); ok {
-		return NewStringField(f.Name, v)
+		return NewField(f.Name, v)
 	} else {
 		return nil
 	}
@@ -206,7 +213,7 @@ func (f *Field) StringField() *Field {
 
 func (f *Field) TimeField() *Field {
 	if v, ok := f.Value.Time(); ok {
-		return NewTimeField(f.Name, v)
+		return NewField(f.Name, v)
 	} else {
 		return nil
 	}
@@ -214,7 +221,7 @@ func (f *Field) TimeField() *Field {
 
 func (f *Field) BinaryField() *Field {
 	if v, ok := f.Value.Bytes(); ok {
-		return NewBinaryField(f.Name, v)
+		return NewField(f.Name, v)
 	} else {
 		return nil
 	}
@@ -279,60 +286,4 @@ func (typ Type) String() string {
 	default:
 		return "UNTYPED"
 	}
-}
-
-func NewBoolField(name string, value bool) *Field {
-	return &Field{Name: name, Value: NewValue(value)}
-}
-
-func NewBoolFieldNull(name string) *Field {
-	return &Field{Name: name, Value: NewNullValue(BOOL)}
-}
-
-func NewIntField(name string, value int64) *Field {
-	return &Field{Name: name, Value: NewValue(value)}
-}
-
-func NewIntFieldNull(name string) *Field {
-	return &Field{Name: name, Value: NewNullValue(INT)}
-}
-
-func NewUintField(name string, value uint64) *Field {
-	return &Field{Name: name, Value: NewValue(value)}
-}
-
-func NewUintFieldNull(name string) *Field {
-	return &Field{Name: name, Value: NewNullValue(UINT)}
-}
-
-func NewFloatField(name string, value float64) *Field {
-	return &Field{Name: name, Value: NewValue(value)}
-}
-
-func NewFloatFieldNull(name string) *Field {
-	return &Field{Name: name, Value: NewNullValue(FLOAT)}
-}
-
-func NewStringField(name string, value string) *Field {
-	return &Field{Name: name, Value: NewValue(value)}
-}
-
-func NewStringFieldNull(name string) *Field {
-	return &Field{Name: name, Value: NewNullValue(STRING)}
-}
-
-func NewTimeField(name string, value time.Time) *Field {
-	return &Field{Name: name, Value: NewValue(value)}
-}
-
-func NewTimeFieldNull(name string) *Field {
-	return &Field{Name: name, Value: NewNullValue(TIME)}
-}
-
-func NewBinaryField(name string, value []byte) *Field {
-	return &Field{Name: name, Value: NewValue(value)}
-}
-
-func NewBinaryFieldNull(name string) *Field {
-	return &Field{Name: name, Value: NewNullValue(BINARY)}
 }

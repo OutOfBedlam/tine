@@ -16,12 +16,12 @@ func ExampleAND() {
 	// Record
 	records := []engine.Record{
 		engine.NewRecord(
-			engine.NewIntField("age", 19),
-			engine.NewStringField("name", "John"),
+			engine.NewField("age", int64(19)),
+			engine.NewField("name", "John"),
 		),
 		engine.NewRecord(
-			engine.NewIntField("age", 17),
-			engine.NewStringField("name", "John"),
+			engine.NewField("age", int64(17)),
+			engine.NewField("name", "John"),
 		),
 	}
 	// Apply AND predicate
@@ -43,12 +43,12 @@ func ExampleOR() {
 	// Record
 	records := []engine.Record{
 		engine.NewRecord(
-			engine.NewIntField("age", 19),
-			engine.NewStringField("name", "John"),
+			engine.NewField("age", int64(19)),
+			engine.NewField("name", "John"),
 		),
 		engine.NewRecord(
-			engine.NewIntField("age", 20),
-			engine.NewStringField("name", "Jane"),
+			engine.NewField("age", int64(20)),
+			engine.NewField("name", "Jane"),
 		),
 	}
 	// Apply OR predicate
@@ -65,7 +65,7 @@ func ExampleNEQ() {
 	// name != "John"
 	p := engine.F{ColName: "name", Comparator: engine.NEQ, Comparando: "Jane"}
 	// Record
-	record := engine.NewRecord(engine.NewStringField("name", "John"))
+	record := engine.NewRecord(engine.NewField("name", "John"))
 	// Apply EQ predicate
 	fmt.Println(p.Apply(record))
 	// Output:
@@ -78,8 +78,8 @@ func ExampleIN() {
 	p := engine.F{ColName: "name", Comparator: engine.IN, Comparando: []string{"John", "Jane", "Scott"}}
 	// Record
 	record := []engine.Record{
-		engine.NewRecord(engine.NewStringField("name", "John")),
-		engine.NewRecord(engine.NewStringField("name", "Tiger")),
+		engine.NewRecord(engine.NewField("name", "John")),
+		engine.NewRecord(engine.NewField("name", "Tiger")),
 	}
 	// Apply IN predicate
 	for _, r := range record {
@@ -96,8 +96,8 @@ func ExampleIN_not() {
 	p := engine.F{ColName: "name", Comparator: engine.NOT_IN, Comparando: []string{"John", "Jane", "Scott"}}
 	// Record
 	record := []engine.Record{
-		engine.NewRecord(engine.NewStringField("name", "John")),
-		engine.NewRecord(engine.NewStringField("name", "Tiger")),
+		engine.NewRecord(engine.NewField("name", "John")),
+		engine.NewRecord(engine.NewField("name", "Tiger")),
 	}
 	// Apply IN predicate
 	for _, r := range record {
@@ -118,7 +118,7 @@ func ExampleCompFunc() {
 			return v == "John"
 		}}
 	// Record
-	record := engine.NewRecord(engine.NewStringField("name", "John"))
+	record := engine.NewRecord(engine.NewField("name", "John"))
 	// Apply EQ predicate
 	fmt.Println(p.Apply(record))
 	// Output:

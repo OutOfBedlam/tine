@@ -305,8 +305,8 @@ const FIELD_TIMESTAMP = "_ts"
 func prependInletNameTimestamp(recs []Record, name string) []Record {
 	for i, r := range recs {
 		recs[i] = NewRecord(
-			NewTimeField(FIELD_TIMESTAMP, Now()),
-			NewStringField(FIELD_INLET, name),
+			NewField(FIELD_TIMESTAMP, Now()),
+			NewField(FIELD_INLET, name),
 		).Append(r.Fields()...)
 	}
 	return recs

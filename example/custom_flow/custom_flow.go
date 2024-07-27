@@ -39,7 +39,7 @@ func main() {
 			if field := r.Field("load1"); field != nil {
 				load, _ := field.Value.Float64()
 				percent := (load * 100) / float64(cpuNum)
-				r = r.Append(engine.NewStringField("load1_percent", fmt.Sprintf("%.1f%%", percent)))
+				r = r.Append(engine.NewField("load1_percent", fmt.Sprintf("%.1f%%", percent)))
 			}
 			ret = append(ret, r)
 		}
