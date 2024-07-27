@@ -2,11 +2,9 @@ package csv
 
 import (
 	gocsv "encoding/csv"
-	"fmt"
 	"io"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/OutOfBedlam/tine/engine"
 )
@@ -37,14 +35,7 @@ func (cw *CSVEncoder) Encode(recs []engine.Record) error {
 		cw.enc = gocsv.NewWriter(cw.Writer)
 	}
 
-	switch strings.ToLower(cw.Subformat) {
-	default:
-		return cw.encodeDefault(recs)
-	case "name_time_value":
-		return cw.encodeNameTimeValue(recs, false)
-	case "time_name_value":
-		return cw.encodeNameTimeValue(recs, true)
-	}
+	return cw.encodeDefault(recs)
 }
 
 func (cw *CSVEncoder) encodeDefault(recs []engine.Record) error {
@@ -63,50 +54,6 @@ func (cw *CSVEncoder) encodeDefault(recs []engine.Record) error {
 		}
 		cw.enc.Write(values)
 		values = values[:0]
-	}
-	cw.enc.Flush()
-	return nil
-}
-
-func (cw *CSVEncoder) encodeNameTimeValue(recs []engine.Record, timeFirst bool) error {
-	for _, rec := range recs {
-		var ts time.Time
-		if tsf := rec.Field(engine.FIELD_TIMESTAMP); tsf == nil {
-			ts = time.Now()
-		} else {
-			if v, ok := tsf.Value.Time(); ok {
-				ts = v
-			} else {
-				ts = time.Now()
-			}
-		}
-		var namePrefix string
-		if inf := rec.Field(engine.FIELD_INLET); inf != nil {
-			if v, ok := inf.Value.String(); ok {
-				namePrefix = v + "."
-			}
-		}
-		for _, field := range rec.Fields(cw.Fields...) {
-			if field == nil || field.Name == engine.FIELD_TIMESTAMP || field.Name == engine.FIELD_INLET {
-				continue
-			}
-			if field.Type() == engine.BINARY {
-				continue
-			}
-			if timeFirst {
-				cw.enc.Write([]string{
-					cw.FormatOption.FormatTime(ts),
-					fmt.Sprintf("%s%s", namePrefix, field.Name),
-					field.Value.Format(cw.FormatOption),
-				})
-			} else {
-				cw.enc.Write([]string{
-					fmt.Sprintf("%s%s", namePrefix, field.Name),
-					cw.FormatOption.FormatTime(ts),
-					field.Value.Format(cw.FormatOption),
-				})
-			}
-		}
 	}
 	cw.enc.Flush()
 	return nil

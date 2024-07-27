@@ -33,6 +33,8 @@ Set the pipline's inputs and outputs.
 [defaults]
     interval = "3s"
 [[inlets.cpu]]
+[[flows.select]]
+    includes = ["#_ts", "#_in", "*"]
 [[outlets.file]]
     path  = "-"
 ```
@@ -52,10 +54,9 @@ It generates CPU usage in CSV format which is default format of 'outlets.file'.
 1721635305,cpu,2.084201750601381
 ```
 
-And change output format to "json" from "csv".
+Change output format to "json" from "csv", add `format = "json"` at the end of the file.
 
 ```toml
-...omit...
 [[outlets.file]]
     path  = "-"
     format = "json"
@@ -80,8 +81,11 @@ And change output format to "json" from "csv".
     interval = "3s"
 [[inlets.load]]
     loads = [1, 5]
+[[flows.select]]
+    includes = ["#_ts", "#_in", "*"]
 [[outlets.file]]
     path  = "-"
+    decimal = 2
 ```
 
 2. Chmod for executable.

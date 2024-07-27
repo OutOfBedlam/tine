@@ -34,5 +34,5 @@ func ExampleExecInlet() {
 		panic(err)
 	}
 	// Output:
-	// 1721954797,exec,hello world
+	// hello world
 }

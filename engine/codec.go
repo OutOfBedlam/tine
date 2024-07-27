@@ -14,7 +14,6 @@ type EncoderReg struct {
 
 type EncoderConfig struct {
 	Writer       io.Writer
-	Subformat    string
 	Indent       string
 	Prefix       string
 	Fields       []string

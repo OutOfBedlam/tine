@@ -7,6 +7,7 @@ func init() {
 	engine.RegisterFlow(&engine.FlowReg{Name: "flatten", Factory: FlattenFlow})
 	engine.RegisterFlow(&engine.FlowReg{Name: "damper", Factory: DamperFlow})
 	engine.RegisterFlow(&engine.FlowReg{Name: "dump", Factory: DumpFlow})
+	engine.RegisterFlow(&engine.FlowReg{Name: "select", Factory: SelectFlow})
 	engine.RegisterFlow(&engine.FlowReg{Name: "set_field", Factory: SetFieldFlow})
 	engine.RegisterFlow(&engine.FlowReg{Name: "set_field_name", Factory: SetFieldNameFlow})
 }

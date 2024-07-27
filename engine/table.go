@@ -234,7 +234,7 @@ func (tb *Table[T]) Select(fields []string) (*Table[T], error) {
 		ret.AddColumn(tb.columns[idx], tb.types[idx])
 	}
 	for k, row := range tb.rows {
-		rec := sliceRecord(row.Fields)
+		rec := NewRecord(row.Fields...)
 		if r := rec.FieldsAt(colIndexes...); r != nil {
 			if tb.predicate != nil && !tb.predicate.Apply(rec) {
 				continue
@@ -261,7 +261,7 @@ func (tb *Table[T]) Compact() *Table[T] {
 		rows:    make(map[T]*Row[T]),
 	}
 	for k, row := range tb.rows {
-		rec := sliceRecord(row.Fields)
+		rec := NewRecord(row.Fields...)
 		if tb.predicate.Apply(rec) {
 			ret.Set(k, row.Fields...)
 		}
@@ -296,7 +296,7 @@ func (tb *Table[T]) Split(filter Predicate) (*Table[T], *Table[T]) {
 		rows:    make(map[T]*Row[T]),
 	}
 	for k, row := range tb.rows {
-		rec := sliceRecord(row.Fields)
+		rec := NewRecord(row.Fields...)
 		if filter.Apply(rec) {
 			ret.Set(k, row.Fields...)
 		} else {
