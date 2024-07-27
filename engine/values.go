@@ -67,6 +67,10 @@ func (v *Value) IsNull() bool {
 	return v.isNull
 }
 
+func (v *Value) IsNotNull() bool {
+	return !v.isNull
+}
+
 func (v *Value) Raw() any {
 	return v.raw
 }

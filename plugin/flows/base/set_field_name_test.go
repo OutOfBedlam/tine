@@ -20,10 +20,11 @@ func ExampleSetFieldNameFlow() {
 	[[flows.set_field_name]]
 		prefix = "pre_"
 		suffix = "_suf"
-	[[flows.flatten]]
+	[[flows.select]]
+		includes = ["**"]
 	[[outlets.file]]
 		path = "-"
-		format = "csv"
+		format = "json"
 	`
 	// Make the output timestamp deterministic, so we can compare it
 	// This line is required only for testing
@@ -40,5 +41,5 @@ func ExampleSetFieldNameFlow() {
 		panic(err)
 	}
 	// Output:
-	// pre_msg_suf,hello world
+	// [{"_in":"args","_ts":1721954797,"pre_msg_suf":"hello world"}]
 }

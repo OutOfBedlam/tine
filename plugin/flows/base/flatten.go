@@ -24,18 +24,15 @@ func (ff *flattenFlow) Parallelism() int { return 1 }
 func (ff *flattenFlow) Process(recs []engine.Record) ([]engine.Record, error) {
 	ret := []engine.Record{}
 	for _, r := range recs {
-		ts := r.Field("_ts")
-		in := r.Field("_in")
+		ts := r.Tags().Get(engine.TAG_TIMESTAMP)
+		in := r.Tags().Get(engine.TAG_INLET)
 		for _, f := range r.Fields() {
-			if f.Name == "_ts" || f.Name == "_in" {
-				continue
-			}
 			fields := []*engine.Field{}
-			if ts != nil {
-				fields = append(fields, ts.Copy("_ts"))
+			if ts != nil && ts.IsNotNull() {
+				fields = append(fields, engine.NewFieldWithValue(engine.TAG_TIMESTAMP, ts))
 			}
-			if in != nil {
-				inStr, _ := in.Value.String()
+			if in != nil && in.IsNotNull() {
+				inStr, _ := in.String()
 				fields = append(fields, engine.NewField("name", fmt.Sprintf("%s%s%s", inStr, ff.nameInfix, f.Name)))
 			} else {
 				fields = append(fields, engine.NewField("name", f.Name))
