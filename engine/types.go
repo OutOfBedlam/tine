@@ -2,7 +2,6 @@ package engine
 
 import (
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 )
@@ -126,9 +125,9 @@ func (r sliceRecord) Names() []string {
 }
 
 type Field struct {
-	Name  string              `json:"name"`
-	Value *Value              `json:"value"`
-	Tags  map[string][]string `json:"tags,omitempty"`
+	Name  string `json:"name"`
+	Value *Value `json:"value"`
+	Tags  Tags   `json:"tags,omitempty"`
 }
 
 func (f *Field) Type() Type {
@@ -141,14 +140,7 @@ func (f *Field) IsNull() bool {
 
 // Clone returns a deep copy of the field
 func (v *Field) Clone() *Field {
-	ret := &Field{Name: v.Name, Value: v.Value.Clone()}
-	if v.Tags != nil {
-		ret.Tags = make(map[string][]string)
-		for k, v := range v.Tags {
-			ret.Tags[k] = append([]string(nil), v...)
-		}
-	}
-	return ret
+	return &Field{Name: v.Name, Value: v.Value.Clone(), Tags: v.Tags.Clone()}
 }
 
 // Copy returns a shallow copy of the field with a new name
@@ -158,52 +150,6 @@ func (v *Field) Copy(newName string) *Field {
 		Value: v.Value,
 		Tags:  v.Tags,
 	}
-}
-
-func (v *Field) AddTag(key, value string) {
-	if v.Tags == nil {
-		v.Tags = make(map[string][]string)
-	}
-	http.Header(v.Tags).Add(key, value)
-}
-
-func (v *Field) DelTag(key string) {
-	if v.Tags == nil {
-		return
-	}
-	http.Header(v.Tags).Del(key)
-}
-
-func (v *Field) GetTag(key string) string {
-	if v.Tags == nil {
-		return ""
-	}
-	return http.Header(v.Tags).Get(key)
-}
-
-func (v *Field) SetTag(key, value string) {
-	if v.Tags == nil {
-		v.Tags = make(map[string][]string)
-	}
-	http.Header(v.Tags).Set(key, value)
-}
-
-func (v *Field) GetTagValues(key string) []string {
-	if v.Tags == nil {
-		return nil
-	}
-	return http.Header(v.Tags).Values(key)
-}
-
-func (v *Field) TagNames() []string {
-	if v.Tags == nil {
-		return nil
-	}
-	headers := make([]string, 0, len(v.Tags))
-	for key := range v.Tags {
-		headers = append(headers, key)
-	}
-	return headers
 }
 
 func UnboxFields(fields []*Field) []any {

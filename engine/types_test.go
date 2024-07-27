@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -187,11 +186,12 @@ func TestString(t *testing.T) {
 
 func TestBinary(t *testing.T) {
 	bv := NewBinaryField("bf", []byte("binary"))
-	bv.SetTag("Content-Type", "text/plain")
-	bv.SetTag("Content-Length", fmt.Sprintf("%d", len("binary")))
+	bv.Tags = Tags{}
+	bv.Tags.Set("Content-Type", NewValue("text/plain"))
+	bv.Tags.Set("Content-Length", NewValue(int64(len("binary"))))
 
-	require.Equal(t, "text/plain", bv.GetTag("content-type"))
-	require.Equal(t, fmt.Sprintf("%d", len("binary")), bv.GetTag("content-length"))
+	require.Equal(t, "text/plain", GetTagString(bv.Tags, "Content-Type"))
+	require.Equal(t, int64(len("binary")), GetTagInt64(bv.Tags, "Content-Length"))
 
 	f := NewBinaryField("bin", bv.Value.raw.([]byte))
 	require.Equal(t, BINARY, f.Type())

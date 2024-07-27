@@ -92,35 +92,35 @@ func (si *screenshotInlet) Pull() ([]engine.Record, error) {
 		switch si.format {
 		default: // "rgba"
 			bin = engine.NewBinaryField(name, img.Pix)
-			bin.SetTag("Content-Type", "image/vnd.rgba")
-			bin.SetTag("X-RGBA-Stride", fmt.Sprintf("%d", img.Stride))
-			bin.SetTag("X-RGBA-Rectangle", fmt.Sprintf("%d,%d,%d,%d", img.Rect.Min.X, img.Rect.Min.Y, img.Rect.Max.X, img.Rect.Max.Y))
+			bin.Tags.Set(engine.CanonicalTagKey("Content-Type"), engine.NewValue("image/vnd.rgba"))
+			bin.Tags.Set(engine.CanonicalTagKey("X-RGBA-Stride"), engine.NewValue(fmt.Sprintf("%d", img.Stride)))
+			bin.Tags.Set(engine.CanonicalTagKey("X-RGBA-Rectangle"), engine.NewValue(fmt.Sprintf("%d,%d,%d,%d", img.Rect.Min.X, img.Rect.Min.Y, img.Rect.Max.X, img.Rect.Max.Y)))
 		case "png":
 			buf := &bytes.Buffer{}
 			if err := png.Encode(buf, img); err != nil {
 				return nil, err
 			}
 			bin = engine.NewBinaryField(name, buf.Bytes())
-			bin.SetTag("Content-Type", "image/png")
+			bin.Tags.Set(engine.CanonicalTagKey("Content-Type"), engine.NewValue("image/png"))
 		case "jpeg":
 			buf := &bytes.Buffer{}
 			if err := jpeg.Encode(buf, img, nil); err != nil {
 				return nil, err
 			}
 			bin = engine.NewBinaryField(name, buf.Bytes())
-			bin.SetTag("Content-Type", "image/jpeg")
+			bin.Tags.Set(engine.CanonicalTagKey("Content-Type"), engine.NewValue("image/jpeg"))
 		case "gif":
 			buf := &bytes.Buffer{}
 			if err := gif.Encode(buf, img, nil); err != nil {
 				return nil, err
 			}
 			bin = engine.NewBinaryField(name, buf.Bytes())
-			bin.SetTag("Content-Type", "image/gif")
+			bin.Tags.Set(engine.CanonicalTagKey("Content-Type"), engine.NewValue("image/gif"))
 		}
 		if bin == nil {
 			continue
 		}
-		bin.SetTag("X-Screenshot-Display", fmt.Sprintf("%d", disp))
+		bin.Tags.Set(engine.CanonicalTagKey("X-Screenshot-Display"), engine.NewValue(fmt.Sprintf("%d", disp)))
 		rec = rec.Append(bin)
 	}
 
