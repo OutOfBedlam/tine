@@ -10,7 +10,7 @@ import (
 func TestTable(t *testing.T) {
 	tb := NewTable[int64]()
 	for i := 0; i < 100; i++ {
-		tb.Set(int64(i), NewIntField("v", int64(i)))
+		tb.Set(int64(i), NewField("v", int64(i)))
 	}
 	keys := tb.Keys()
 	for i := 0; i < 100; i++ {
@@ -24,7 +24,7 @@ func TestTable(t *testing.T) {
 	require.Equal(t, []Type{TIME, STRING, INT}, tb.Types())
 
 	ts1 := time.Now()
-	tb.Set(ts1.Unix(), NewTimeField("ts", ts1), NewStringField("name", "foo"), NewIntField("age", 20))
+	tb.Set(ts1.Unix(), NewField("ts", ts1), NewField("name", "foo"), NewField("age", int64(20)))
 	require.Equal(t, 1, tb.Len())
 	require.Equal(t, 1, len(tb.rows))
 	require.Equal(t, 3, len(tb.rows[ts1.Unix()].Fields))
@@ -33,7 +33,7 @@ func TestTable(t *testing.T) {
 	require.Equal(t, int64(20), tb.rows[ts1.Unix()].Fields[2].Value.raw)
 
 	ts2 := ts1.Add(1 * time.Second)
-	tb.Set(ts2.Unix(), NewTimeField("ts", ts2), NewStringField("name", "bar"), NewIntField("age", 21))
+	tb.Set(ts2.Unix(), NewField("ts", ts2), NewField("name", "bar"), NewField("age", int64(21)))
 	require.Equal(t, 2, tb.Len())
 	require.Equal(t, []any{ts1, ts2}, UnboxFields(tb.Series("ts")))
 	require.Equal(t, []any{"foo", "bar"}, UnboxFields(tb.Series("name")))
@@ -113,26 +113,26 @@ func TestTableMergeRecords(t *testing.T) {
 
 	recsA := []Record{
 		NewRecord(
-			NewStringField("_in", "cpu"),
-			NewTimeField("_ts", tf1),
-			NewIntField("total", 10),
+			NewField("_in", "cpu"),
+			NewField("_ts", tf1),
+			NewField("total", int64(10)),
 		),
 		NewRecord(
-			NewStringField("_in", "cpu"),
-			NewTimeField("_ts", tf2),
-			NewIntField("total", 20),
+			NewField("_in", "cpu"),
+			NewField("_ts", tf2),
+			NewField("total", int64(20)),
 		),
 	}
 	recsB := []Record{
 		NewRecord(
-			NewStringField("_in", "mem"),
-			NewTimeField("_ts", tf1),
-			NewIntField("usage", 30),
+			NewField("_in", "mem"),
+			NewField("_ts", tf1),
+			NewField("usage", int64(30)),
 		),
 		NewRecord(
-			NewStringField("_in", "mem"),
-			NewTimeField("_ts", tf3),
-			NewIntField("usage", 40),
+			NewField("_in", "mem"),
+			NewField("_ts", tf3),
+			NewField("usage", int64(40)),
 		),
 	}
 
@@ -157,22 +157,22 @@ func TestTableMergeRecords(t *testing.T) {
 	tbExpect := []Record{
 		NewRecord(
 			// NewStringField("_in", "cpu"), // TODO how will we deal with over-written _in and _ts?
-			NewStringField("_in", "mem"),
-			NewTimeField("_ts", tf1),
-			NewIntField("total", 10),
-			NewIntField("usage", 30),
+			NewField("_in", "mem"),
+			NewField("_ts", tf1),
+			NewField("total", int64(10)),
+			NewField("usage", int64(30)),
 		),
 		NewRecord(
-			NewStringField("_in", "cpu"),
-			NewTimeField("_ts", tf2),
-			NewIntField("total", 20),
+			NewField("_in", "cpu"),
+			NewField("_ts", tf2),
+			NewField("total", int64(20)),
 			nil,
 		),
 		NewRecord(
-			NewStringField("_in", "mem"),
-			NewTimeField("_ts", tf3),
+			NewField("_in", "mem"),
+			NewField("_ts", tf3),
 			nil,
-			NewIntField("usage", 40),
+			NewField("usage", int64(40)),
 		),
 	}
 	result := tbC.Rows()

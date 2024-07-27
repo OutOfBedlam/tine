@@ -64,11 +64,11 @@ func (ti *telegramInlet) Push(cb func([]engine.Record, error)) {
 			continue
 		}
 		rec := engine.NewRecord(
-			engine.NewIntField("message_id", int64(update.Message.MessageID)),
-			engine.NewStringField("from", update.Message.From.String()),
-			engine.NewStringField("chat_title", update.Message.Chat.Title),
-			engine.NewIntField("chat_id", int64(update.Message.Chat.ID)),
-			engine.NewStringField("text", update.Message.Text),
+			engine.NewField("message_id", int64(update.Message.MessageID)),
+			engine.NewField("from", update.Message.From.String()),
+			engine.NewField("chat_title", update.Message.Chat.Title),
+			engine.NewField("chat_id", int64(update.Message.Chat.ID)),
+			engine.NewField("text", update.Message.Text),
 		)
 		if len(update.Message.Photo) > 0 {
 			photo := update.Message.Photo[len(update.Message.Photo)-1]
@@ -82,7 +82,7 @@ func (ti *telegramInlet) Push(cb func([]engine.Record, error)) {
 				ti.ctx.LogWarn("inetls.telegram fetch photo", "error", err)
 				continue
 			} else {
-				bv := engine.NewBinaryField("photo", bin)
+				bv := engine.NewField("photo", bin)
 				// since telegram server returns "application/octet-stream"
 				// we need to set the content type manually
 				switch strings.ToLower(filepath.Ext(tfile.FilePath)) {

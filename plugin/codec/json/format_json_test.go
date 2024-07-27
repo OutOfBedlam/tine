@@ -1,6 +1,8 @@
 package json_test
 
 import (
+	"time"
+
 	"github.com/OutOfBedlam/tine/engine"
 	_ "github.com/OutOfBedlam/tine/plugin/codec/csv"
 	_ "github.com/OutOfBedlam/tine/plugin/codec/json"
@@ -21,12 +23,16 @@ func ExampleJSONEncoder() {
 		]
 		format = "csv"
 		fields = ["area"]
-	[[flows.set_field]]
-		set = { _ts = 1721954797 }
 	[[outlets.file]]
 		path = "-"
 		format = "json"
 	`
+
+	// Mock the current time
+	count := int64(0)
+	engine.Now = func() time.Time { count++; return time.Unix(1721954797+count, 0) }
+
+	// Create a new pipeline
 	pipeline, err := engine.New(engine.WithConfig(dsl))
 	if err != nil {
 		panic(err)
@@ -35,5 +41,5 @@ func ExampleJSONEncoder() {
 		panic(err)
 	}
 	// Output:
-	// [{"0":"a","1":"1","_in":"file","_ts":"1721954797"},{"0":"b","1":"2","_in":"file","_ts":"1721954797"},{"0":"c","1":"3","_in":"file","_ts":"1721954797"}]
+	// [{"0":"a","1":"1","_in":"file","_ts":1721954798},{"0":"b","1":"2","_in":"file","_ts":1721954799},{"0":"c","1":"3","_in":"file","_ts":1721954800}]
 }

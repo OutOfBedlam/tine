@@ -2,30 +2,27 @@ package base
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/OutOfBedlam/tine/engine"
 )
 
 type mergeFlow struct {
-	ctx             *engine.Context
-	table           *engine.Table[int64]
-	waitLimit       time.Duration
-	joinField       string // joinField should be time.Time type, for now.
-	namePrefixField string
+	ctx           *engine.Context
+	table         *engine.Table[int64]
+	waitLimit     time.Duration
+	joinTag       string // joinTag should be time.Time type, for now.
+	namePrefixTag string
 }
 
 func MergeFlow(ctx *engine.Context) engine.Flow {
 	waitLimit := ctx.Config().GetDuration("wait_limit", 10*time.Second)
-	joinField := "_ts"
-	namePrefixField := "_in"
 	return &mergeFlow{
-		ctx:             ctx,
-		table:           engine.NewTable[int64](),
-		waitLimit:       waitLimit,
-		joinField:       joinField,
-		namePrefixField: namePrefixField,
+		ctx:           ctx,
+		table:         engine.NewTable[int64](),
+		waitLimit:     waitLimit,
+		joinTag:       engine.TAG_TIMESTAMP,
+		namePrefixTag: engine.TAG_INLET,
 	}
 }
 
@@ -43,29 +40,29 @@ func (mf *mergeFlow) Flush() []engine.Record {
 
 func (mf *mergeFlow) Process(records []engine.Record) ([]engine.Record, error) {
 	for _, rec := range records {
-		k := rec.Field(mf.joinField)
-		if k == nil {
+		var tsValue *engine.Value
+		var ts time.Time
+		if v := rec.Tags().Get(mf.joinTag); v == nil {
 			continue
+		} else {
+			tsValue = v
+			if t, ok := tsValue.Time(); !ok {
+				continue
+			} else {
+				ts = t
+			}
 		}
-		ts, ok := k.Value.Time()
-		if !ok {
-			continue
+		var namePrefix string
+		if v := rec.Tags().Get(mf.namePrefixTag); v != nil && !v.IsNull() {
+			if s, ok := v.String(); ok {
+				namePrefix = s
+			}
 		}
-
-		np := rec.Field(mf.namePrefixField)
-		if np != nil && !np.IsNull() {
-			namePrefix, _ := np.Value.String()
-			fields := []*engine.Field{}
+		if namePrefix != "" {
+			fields := []*engine.Field{engine.NewFieldWithValue(mf.joinTag, tsValue)}
 			for _, f := range rec.Fields() {
-				if strings.EqualFold(f.Name, mf.namePrefixField) {
-					continue
-				}
-				if strings.EqualFold(f.Name, mf.joinField) {
-					fields = append(fields, f)
-				} else {
-					f.Name = fmt.Sprintf("%v.%s", namePrefix, f.Name)
-					fields = append(fields, f)
-				}
+				f.Name = fmt.Sprintf("%v.%s", namePrefix, f.Name)
+				fields = append(fields, f)
 			}
 			mf.table.Set(ts.Unix(), fields...)
 		} else {
@@ -75,7 +72,7 @@ func (mf *mergeFlow) Process(records []engine.Record) ([]engine.Record, error) {
 
 	til := engine.Now().Add(-mf.waitLimit)
 
-	selected, remains := mf.table.Split(engine.F{ColName: mf.joinField, Comparator: engine.LT, Comparando: til})
+	selected, remains := mf.table.Split(engine.F{ColName: mf.joinTag, Comparator: engine.LT, Comparando: til})
 	mf.table = remains
 
 	ret := []engine.Record{}

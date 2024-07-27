@@ -124,9 +124,9 @@ func (ei *execPull) Pull() ([]engine.Record, error) {
 		}
 		ret := []engine.Record{
 			engine.NewRecord(
-				engine.NewIntField(ei.namePrefix+"exit_code", int64(exitCode)),
-				engine.NewStringField(ei.namePrefix+"stdout", strout),
-				engine.NewStringField(ei.namePrefix+"stderr", strerr),
+				engine.NewField(ei.namePrefix+"exit_code", int64(exitCode)),
+				engine.NewField(ei.namePrefix+"stdout", strout),
+				engine.NewField(ei.namePrefix+"stderr", strerr),
 			),
 		}
 		if ei.countLimit > 0 && runCount >= ei.countLimit {

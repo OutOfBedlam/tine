@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"fmt"
 	"net/textproto"
 )
 
@@ -26,7 +25,7 @@ func (t Tags) Del(key string) {
 	delete(t, key)
 }
 
-func (t Tags) Keys() []string {
+func (t Tags) Names() []string {
 	if t == nil {
 		return nil
 	}
@@ -94,7 +93,6 @@ func GetTagString(t Tags, key string) string {
 	if t == nil {
 		return ""
 	}
-	fmt.Println(t.Keys())
 	if v := t.Get(key); v != nil {
 		if s, ok := v.String(); ok {
 			return s

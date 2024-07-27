@@ -41,3 +41,9 @@
     ## then the new records will be [{"_ts": timestamp, "name": "my_field1", "value": 1}, {"_ts": timestamp, "name": "my_field2", "value": 2}]
     ## If "_in" field does not exist in the record, the "name" is not changed and keep the original field's name.
     name_infix = "_"
+
+[[flows.select]]
+    ## Selects fields in a record with the given field names.
+    ## "*" means all fields.
+    ## if item starts with "#_", it specifies a tag value.
+    includes = ["#_ts", "#_in", "*"]

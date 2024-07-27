@@ -60,8 +60,8 @@ func main() {
 func customInletFunc() ([]engine.Record, error) {
 	result := []engine.Record{
 		engine.NewRecord(
-			engine.NewStringField("text", "hello world"),
-			engine.NewFloatField("random", rand.Float64()*100),
+			engine.NewField("text", "hello world"),
+			engine.NewField("random", rand.Float64()*100),
 		),
 	}
 	return result, nil

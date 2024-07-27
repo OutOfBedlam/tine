@@ -2,11 +2,9 @@ package csv
 
 import (
 	gocsv "encoding/csv"
-	"fmt"
 	"io"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/OutOfBedlam/tine/engine"
 )
@@ -37,14 +35,7 @@ func (cw *CSVEncoder) Encode(recs []engine.Record) error {
 		cw.enc = gocsv.NewWriter(cw.Writer)
 	}
 
-	switch strings.ToLower(cw.Subformat) {
-	default:
-		return cw.encodeDefault(recs)
-	case "name_time_value":
-		return cw.encodeNameTimeValue(recs, false)
-	case "time_name_value":
-		return cw.encodeNameTimeValue(recs, true)
-	}
+	return cw.encodeDefault(recs)
 }
 
 func (cw *CSVEncoder) encodeDefault(recs []engine.Record) error {
@@ -63,50 +54,6 @@ func (cw *CSVEncoder) encodeDefault(recs []engine.Record) error {
 		}
 		cw.enc.Write(values)
 		values = values[:0]
-	}
-	cw.enc.Flush()
-	return nil
-}
-
-func (cw *CSVEncoder) encodeNameTimeValue(recs []engine.Record, timeFirst bool) error {
-	for _, rec := range recs {
-		var ts time.Time
-		if tsf := rec.Field(engine.FIELD_TIMESTAMP); tsf == nil {
-			ts = time.Now()
-		} else {
-			if v, ok := tsf.Value.Time(); ok {
-				ts = v
-			} else {
-				ts = time.Now()
-			}
-		}
-		var namePrefix string
-		if inf := rec.Field(engine.FIELD_INLET); inf != nil {
-			if v, ok := inf.Value.String(); ok {
-				namePrefix = v + "."
-			}
-		}
-		for _, field := range rec.Fields(cw.Fields...) {
-			if field == nil || field.Name == engine.FIELD_TIMESTAMP || field.Name == engine.FIELD_INLET {
-				continue
-			}
-			if field.Type() == engine.BINARY {
-				continue
-			}
-			if timeFirst {
-				cw.enc.Write([]string{
-					cw.FormatOption.FormatTime(ts),
-					fmt.Sprintf("%s%s", namePrefix, field.Name),
-					field.Value.Format(cw.FormatOption),
-				})
-			} else {
-				cw.enc.Write([]string{
-					fmt.Sprintf("%s%s", namePrefix, field.Name),
-					cw.FormatOption.FormatTime(ts),
-					field.Value.Format(cw.FormatOption),
-				})
-			}
-		}
 	}
 	cw.enc.Flush()
 	return nil
@@ -162,7 +109,7 @@ func (cr *CSVDecoder) Decode() ([]engine.Record, error) {
 			// there is no fields specified, accept all fields
 			cols := []*engine.Field{}
 			for idx, str := range fields {
-				cols = append(cols, engine.NewStringField(strconv.Itoa(idx), str))
+				cols = append(cols, engine.NewField(strconv.Itoa(idx), str))
 			}
 			rec := engine.NewRecord(cols...)
 			ret = append(ret, rec)
@@ -177,54 +124,54 @@ func (cr *CSVDecoder) Decode() ([]engine.Record, error) {
 					fieldName = strings.ToUpper(cr.fields[idx])
 				}
 				if idx >= len(cr.types) {
-					cols = append(cols, engine.NewStringField(fieldName, str))
+					cols = append(cols, engine.NewField(fieldName, str))
 				} else {
 					switch cr.types[idx] {
 					default:
-						cols = append(cols, engine.NewStringField(fieldName, str))
+						cols = append(cols, engine.NewField(fieldName, str))
 					case engine.Type('?'):
 						if strings.ToLower(str) == "true" {
-							cols = append(cols, engine.NewBoolField(fieldName, true))
+							cols = append(cols, engine.NewField(fieldName, true))
 						} else if strings.ToLower(str) == "false" {
-							cols = append(cols, engine.NewBoolField(fieldName, false))
+							cols = append(cols, engine.NewField(fieldName, false))
 						} else if f, err := strconv.ParseFloat(str, 64); err == nil {
-							cols = append(cols, engine.NewFloatField(fieldName, f))
+							cols = append(cols, engine.NewField(fieldName, f))
 						} else if tm, err := cr.tf.Parse(str); err == nil {
-							cols = append(cols, engine.NewTimeField(fieldName, tm))
+							cols = append(cols, engine.NewField(fieldName, tm))
 						} else {
-							cols = append(cols, engine.NewStringField(fieldName, str))
+							cols = append(cols, engine.NewField(fieldName, str))
 						}
 					case engine.STRING:
-						cols = append(cols, engine.NewStringField(fieldName, str))
+						cols = append(cols, engine.NewField(fieldName, str))
 					case engine.INT:
 						if i, err := strconv.ParseInt(str, 10, 64); err != nil {
-							cols = append(cols, engine.NewStringField(fieldName, str+"; "+err.Error()))
+							cols = append(cols, engine.NewField(fieldName, str+"; "+err.Error()))
 						} else {
-							cols = append(cols, engine.NewIntField(fieldName, i))
+							cols = append(cols, engine.NewField(fieldName, i))
 						}
 					case engine.UINT:
 						if i, err := strconv.ParseInt(str, 10, 64); err != nil {
-							cols = append(cols, engine.NewStringField(fieldName, str+"; "+err.Error()))
+							cols = append(cols, engine.NewField(fieldName, str+"; "+err.Error()))
 						} else {
-							cols = append(cols, engine.NewIntField(fieldName, i))
+							cols = append(cols, engine.NewField(fieldName, i))
 						}
 					case engine.FLOAT:
 						if f, err := strconv.ParseFloat(str, 64); err != nil {
-							cols = append(cols, engine.NewStringField(fieldName, str+"; "+err.Error()))
+							cols = append(cols, engine.NewField(fieldName, str+"; "+err.Error()))
 						} else {
-							cols = append(cols, engine.NewFloatField(fieldName, f))
+							cols = append(cols, engine.NewField(fieldName, f))
 						}
 					case engine.BOOL:
 						if b, err := strconv.ParseBool(str); err != nil {
-							cols = append(cols, engine.NewStringField(fieldName, str+"; "+err.Error()))
+							cols = append(cols, engine.NewField(fieldName, str+"; "+err.Error()))
 						} else {
-							cols = append(cols, engine.NewBoolField(fieldName, b))
+							cols = append(cols, engine.NewField(fieldName, b))
 						}
 					case engine.TIME:
 						if tm, err := cr.tf.Parse(str); err != nil {
-							cols = append(cols, engine.NewStringField(fieldName, str+"; "+err.Error()))
+							cols = append(cols, engine.NewField(fieldName, str+"; "+err.Error()))
 						} else {
-							cols = append(cols, engine.NewTimeField(fieldName, tm))
+							cols = append(cols, engine.NewField(fieldName, tm))
 						}
 					}
 				}

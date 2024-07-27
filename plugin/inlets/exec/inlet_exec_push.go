@@ -72,7 +72,7 @@ func (ep *execPush) Push(fn func([]engine.Record, error)) {
 				result = bytes.TrimSpace(result)
 			}
 			fn([]engine.Record{engine.NewRecord(
-				engine.NewStringField(ep.namePrefix+"stdout", string(result)),
+				engine.NewField(ep.namePrefix+"stdout", string(result)),
 			)}, nil)
 		} else {
 			lines := bytes.Split(buff[:n], ep.separator)
@@ -84,7 +84,7 @@ func (ep *execPush) Push(fn func([]engine.Record, error)) {
 			ret := []engine.Record{}
 			for _, line := range lines {
 				ret = append(ret, engine.NewRecord(
-					engine.NewStringField(ep.namePrefix+"stdout", string(line)),
+					engine.NewField(ep.namePrefix+"stdout", string(line)),
 				))
 			}
 			fn(ret, nil)

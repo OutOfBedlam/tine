@@ -77,8 +77,8 @@ func (cf *CelFlow) Process(records []engine.Record) ([]engine.Record, error) {
 		return nil, err
 	}
 	records = append(records, engine.NewRecord(
-		engine.NewStringField("NAME", "CEL"),
-		engine.NewStringField("VALUE", fmt.Sprintf("%v", out.Value())),
+		engine.NewField("NAME", "CEL"),
+		engine.NewField("VALUE", fmt.Sprintf("%v", out.Value())),
 	))
 	return records, nil
 }

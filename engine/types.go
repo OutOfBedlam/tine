@@ -3,13 +3,7 @@ package engine
 import (
 	"fmt"
 	"strings"
-	"time"
 )
-
-type OpenCloser interface {
-	Open() error
-	Close() error
-}
 
 type Record interface {
 	// Field retursn field by name
@@ -36,42 +30,53 @@ type Record interface {
 
 	// AppendOrReplace returns a new record with fields appended or replaced if the field name already exists
 	AppendOrReplace(...*Field) Record
+
+	Tags() Tags
 }
 
 func NewRecord(fields ...*Field) Record {
-	return sliceRecord(fields)
+	return &tagRecord{fields: fields, tags: Tags{}}
 }
 
-type sliceRecord []*Field
+type tagRecord struct {
+	fields []*Field
+	tags   Tags
+}
 
-func (r sliceRecord) Append(fields ...*Field) Record {
-	r = append(r, fields...)
+var _ = Record((*tagRecord)(nil))
+
+func (r *tagRecord) Tags() Tags {
+	return r.tags
+}
+
+func (r *tagRecord) Append(fields ...*Field) Record {
+	r.fields = append(r.fields, fields...)
 	return r
 }
 
-func (r sliceRecord) AppendOrReplace(fields ...*Field) Record {
+func (r *tagRecord) AppendOrReplace(fields ...*Field) Record {
 	for _, f := range fields {
 		found := false
-		for i, old := range r {
+		for i, old := range r.fields {
 			if old == nil {
 				continue
 			}
 			if strings.EqualFold(old.Name, f.Name) {
-				r[i] = f
+				r.fields[i] = f
 				found = true
 				break
 			}
 		}
 		if !found {
-			r = append(r, f)
+			r.fields = append(r.fields, f)
 		}
 	}
 	return r
 }
 
-func (r sliceRecord) Field(name string) *Field {
+func (r *tagRecord) Field(name string) *Field {
 	name = strings.ToUpper(name)
-	for _, f := range r {
+	for _, f := range r.fields {
 		if f == nil {
 			continue
 		}
@@ -82,9 +87,9 @@ func (r sliceRecord) Field(name string) *Field {
 	return nil
 }
 
-func (r sliceRecord) Fields(names ...string) []*Field {
+func (r *tagRecord) Fields(names ...string) []*Field {
 	if len(names) == 0 {
-		return r
+		return r.fields
 	}
 	ret := make([]*Field, len(names))
 	for i, name := range names {
@@ -93,14 +98,14 @@ func (r sliceRecord) Fields(names ...string) []*Field {
 	return ret
 }
 
-func (r sliceRecord) FieldAt(index int) *Field {
-	if index < 0 || index >= len(r) {
+func (r *tagRecord) FieldAt(index int) *Field {
+	if index < 0 || index >= len(r.fields) {
 		return nil
 	}
-	return r[index]
+	return r.fields[index]
 }
 
-func (r sliceRecord) FieldsAt(indexes ...int) []*Field {
+func (r *tagRecord) FieldsAt(indexes ...int) []*Field {
 	ret := make([]*Field, len(indexes))
 	for i, idx := range indexes {
 		ret[i] = r.FieldAt(idx)
@@ -108,13 +113,13 @@ func (r sliceRecord) FieldsAt(indexes ...int) []*Field {
 	return ret
 }
 
-func (r sliceRecord) Empty() bool {
-	return len(r) == 0
+func (r *tagRecord) Empty() bool {
+	return len(r.fields) == 0
 }
 
-func (r sliceRecord) Names() []string {
-	ret := make([]string, len(r))
-	for i, f := range r {
+func (r *tagRecord) Names() []string {
+	ret := make([]string, len(r.fields))
+	for i, f := range r.fields {
 		if f != nil {
 			ret[i] = strings.ToUpper(f.Name)
 		} else {
@@ -124,6 +129,19 @@ func (r sliceRecord) Names() []string {
 	return ret
 }
 
+func NewField[T RawValue](name string, value T) *Field {
+	return &Field{Name: name, Value: NewValue(value)}
+}
+
+// if name is empty or value is nil, return nil
+func NewFieldWithValue(name string, value *Value) *Field {
+	if name == "" || value == nil {
+		return nil
+	}
+	return &Field{Name: name, Value: value}
+}
+
+// Field is Value with name and Tags
 type Field struct {
 	Name  string `json:"name"`
 	Value *Value `json:"value"`
@@ -166,7 +184,7 @@ func (f *Field) String() string {
 
 func (f *Field) BoolField() *Field {
 	if v, ok := f.Value.Bool(); ok {
-		return NewBoolField(f.Name, v)
+		return NewField(f.Name, v)
 	} else {
 		return nil
 	}
@@ -174,7 +192,7 @@ func (f *Field) BoolField() *Field {
 
 func (f *Field) IntField() *Field {
 	if v, ok := f.Value.Int64(); ok {
-		return NewIntField(f.Name, v)
+		return NewField(f.Name, v)
 	} else {
 		return nil
 	}
@@ -182,7 +200,7 @@ func (f *Field) IntField() *Field {
 
 func (f *Field) UintField() *Field {
 	if v, ok := f.Value.Uint64(); ok {
-		return NewUintField(f.Name, v)
+		return NewField(f.Name, v)
 	} else {
 		return nil
 	}
@@ -190,7 +208,7 @@ func (f *Field) UintField() *Field {
 
 func (f *Field) FloatField() *Field {
 	if v, ok := f.Value.Float64(); ok {
-		return NewFloatField(f.Name, v)
+		return NewField(f.Name, v)
 	} else {
 		return nil
 	}
@@ -198,7 +216,7 @@ func (f *Field) FloatField() *Field {
 
 func (f *Field) StringField() *Field {
 	if v, ok := f.Value.String(); ok {
-		return NewStringField(f.Name, v)
+		return NewField(f.Name, v)
 	} else {
 		return nil
 	}
@@ -206,7 +224,7 @@ func (f *Field) StringField() *Field {
 
 func (f *Field) TimeField() *Field {
 	if v, ok := f.Value.Time(); ok {
-		return NewTimeField(f.Name, v)
+		return NewField(f.Name, v)
 	} else {
 		return nil
 	}
@@ -214,7 +232,7 @@ func (f *Field) TimeField() *Field {
 
 func (f *Field) BinaryField() *Field {
 	if v, ok := f.Value.Bytes(); ok {
-		return NewBinaryField(f.Name, v)
+		return NewField(f.Name, v)
 	} else {
 		return nil
 	}
@@ -279,60 +297,4 @@ func (typ Type) String() string {
 	default:
 		return "UNTYPED"
 	}
-}
-
-func NewBoolField(name string, value bool) *Field {
-	return &Field{Name: name, Value: NewValue(value)}
-}
-
-func NewBoolFieldNull(name string) *Field {
-	return &Field{Name: name, Value: NewNullValue(BOOL)}
-}
-
-func NewIntField(name string, value int64) *Field {
-	return &Field{Name: name, Value: NewValue(value)}
-}
-
-func NewIntFieldNull(name string) *Field {
-	return &Field{Name: name, Value: NewNullValue(INT)}
-}
-
-func NewUintField(name string, value uint64) *Field {
-	return &Field{Name: name, Value: NewValue(value)}
-}
-
-func NewUintFieldNull(name string) *Field {
-	return &Field{Name: name, Value: NewNullValue(UINT)}
-}
-
-func NewFloatField(name string, value float64) *Field {
-	return &Field{Name: name, Value: NewValue(value)}
-}
-
-func NewFloatFieldNull(name string) *Field {
-	return &Field{Name: name, Value: NewNullValue(FLOAT)}
-}
-
-func NewStringField(name string, value string) *Field {
-	return &Field{Name: name, Value: NewValue(value)}
-}
-
-func NewStringFieldNull(name string) *Field {
-	return &Field{Name: name, Value: NewNullValue(STRING)}
-}
-
-func NewTimeField(name string, value time.Time) *Field {
-	return &Field{Name: name, Value: NewValue(value)}
-}
-
-func NewTimeFieldNull(name string) *Field {
-	return &Field{Name: name, Value: NewNullValue(TIME)}
-}
-
-func NewBinaryField(name string, value []byte) *Field {
-	return &Field{Name: name, Value: NewValue(value)}
-}
-
-func NewBinaryFieldNull(name string) *Field {
-	return &Field{Name: name, Value: NewNullValue(BINARY)}
 }

@@ -299,15 +299,13 @@ func (in *InletHandler) runPush() error {
 	return nil
 }
 
-const FIELD_INLET = "_in"
-const FIELD_TIMESTAMP = "_ts"
+const TAG_INLET = "_in"
+const TAG_TIMESTAMP = "_ts"
 
 func prependInletNameTimestamp(recs []Record, name string) []Record {
-	for i, r := range recs {
-		recs[i] = NewRecord(
-			NewTimeField(FIELD_TIMESTAMP, Now()),
-			NewStringField(FIELD_INLET, name),
-		).Append(r.Fields()...)
+	for _, r := range recs {
+		r.Tags().Set(TAG_INLET, NewValue(name))
+		r.Tags().Set(TAG_TIMESTAMP, NewValue(Now()))
 	}
 	return recs
 }

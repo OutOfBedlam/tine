@@ -75,7 +75,7 @@ func (ai *argsInlet) Push(cb func([]engine.Record, error)) {
 				cb(nil, err)
 				return
 			}
-			bv := engine.NewBinaryField(name, body)
+			bv := engine.NewField(name, body)
 			bv.Tags.Set(engine.CanonicalTagKey("Content-Type"), engine.NewValue(contentType))
 			rec = rec.Append(bv)
 		} else if strings.HasPrefix(value, "binary+http://") || strings.HasPrefix(value, "binary+https://") {
@@ -85,7 +85,7 @@ func (ai *argsInlet) Push(cb func([]engine.Record, error)) {
 				cb(nil, err)
 				return
 			}
-			bv := engine.NewBinaryField(name, body)
+			bv := engine.NewField(name, body)
 			bv.Tags.Set(engine.CanonicalTagKey("Content-Type"), engine.NewValue(contentType))
 			rec = rec.Append(bv)
 		} else if strings.HasPrefix(value, "base64+file://") {
@@ -96,7 +96,7 @@ func (ai *argsInlet) Push(cb func([]engine.Record, error)) {
 				return
 			}
 			base64ed := base64.StdEncoding.EncodeToString(body)
-			rec = rec.Append(engine.NewStringField(name, base64ed))
+			rec = rec.Append(engine.NewField(name, base64ed))
 		} else if strings.HasPrefix(value, "base64+http://") || strings.HasPrefix(value, "base64+https://") {
 			value = value[7:]
 			body, _, err := ai.fetchHttp(value)
@@ -106,9 +106,9 @@ func (ai *argsInlet) Push(cb func([]engine.Record, error)) {
 
 			}
 			base64ed := base64.StdEncoding.EncodeToString(body)
-			rec = rec.Append(engine.NewStringField(name, base64ed))
+			rec = rec.Append(engine.NewField(name, base64ed))
 		} else {
-			rec = rec.Append(engine.NewStringField(name, value))
+			rec = rec.Append(engine.NewField(name, value))
 		}
 	}
 	cb([]engine.Record{rec}, nil)

@@ -28,15 +28,15 @@ func (sf *setFieldFlow) Open() error {
 			// if caller wants to replace _ts field via pipeline DSL, it is impossible for now
 			switch v := val.(type) {
 			case string:
-				sf.fields = append(sf.fields, engine.NewStringField(key, v))
+				sf.fields = append(sf.fields, engine.NewField(key, v))
 			case int:
-				sf.fields = append(sf.fields, engine.NewIntField(key, int64(v)))
+				sf.fields = append(sf.fields, engine.NewField(key, int64(v)))
 			case float64:
-				sf.fields = append(sf.fields, engine.NewFloatField(key, v))
+				sf.fields = append(sf.fields, engine.NewField(key, v))
 			case bool:
-				sf.fields = append(sf.fields, engine.NewBoolField(key, v))
+				sf.fields = append(sf.fields, engine.NewField(key, v))
 			default:
-				sf.fields = append(sf.fields, engine.NewStringField(key, fmt.Sprintf("%v", v)))
+				sf.fields = append(sf.fields, engine.NewField(key, fmt.Sprintf("%v", v)))
 			}
 			sf.fieldNames = append(sf.fieldNames, key)
 		}

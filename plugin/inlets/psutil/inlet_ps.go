@@ -85,7 +85,7 @@ func CpuInlet(ctx *engine.Context) engine.Inlet {
 		if tv != nil {
 			if totalCpu {
 				rec = rec.Append(
-					engine.NewFloatField("total_percent", tv[0]),
+					engine.NewField("total_percent", tv[0]),
 				)
 			}
 		}
@@ -96,7 +96,7 @@ func CpuInlet(ctx *engine.Context) engine.Inlet {
 			}
 			for i, p := range v {
 				rec = rec.Append(
-					engine.NewFloatField(fmt.Sprintf("%d_percent", i), p),
+					engine.NewField(fmt.Sprintf("%d_percent", i), p),
 				)
 			}
 		}
@@ -118,11 +118,11 @@ func LoadInlet(ctx *engine.Context) engine.Inlet {
 		for _, i := range loads {
 			switch i {
 			case 1:
-				rec = rec.Append(engine.NewFloatField("load1", stat.Load1))
+				rec = rec.Append(engine.NewField("load1", stat.Load1))
 			case 5:
-				rec = rec.Append(engine.NewFloatField("load5", stat.Load5))
+				rec = rec.Append(engine.NewField("load5", stat.Load5))
 			case 15:
-				rec = rec.Append(engine.NewFloatField("load15", stat.Load15))
+				rec = rec.Append(engine.NewField("load15", stat.Load15))
 			}
 		}
 		return []engine.Record{rec}, nil
@@ -139,10 +139,10 @@ func MemInlet(ctx *engine.Context) engine.Inlet {
 			return nil, err
 		}
 		rec := engine.NewRecord(
-			engine.NewUintField("total", stat.Total),
-			engine.NewUintField("free", stat.Free),
-			engine.NewUintField("used", stat.Used),
-			engine.NewFloatField("used_percent", stat.UsedPercent),
+			engine.NewField("total", stat.Total),
+			engine.NewField("free", stat.Free),
+			engine.NewField("used", stat.Used),
+			engine.NewField("used_percent", stat.UsedPercent),
 		)
 		return []engine.Record{rec}, nil
 	}, engine.WithInterval(interval), engine.WithRunCountLimit(count))
@@ -181,21 +181,21 @@ func DiskInlet(ctx *engine.Context) engine.Inlet {
 				return nil, err
 			}
 			rec := engine.NewRecord(
-				engine.NewStringField("mount_point", v.Mountpoint),
-				engine.NewStringField("device", v.Device),
-				engine.NewStringField("fstype", v.Fstype),
-				engine.NewUintField("total", usage.Total),
-				engine.NewUintField("free", usage.Free),
-				engine.NewUintField("used", usage.Used),
-				engine.NewFloatField("used_percent", usage.UsedPercent),
+				engine.NewField("mount_point", v.Mountpoint),
+				engine.NewField("device", v.Device),
+				engine.NewField("fstype", v.Fstype),
+				engine.NewField("total", usage.Total),
+				engine.NewField("free", usage.Free),
+				engine.NewField("used", usage.Used),
+				engine.NewField("used_percent", usage.UsedPercent),
 			)
 
 			if runtime.GOOS != "windows" {
 				rec = rec.Append(
-					engine.NewUintField("inodes_total", usage.InodesTotal),
-					engine.NewUintField("inodes_free", usage.InodesFree),
-					engine.NewUintField("inodes_used", usage.InodesUsed),
-					engine.NewFloatField("inodes_used_percent", usage.InodesUsedPercent),
+					engine.NewField("inodes_total", usage.InodesTotal),
+					engine.NewField("inodes_free", usage.InodesFree),
+					engine.NewField("inodes_used", usage.InodesUsed),
+					engine.NewField("inodes_used_percent", usage.InodesUsedPercent),
 				)
 			}
 			ret = append(ret, rec)
@@ -229,20 +229,20 @@ func DiskioInlet(ctx *engine.Context) engine.Inlet {
 				continue
 			}
 			rec := engine.NewRecord(
-				engine.NewStringField("device", v.Name),
-				engine.NewStringField("serial_number", v.SerialNumber),
-				engine.NewStringField("label", v.Label),
-				engine.NewUintField("read_count", v.ReadCount),
-				engine.NewUintField("merged_read_count", v.MergedReadCount),
-				engine.NewUintField("write_count", v.WriteCount),
-				engine.NewUintField("merged_write_count", v.MergedWriteCount),
-				engine.NewUintField("read_bytes", v.ReadBytes),
-				engine.NewUintField("write_bytes", v.WriteBytes),
-				engine.NewUintField("read_time", v.ReadTime),
-				engine.NewUintField("write_time", v.WriteTime),
-				engine.NewUintField("iops_in_progress", v.IopsInProgress),
-				engine.NewUintField("io_time", v.IoTime),
-				engine.NewUintField("weighted_io", v.WeightedIO),
+				engine.NewField("device", v.Name),
+				engine.NewField("serial_number", v.SerialNumber),
+				engine.NewField("label", v.Label),
+				engine.NewField("read_count", v.ReadCount),
+				engine.NewField("merged_read_count", v.MergedReadCount),
+				engine.NewField("write_count", v.WriteCount),
+				engine.NewField("merged_write_count", v.MergedWriteCount),
+				engine.NewField("read_bytes", v.ReadBytes),
+				engine.NewField("write_bytes", v.WriteBytes),
+				engine.NewField("read_time", v.ReadTime),
+				engine.NewField("write_time", v.WriteTime),
+				engine.NewField("iops_in_progress", v.IopsInProgress),
+				engine.NewField("io_time", v.IoTime),
+				engine.NewField("weighted_io", v.WeightedIO),
 			)
 			ret = append(ret, rec)
 		}
@@ -275,17 +275,17 @@ func NetInlet(ctx *engine.Context) engine.Inlet {
 				continue
 			}
 			rec := engine.NewRecord(
-				engine.NewStringField("device", v.Name),
-				engine.NewUintField("bytes_sent", v.BytesSent),
-				engine.NewUintField("bytes_recv", v.BytesRecv),
-				engine.NewUintField("packets_sent", v.PacketsSent),
-				engine.NewUintField("packets_recv", v.PacketsRecv),
-				engine.NewUintField("err_in", v.Errin),
-				engine.NewUintField("err_out", v.Errout),
-				engine.NewUintField("drop_in", v.Dropin),
-				engine.NewUintField("drop_out", v.Dropout),
-				engine.NewUintField("fifos_in", v.Fifoin),
-				engine.NewUintField("fifos_out", v.Fifoout),
+				engine.NewField("device", v.Name),
+				engine.NewField("bytes_sent", v.BytesSent),
+				engine.NewField("bytes_recv", v.BytesRecv),
+				engine.NewField("packets_sent", v.PacketsSent),
+				engine.NewField("packets_recv", v.PacketsRecv),
+				engine.NewField("err_in", v.Errin),
+				engine.NewField("err_out", v.Errout),
+				engine.NewField("drop_in", v.Dropin),
+				engine.NewField("drop_out", v.Dropout),
+				engine.NewField("fifos_in", v.Fifoin),
+				engine.NewField("fifos_out", v.Fifoout),
 			)
 			ret = append(ret, rec)
 		}
@@ -306,10 +306,10 @@ func NetstatInlet(ctx *engine.Context) engine.Inlet {
 		ret := []engine.Record{}
 		for _, st := range stat {
 			rec := engine.NewRecord(
-				engine.NewStringField("protocol", st.Protocol),
+				engine.NewField("protocol", st.Protocol),
 			)
 			for key, val := range st.Stats {
-				rec = rec.Append(engine.NewIntField(camelToSnake(key), val))
+				rec = rec.Append(engine.NewField(camelToSnake(key), val))
 			}
 			ret = append(ret, rec)
 		}
@@ -345,10 +345,10 @@ func SensorsInlet(ctx *engine.Context) engine.Inlet {
 		ret := []engine.Record{}
 		for _, v := range stat {
 			rec := engine.NewRecord(
-				engine.NewStringField("sensor_key", v.SensorKey),
-				engine.NewFloatField("temperature", v.Temperature),
-				engine.NewFloatField("high", v.High),
-				engine.NewFloatField("critical", v.Critical),
+				engine.NewField("sensor_key", v.SensorKey),
+				engine.NewField("temperature", v.Temperature),
+				engine.NewField("high", v.High),
+				engine.NewField("critical", v.Critical),
 			)
 			ret = append(ret, rec)
 		}
@@ -366,18 +366,18 @@ func HostInlet(ctx *engine.Context) engine.Inlet {
 			return nil, err
 		}
 		rec := engine.NewRecord(
-			engine.NewStringField("hostname", stat.Hostname),
-			engine.NewUintField("uptime", stat.Uptime),
-			engine.NewUintField("procs", stat.Procs),
-			engine.NewStringField("os", stat.OS),
-			engine.NewStringField("platform", stat.Platform),
-			engine.NewStringField("platform_family", stat.PlatformFamily),
-			engine.NewStringField("platform_version", stat.PlatformVersion),
-			engine.NewStringField("kernel_version", stat.KernelVersion),
-			engine.NewStringField("kernel_arch", stat.KernelArch),
-			engine.NewStringField("virtualization_system", stat.VirtualizationSystem),
-			engine.NewStringField("virtualization_role", stat.VirtualizationRole),
-			engine.NewStringField("host_id", stat.HostID),
+			engine.NewField("hostname", stat.Hostname),
+			engine.NewField("uptime", stat.Uptime),
+			engine.NewField("procs", stat.Procs),
+			engine.NewField("os", stat.OS),
+			engine.NewField("platform", stat.Platform),
+			engine.NewField("platform_family", stat.PlatformFamily),
+			engine.NewField("platform_version", stat.PlatformVersion),
+			engine.NewField("kernel_version", stat.KernelVersion),
+			engine.NewField("kernel_arch", stat.KernelArch),
+			engine.NewField("virtualization_system", stat.VirtualizationSystem),
+			engine.NewField("virtualization_role", stat.VirtualizationRole),
+			engine.NewField("host_id", stat.HostID),
 		)
 		return []engine.Record{rec}, nil
 	}, engine.WithInterval(interval), engine.WithRunCountLimit(count))

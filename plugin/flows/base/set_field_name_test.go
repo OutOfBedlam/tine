@@ -40,7 +40,5 @@ func ExampleSetFieldNameFlow() {
 		panic(err)
 	}
 	// Output:
-	// pre__ts_suf,1721954797
-	// pre__in_suf,args
 	// pre_msg_suf,hello world
 }

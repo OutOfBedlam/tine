@@ -138,25 +138,25 @@ func doAction(db *sql.DB, ctx context.Context, act sqlite3.Action, cb func([]eng
 			if value == nil {
 				switch colTypes[i].DatabaseTypeName() {
 				case "INTEGER":
-					rec = rec.Append(engine.NewIntFieldNull(colNames[i]))
+					rec = rec.Append(engine.NewFieldWithValue(colNames[i], engine.NewNullValue(engine.INT)))
 				case "TEXT":
-					rec = rec.Append(engine.NewStringFieldNull(colNames[i]))
+					rec = rec.Append(engine.NewFieldWithValue(colNames[i], engine.NewNullValue(engine.STRING)))
 				case "REAL":
-					rec = rec.Append(engine.NewFloatFieldNull(colNames[i]))
+					rec = rec.Append(engine.NewFieldWithValue(colNames[i], engine.NewNullValue(engine.FLOAT)))
 				case "BLOB":
-					rec = rec.Append(engine.NewBinaryFieldNull(colNames[i]))
+					rec = rec.Append(engine.NewFieldWithValue(colNames[i], engine.NewNullValue(engine.BINARY)))
 				}
 				continue
 			}
 			switch val := value.(type) {
 			case *int64:
-				rec = rec.Append(engine.NewIntField(colNames[i], *val))
+				rec = rec.Append(engine.NewField(colNames[i], *val))
 			case *string:
-				rec = rec.Append(engine.NewStringField(colNames[i], *val))
+				rec = rec.Append(engine.NewField(colNames[i], *val))
 			case *float64:
-				rec = rec.Append(engine.NewFloatField(colNames[i], *val))
+				rec = rec.Append(engine.NewField(colNames[i], *val))
 			case *[]byte:
-				bf := engine.NewBinaryField(colNames[i], *val)
+				bf := engine.NewField(colNames[i], *val)
 				rec = rec.Append(bf)
 			}
 		}

@@ -9,7 +9,6 @@ import (
 
 type Writer struct {
 	Format       string
-	Subformat    string
 	OutputIndent string
 	OutputPrefix string
 	Timeformat   string
@@ -27,7 +26,6 @@ type Writer struct {
 func NewWriter(w io.Writer, cfg Config) (*Writer, error) {
 	ret := &Writer{
 		Format:       cfg.GetString("format", "csv"),
-		Subformat:    cfg.GetString("subformat", ""),
 		OutputIndent: cfg.GetString("indent", ""),
 		OutputPrefix: cfg.GetString("prefix", ""),
 		Decimal:      cfg.GetInt("decimal", -1),
@@ -65,7 +63,6 @@ func NewWriter(w io.Writer, cfg Config) (*Writer, error) {
 
 	ret.encoder = reg.Factory(EncoderConfig{
 		Writer:       ret.raw,
-		Subformat:    ret.Subformat,
 		Indent:       ret.OutputIndent,
 		Prefix:       ret.OutputPrefix,
 		Fields:       ret.Fields,

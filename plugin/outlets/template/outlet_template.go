@@ -82,6 +82,9 @@ func (to *templateOutlet) Handle(recs []engine.Record) error {
 	for _, rec := range recs {
 		fields := rec.Fields()
 		obj := map[string]any{}
+		for k, v := range rec.Tags() {
+			obj[k] = v.Raw()
+		}
 		for _, f := range fields {
 			obj[f.Name] = f.Value.Raw()
 		}

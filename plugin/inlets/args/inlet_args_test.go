@@ -36,5 +36,5 @@ func ExampleArgsInlet() {
 		panic(err)
 	}
 	// Output:
-	// 1721954797,args,hello world
+	// hello world
 }

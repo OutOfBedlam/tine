@@ -18,6 +18,11 @@ import (
 	"github.com/OutOfBedlam/tine/util"
 )
 
+type OpenCloser interface {
+	Open() error
+	Close() error
+}
+
 type Pipeline struct {
 	PipelineConfig
 	inputs    []*InletHandler

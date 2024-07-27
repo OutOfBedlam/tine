@@ -34,8 +34,8 @@ func main() {
 	custom := func() ([]engine.Record, error) {
 		result := []engine.Record{
 			engine.NewRecord(
-				engine.NewStringField("name", "random"),
-				engine.NewFloatField("value", rand.Float64()*100),
+				engine.NewField("name", "random"),
+				engine.NewField("value", rand.Float64()*100),
 			),
 		}
 		return result, nil

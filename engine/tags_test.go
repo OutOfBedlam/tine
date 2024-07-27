@@ -117,22 +117,22 @@ func ExampleTags_Merge() {
 	// value3
 }
 
-func ExampleTags_Keys() {
+func ExampleTags_Names() {
 	tags := engine.Tags{
 		"key1": engine.NewValue("value1"),
 		"key2": engine.NewValue("value2"),
 	}
-	keys := tags.Keys()
-	slices.Sort(keys)
-	fmt.Println(keys)
+	names := tags.Names()
+	slices.Sort(names)
+	fmt.Println(names)
 	// Output:
 	// [key1 key2]
 }
 
-func ExampleTags_Keys_empty() {
+func ExampleTags_Names_empty() {
 	tags := engine.Tags{}
-	keys := tags.Keys()
-	fmt.Println(keys)
+	names := tags.Names()
+	fmt.Println(names)
 	// Output:
 	// []
 }

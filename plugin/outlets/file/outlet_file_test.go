@@ -37,7 +37,7 @@ func ExampleFileOutlet() {
 		panic(err)
 	}
 	// Output:
-	// 1721954797,file,a,1
-	// 1721954797,file,b,2
-	// 1721954797,file,c,3
+	// a,1
+	// b,2
+	// c,3
 }

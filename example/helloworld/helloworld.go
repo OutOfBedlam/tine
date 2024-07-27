@@ -13,6 +13,9 @@ var config = `
 	commands = ["echo", "Hello, World!"]
 	count = 1
 
+[[flows.select]]
+	includes = ["#_ts", "#_in", "*"]
+
 [[outlets.file]]
 	path = "-"
 	format = "json"

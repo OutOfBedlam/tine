@@ -8,7 +8,7 @@ import (
 )
 
 func TestBoolFeild(t *testing.T) {
-	f := NewBoolField("boolean", true)
+	f := NewField("boolean", true)
 	require.Equal(t, BOOL, f.Type())
 	require.Equal(t, true, f.Value.raw)
 	require.Equal(t, "boolean", f.Name)
@@ -41,7 +41,7 @@ func TestBoolFeild(t *testing.T) {
 }
 
 func TestInt(t *testing.T) {
-	f := NewIntField("integer", 42)
+	f := NewField("integer", int64(42))
 	require.Equal(t, INT, f.Type())
 	require.Equal(t, int64(42), f.Value.raw)
 	require.Equal(t, "integer", f.Name)
@@ -76,7 +76,7 @@ func TestInt(t *testing.T) {
 }
 
 func TestUint(t *testing.T) {
-	f := NewUintField("unsigned", 42)
+	f := NewField("unsigned", uint64(42))
 	require.Equal(t, UINT, f.Type())
 	require.Equal(t, uint64(42), f.Value.raw)
 	require.Equal(t, "unsigned", f.Name)
@@ -111,7 +111,7 @@ func TestUint(t *testing.T) {
 }
 
 func TestFloat(t *testing.T) {
-	f := NewFloatField("float", 42.42)
+	f := NewField("float", 42.42)
 	require.Equal(t, FLOAT, f.Type())
 	require.Equal(t, 42.42, f.Value.raw)
 	require.Equal(t, "float", f.Name)
@@ -146,7 +146,7 @@ func TestFloat(t *testing.T) {
 }
 
 func TestString(t *testing.T) {
-	f := NewStringField("string", "1")
+	f := NewField("string", "1")
 	require.Equal(t, STRING, f.Type())
 	require.Equal(t, "1", f.Value.raw)
 	require.Equal(t, "string", f.Name)
@@ -174,7 +174,7 @@ func TestString(t *testing.T) {
 	tval := f.TimeField()
 	require.Nil(t, tval)
 
-	f = NewStringField("string", "2024-01-01T00:00:00Z")
+	f = NewField("string", "2024-01-01T00:00:00Z")
 	tval = f.TimeField()
 	require.Equal(t, TIME, tval.Type())
 	require.Equal(t, "2024-01-01T00:00:00Z", tval.Value.raw.(time.Time).Format(time.RFC3339))
@@ -185,7 +185,7 @@ func TestString(t *testing.T) {
 }
 
 func TestBinary(t *testing.T) {
-	bv := NewBinaryField("bf", []byte("binary"))
+	bv := NewField("bf", []byte("binary"))
 	bv.Tags = Tags{}
 	bv.Tags.Set("Content-Type", NewValue("text/plain"))
 	bv.Tags.Set("Content-Length", NewValue(int64(len("binary"))))
@@ -193,7 +193,7 @@ func TestBinary(t *testing.T) {
 	require.Equal(t, "text/plain", GetTagString(bv.Tags, "Content-Type"))
 	require.Equal(t, int64(len("binary")), GetTagInt64(bv.Tags, "Content-Length"))
 
-	f := NewBinaryField("bin", bv.Value.raw.([]byte))
+	f := NewField("bin", bv.Value.raw.([]byte))
 	require.Equal(t, BINARY, f.Type())
 	require.Equal(t, "binary", string(f.Value.raw.([]byte)))
 	require.Equal(t, "bin", f.Name)
