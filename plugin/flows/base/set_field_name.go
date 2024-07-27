@@ -6,7 +6,7 @@ import (
 
 func SetFieldNameFlow(ctx *engine.Context) engine.Flow {
 	prefix := ctx.Config().GetString("prefix", "")
-	suffix := ctx.Config().GetString("prefix", "")
+	suffix := ctx.Config().GetString("suffix", "")
 	ret := &setFieldNameFlow{
 		prefix:   prefix,
 		suffix:   suffix,
