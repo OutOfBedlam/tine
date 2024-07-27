@@ -14,6 +14,13 @@ type selectFlow struct {
 
 func SelectFlow(ctx *engine.Context) engine.Flow {
 	includes := ctx.Config().GetStringSlice("includes", []string{"#*", "*"})
+	for i := 0; i < len(includes); i++ {
+		if includes[i] == "**" {
+			includes[i] = "#*"
+			i++
+			includes = slices.Insert(includes, i, "*")
+		}
+	}
 	return &selectFlow{ctx: ctx, includes: includes}
 }
 
@@ -49,7 +56,11 @@ func (sf *selectFlow) Process(recs []engine.Record) ([]engine.Record, error) {
 				}
 			} else {
 				f := r.Field(item)
-				fields = append(fields, f)
+				if f == nil {
+					fields = append(fields, engine.NewFieldWithValue(item, engine.NewUntypedNullValue()))
+				} else {
+					fields = append(fields, f)
+				}
 			}
 		}
 		rec := engine.NewRecord(fields...)
