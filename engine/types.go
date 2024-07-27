@@ -127,10 +127,15 @@ func NewField[T RawValue](name string, value T) *Field {
 	return &Field{Name: name, Value: NewValue(value)}
 }
 
+// if name is empty or value is nil, return nil
 func NewFieldWithValue(name string, value *Value) *Field {
+	if name == "" || value == nil {
+		return nil
+	}
 	return &Field{Name: name, Value: value}
 }
 
+// Field is Value with name and Tags
 type Field struct {
 	Name  string `json:"name"`
 	Value *Value `json:"value"`
