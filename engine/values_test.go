@@ -83,7 +83,7 @@ func ExampleNewValue() {
 	// 3.141592 NULL
 	// true NULL
 	// 2024-07-24T23:50:54Z NULL
-	// BINARY(6 B) NULL
+	// BINARY(6B) NULL
 }
 
 func ExampleDefaultValueFormat() {

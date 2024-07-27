@@ -45,6 +45,10 @@ type OR struct {
 	r Predicate
 }
 
+func PredicateOR(l, r Predicate) Predicate {
+	return OR{l: l, r: r}
+}
+
 func (of OR) Apply(r Record) bool {
 	if of.l != nil && of.l.Apply(r) {
 		return true
@@ -58,6 +62,10 @@ func (of OR) Apply(r Record) bool {
 type AND struct {
 	l Predicate
 	r Predicate
+}
+
+func PredicateAND(l, r Predicate) Predicate {
+	return AND{l: l, r: r}
 }
 
 func (of AND) Apply(r Record) bool {

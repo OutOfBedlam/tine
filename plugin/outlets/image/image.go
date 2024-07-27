@@ -114,7 +114,7 @@ func (iout *imageOutlet) encodeRec(rec engine.Record) error {
 		if field == nil || field.Type() != engine.BINARY {
 			continue
 		}
-		srcContentType := field.GetTag("Content-Type")
+		srcContentType := engine.GetTagString(field.Tags, engine.CanonicalTagKey("Content-Type"))
 		if !strings.HasPrefix(srcContentType, "image/") {
 			continue
 		}
@@ -129,7 +129,7 @@ func (iout *imageOutlet) writeImageField(field *engine.Field) error {
 	if field.Type() != engine.BINARY {
 		return fmt.Errorf("field %q is not binary", field.Name)
 	}
-	srcContentType := field.GetTag("Content-Type")
+	srcContentType := engine.GetTagString(field.Tags, engine.CanonicalTagKey("Content-Type"))
 	if srcContentType == "" {
 		return fmt.Errorf("field %q Content-Type is not specified", field.Name)
 	}
@@ -175,8 +175,8 @@ func (iout *imageOutlet) writeImageField(field *engine.Field) error {
 			}
 		}
 	case "image/vnd.rgba":
-		strStride := field.GetTag("X-RGBA-Stride")
-		strRect := field.GetTag("X-RGBA-Rectangle")
+		strStride := engine.GetTagString(field.Tags, engine.CanonicalTagKey("X-RGBA-Stride"))
+		strRect := engine.GetTagString(field.Tags, engine.CanonicalTagKey("X-RGBA-Rectangle"))
 		stride, err := strconv.ParseInt(strStride, 10, 64)
 		if err != nil {
 			return fmt.Errorf("field %q has invalid X-RGBA-Stride %q", field.Name, strStride)

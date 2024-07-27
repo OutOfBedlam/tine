@@ -87,11 +87,11 @@ func (ti *telegramInlet) Push(cb func([]engine.Record, error)) {
 				// we need to set the content type manually
 				switch strings.ToLower(filepath.Ext(tfile.FilePath)) {
 				case ".png":
-					bv.SetTag("Content-Type", "image/png")
+					bv.Tags.Set(engine.CanonicalTagKey("Content-Type"), engine.NewValue("image/png"))
 				case ".jpg", ".jpeg":
-					bv.SetTag("Content-Type", "image/jpeg")
+					bv.Tags.Set(engine.CanonicalTagKey("Content-Type"), engine.NewValue("image/jpeg"))
 				case ".gif":
-					bv.SetTag("Content-Type", "image/gif")
+					bv.Tags.Set(engine.CanonicalTagKey("Content-Type"), engine.NewValue("image/gif"))
 				default:
 					ti.ctx.LogWarn("inetls.telegram fetch photo unknown file type", "file", tfile.FilePath)
 					continue

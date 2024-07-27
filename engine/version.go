@@ -41,7 +41,7 @@ func GetVersion() *Version {
 }
 
 func DisplayVersion() string {
-	return tineVersion
+	return strings.TrimPrefix(tineVersion, "v")
 }
 
 func VersionString() string {

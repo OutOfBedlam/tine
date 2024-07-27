@@ -76,7 +76,7 @@ func (ai *argsInlet) Push(cb func([]engine.Record, error)) {
 				return
 			}
 			bv := engine.NewBinaryField(name, body)
-			bv.SetTag("Content-Type", contentType)
+			bv.Tags.Set(engine.CanonicalTagKey("Content-Type"), engine.NewValue(contentType))
 			rec = rec.Append(bv)
 		} else if strings.HasPrefix(value, "binary+http://") || strings.HasPrefix(value, "binary+https://") {
 			value = value[7:]
@@ -86,7 +86,7 @@ func (ai *argsInlet) Push(cb func([]engine.Record, error)) {
 				return
 			}
 			bv := engine.NewBinaryField(name, body)
-			bv.SetTag("Content-Type", contentType)
+			bv.Tags.Set(engine.CanonicalTagKey("Content-Type"), engine.NewValue(contentType))
 			rec = rec.Append(bv)
 		} else if strings.HasPrefix(value, "base64+file://") {
 			value = value[14:]
