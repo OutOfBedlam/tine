@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"fmt"
 	"net/textproto"
 )
 
@@ -94,7 +93,6 @@ func GetTagString(t Tags, key string) string {
 	if t == nil {
 		return ""
 	}
-	fmt.Println(t.Names())
 	if v := t.Get(key); v != nil {
 		if s, ok := v.String(); ok {
 			return s

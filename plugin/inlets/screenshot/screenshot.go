@@ -92,6 +92,7 @@ func (si *screenshotInlet) Pull() ([]engine.Record, error) {
 		switch si.format {
 		default: // "rgba"
 			bin = engine.NewField(name, img.Pix)
+			bin.Tags = engine.Tags{}
 			bin.Tags.Set(engine.CanonicalTagKey("Content-Type"), engine.NewValue("image/vnd.rgba"))
 			bin.Tags.Set(engine.CanonicalTagKey("X-RGBA-Stride"), engine.NewValue(fmt.Sprintf("%d", img.Stride)))
 			bin.Tags.Set(engine.CanonicalTagKey("X-RGBA-Rectangle"), engine.NewValue(fmt.Sprintf("%d,%d,%d,%d", img.Rect.Min.X, img.Rect.Min.Y, img.Rect.Max.X, img.Rect.Max.Y)))
@@ -101,6 +102,7 @@ func (si *screenshotInlet) Pull() ([]engine.Record, error) {
 				return nil, err
 			}
 			bin = engine.NewField(name, buf.Bytes())
+			bin.Tags = engine.Tags{}
 			bin.Tags.Set(engine.CanonicalTagKey("Content-Type"), engine.NewValue("image/png"))
 		case "jpeg":
 			buf := &bytes.Buffer{}
@@ -108,6 +110,7 @@ func (si *screenshotInlet) Pull() ([]engine.Record, error) {
 				return nil, err
 			}
 			bin = engine.NewField(name, buf.Bytes())
+			bin.Tags = engine.Tags{}
 			bin.Tags.Set(engine.CanonicalTagKey("Content-Type"), engine.NewValue("image/jpeg"))
 		case "gif":
 			buf := &bytes.Buffer{}
@@ -115,6 +118,7 @@ func (si *screenshotInlet) Pull() ([]engine.Record, error) {
 				return nil, err
 			}
 			bin = engine.NewField(name, buf.Bytes())
+			bin.Tags = engine.Tags{}
 			bin.Tags.Set(engine.CanonicalTagKey("Content-Type"), engine.NewValue("image/gif"))
 		}
 		if bin == nil {

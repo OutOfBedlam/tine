@@ -248,12 +248,13 @@ http.ListenAndServe(":8080", router)
 
 |  Name          |    Description                             |
 |:---------------|:-------------------------------------------|
+| select         | Filter fields and promote tags to fields of a record |
+| merge          | Merge multiple records into a wide record  |
+| flatten        | Split a record into multiple records       |
 | set_field_name | Manipulate field name of records           |
 | set_field      | Forcely set a field                        |
 | fan-in         | Aggregate messages from multiple sources   |
 | fan-out        | Distribute messages to multiple sinks      |
-| merge          | Merge multiple records into a wide record  |
-| flatten        | Split a record into multiple records       |
 | damper         | Combine multiple records                   |
 | dump           | Log print records for debugging            |
 

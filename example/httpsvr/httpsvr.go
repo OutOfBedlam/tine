@@ -38,8 +38,6 @@ const screenshotPipeline = `
 `
 
 const templatePipeline = `
-[log]
-	level = "debug"
 [[inlets.load]]
 	count = 1
 [[outlets.template]]
