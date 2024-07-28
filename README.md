@@ -185,11 +185,8 @@ as variables of Go Templates to build pipeline configuration.
 
 ## Recipes
 
-- [ollama flow](./docs/recipes/ollama-cli.md)
-- [sqlite out](./docs/recipes/sqlite-out.md)
-- [rrd out](./docs/recipes/rrd-out.md)
-- [rrd-graph in](./docs/recipes/rrd-graph.md)
-  
+Pipeline configuration examples are in [docs/recipes](./docs/recipes).
+
 ## Plugin system
 
 **Inbound**
