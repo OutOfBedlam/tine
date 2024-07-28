@@ -1,5 +1,6 @@
-# ARGS - OLLAMA - STDOUT
+# OLLAMA
 
+### Generates text via OLLAMA from user text by command line argument.
 
 **ollama.toml**
 

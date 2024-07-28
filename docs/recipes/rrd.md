@@ -1,9 +1,10 @@
 # RRD
 
-> [!IMPORTANT]
-> rrd plugins requires TINE to be built with `-tags rrd` which need `librrd-dev` package to be installed in advance.
+{% hint style="info" %}
+rrd plugins requires Tine to be built with `-tags rrd` which need `librrd-dev` package to be installed in advance.
+{% endhint %}
 
-## Save data into RRD
+### Save data into RRD
 
 **rrd_out.toml**
 
@@ -70,7 +71,7 @@ tine run rrd_out.toml
 ```
 
 
-## Read data from RRD and generate graph
+### Read data from RRD and generate graph
 
 ```toml
 [log]

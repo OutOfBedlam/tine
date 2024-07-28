@@ -8,8 +8,7 @@
 
 ## RECIPES
 
-* [OLLAMA flow](recipes/ollama-cli.md)
-* [RRD outlet](recipes/rrd-out.md)
-* [RRD graph inlet](recipes/rrd-graph.md)
-* [SQLite outlet](recipes/sqlite-out.md)
+* [OLLAMA](recipes/ollama.md)
+* [RRD](recipes/rrd.md)
+* [SQLite](recipes/sqlite.md)
 
