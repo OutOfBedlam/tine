@@ -12,10 +12,15 @@ layout:
     visible: true
 ---
 
-# TINE
+# Highlights
 
 TINE is a data-pipeline runner.&#x20;
 
-### Highlights
+{% hint style="danger" %}
+Tine is currently under active development, and both the API and syntax are subject to change.
+{% endhint %}
 
-<table data-column-title-hidden data-view="cards" data-full-width="true"><thead><tr><th></th><th></th><th data-type="content-ref"></th><th></th><th data-type="files"></th></tr></thead><tbody><tr><td><strong>Install</strong></td><td>How to install Tine</td><td><a href="broken-reference">Broken link</a></td><td></td><td><a href=".gitbook/assets/tine_square_blue.jpg">tine_square_blue.jpg</a></td></tr></tbody></table>
+
+
+<table data-view="cards"><thead><tr><th></th><th data-hidden></th><th data-hidden></th><th data-hidden data-card-cover data-type="files"></th><th data-hidden data-card-target data-type="content-ref"></th></tr></thead><tbody><tr><td><strong>Install Tine</strong></td><td></td><td></td><td><a href=".gitbook/assets/tine_square_blue.jpg">tine_square_blue.jpg</a></td><td><a href="tine/install.md">install.md</a></td></tr></tbody></table>
+
