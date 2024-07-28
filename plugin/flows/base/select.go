@@ -28,7 +28,7 @@ func (sf *selectFlow) Open() error      { return nil }
 func (sf *selectFlow) Close() error     { return nil }
 func (sf *selectFlow) Parallelism() int { return 1 }
 
-func (sf *selectFlow) Process(recs []engine.Record) ([]engine.Record, error) {
+func (sf *selectFlow) Process(recs []engine.Record, nextFunc engine.FlowNextFunc) {
 	ret := []engine.Record{}
 	for _, r := range recs {
 		fields := []*engine.Field{}
@@ -67,5 +67,5 @@ func (sf *selectFlow) Process(recs []engine.Record) ([]engine.Record, error) {
 		rec.Tags().Merge(r.Tags())
 		ret = append(ret, rec)
 	}
-	return ret, nil
+	nextFunc(ret, nil)
 }

@@ -21,7 +21,7 @@ func (ff *flattenFlow) Open() error      { return nil }
 func (ff *flattenFlow) Close() error     { return nil }
 func (ff *flattenFlow) Parallelism() int { return 1 }
 
-func (ff *flattenFlow) Process(recs []engine.Record) ([]engine.Record, error) {
+func (ff *flattenFlow) Process(recs []engine.Record, nextFunc engine.FlowNextFunc) {
 	ret := []engine.Record{}
 	for _, r := range recs {
 		ts := r.Tags().Get(engine.TAG_TIMESTAMP)
@@ -41,5 +41,5 @@ func (ff *flattenFlow) Process(recs []engine.Record) ([]engine.Record, error) {
 			ret = append(ret, engine.NewRecord(fields...))
 		}
 	}
-	return ret, nil
+	nextFunc(ret, nil)
 }

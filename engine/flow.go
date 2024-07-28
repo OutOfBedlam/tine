@@ -10,12 +10,14 @@ var flowsLock sync.RWMutex
 
 type Flow interface {
 	OpenCloser
-	Process([]Record) ([]Record, error)
+	Process([]Record, FlowNextFunc)
 	Parallelism() int
 }
 
+type FlowNextFunc func([]Record, error)
+
 type BufferedFlow interface {
-	Flush() []Record
+	Flush(FlowNextFunc)
 }
 
 type FlowReg struct {
@@ -102,6 +104,16 @@ func (fh *FlowHandler) Start() error {
 	}
 	fh.closeWg.Add(1)
 
+	var flowCallback = func(r []Record, err error) {
+		if err != nil {
+			fh.ctx.LogError("failed to handle flow", "error", err.Error())
+		}
+		if len(r) > 0 {
+			fh.outCh <- r
+			atomic.AddUint64(&fh.sent, uint64(len(r)))
+		}
+	}
+
 	if fh.parallelism != nil {
 		go func() {
 			for records := range fh.inCh {
@@ -113,14 +125,7 @@ func (fh *FlowHandler) Start() error {
 						fh.closeWg.Done()
 						<-fh.parallelism
 					}()
-					r, err := fh.flow.Process(r)
-					if err != nil {
-						fh.ctx.LogError("failed to handle flow", "error", err.Error())
-					}
-					if len(r) > 0 {
-						fh.outCh <- r
-						atomic.AddUint64(&fh.sent, uint64(len(r)))
-					}
+					fh.flow.Process(records, flowCallback)
 				}(records)
 			}
 			fh.closeWg.Done()
@@ -129,23 +134,13 @@ func (fh *FlowHandler) Start() error {
 		go func() {
 			for records := range fh.inCh {
 				atomic.AddUint64(&fh.recv, uint64(len(records)))
-				r, err := fh.flow.Process(records)
-				if err != nil {
-					fh.ctx.LogError("failed to handle flow", "error", err.Error())
-				}
-				if len(r) > 0 {
-					fh.outCh <- r
-					atomic.AddUint64(&fh.sent, uint64(len(r)))
-				} else if _, ok := fh.flow.(*fanOutFlow); ok {
+				fh.flow.Process(records, flowCallback)
+				if _, ok := fh.flow.(*fanOutFlow); ok {
 					atomic.AddUint64(&fh.sent, uint64(len(records)))
 				}
 			}
 			if buffered, ok := fh.flow.(BufferedFlow); ok {
-				r := buffered.Flush()
-				if len(r) > 0 {
-					fh.outCh <- r
-					atomic.AddUint64(&fh.sent, uint64(len(r)))
-				}
+				buffered.Flush(flowCallback)
 			}
 			fh.closeWg.Done()
 		}()
@@ -180,11 +175,10 @@ func FanInFlow(ctx *Context) Flow {
 	return &fanInFlow{}
 }
 
-func (ff *fanInFlow) Open() error      { return nil }
-func (ff *fanInFlow) Close() error     { return nil }
-func (ff *fanInFlow) Parallelism() int { return 1 }
-
-func (ff *fanInFlow) Process(r []Record) ([]Record, error) { return r, nil }
+func (ff *fanInFlow) Open() error                         { return nil }
+func (ff *fanInFlow) Close() error                        { return nil }
+func (ff *fanInFlow) Parallelism() int                    { return 1 }
+func (ff *fanInFlow) Process(r []Record, cb FlowNextFunc) { cb(r, nil) }
 
 type fanOutFlow struct {
 	outs []chan<- []Record
@@ -204,11 +198,11 @@ func (ff *fanOutFlow) LinkOutlets(outs ...*OutletHandler) {
 	}
 }
 
-func (ff *fanOutFlow) Process(r []Record) ([]Record, error) {
+func (ff *fanOutFlow) Process(r []Record, cb FlowNextFunc) {
 	for _, o := range ff.outs {
 		o <- r
 	}
-	return nil, nil
+	cb(nil, nil)
 }
 
 type FlowFuncWrapOption func(*FlowFuncWrap)
@@ -246,8 +240,9 @@ func (fw *FlowFuncWrap) Close() error {
 	return nil
 }
 
-func (fw *FlowFuncWrap) Process(r []Record) ([]Record, error) {
-	return fw.fn(r)
+func (fw *FlowFuncWrap) Process(r []Record, cb FlowNextFunc) {
+	result, err := fw.fn(r)
+	cb(result, err)
 }
 
 func (fw *FlowFuncWrap) Parallelism() int {

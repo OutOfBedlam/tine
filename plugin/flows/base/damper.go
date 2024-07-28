@@ -30,7 +30,7 @@ func (df *damperFlow) Open() error      { return nil }
 func (df *damperFlow) Close() error     { return nil }
 func (df *damperFlow) Parallelism() int { return 1 }
 
-func (df *damperFlow) Process(r []engine.Record) ([]engine.Record, error) {
+func (df *damperFlow) Process(r []engine.Record, nextFunc engine.FlowNextFunc) {
 	df.buffer = append(df.buffer, r...)
 	if time.Since(df.lastFlush) >= df.bufferInterval || len(df.buffer) >= df.bufferLimit {
 		df.lastFlush = time.Now()
@@ -39,7 +39,8 @@ func (df *damperFlow) Process(r []engine.Record) ([]engine.Record, error) {
 			df.bufferSize = len(df.buffer)
 		}
 		df.buffer = make([]engine.Record, 0, df.bufferSize)
-		return ret, nil
+		nextFunc(ret, nil)
+	} else {
+		nextFunc(nil, nil)
 	}
-	return nil, nil
 }

@@ -40,7 +40,7 @@ func (nf *setFieldNameFlow) Open() error      { return nil }
 func (nf *setFieldNameFlow) Close() error     { return nil }
 func (nf *setFieldNameFlow) Parallelism() int { return 1 }
 
-func (nf *setFieldNameFlow) Process(recs []engine.Record) ([]engine.Record, error) {
+func (nf *setFieldNameFlow) Process(recs []engine.Record, nextFunc engine.FlowNextFunc) {
 	if len(nf.replaces) > 0 {
 		for _, r := range recs {
 			for _, f := range r.Fields() {
@@ -57,5 +57,5 @@ func (nf *setFieldNameFlow) Process(recs []engine.Record) ([]engine.Record, erro
 			}
 		}
 	}
-	return recs, nil
+	nextFunc(recs, nil)
 }

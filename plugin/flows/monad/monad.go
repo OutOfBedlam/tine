@@ -43,9 +43,10 @@ func (ff *filterFlow) Close() error {
 	return nil
 }
 
-func (ff *filterFlow) Process(records []engine.Record) ([]engine.Record, error) {
+func (ff *filterFlow) Process(records []engine.Record, nextFunc engine.FlowNextFunc) {
 	if ff.predicate == nil {
-		return records, nil
+		nextFunc(records, nil)
+		return
 	}
 	ret := make([]engine.Record, 0, len(records))
 	for _, record := range records {
@@ -54,7 +55,7 @@ func (ff *filterFlow) Process(records []engine.Record) ([]engine.Record, error) 
 			ret = append(ret, record)
 		}
 	}
-	return ret, nil
+	nextFunc(ret, nil)
 }
 
 func (ff *filterFlow) Parallelism() int {
