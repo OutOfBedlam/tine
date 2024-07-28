@@ -70,7 +70,7 @@ var DefaultProgramEnv = map[string]any{
 
 const doEval = true
 
-func (ef *exprFlow) Process(recs []engine.Record) ([]engine.Record, error) {
+func (ef *exprFlow) Process(recs []engine.Record, nextFunc engine.FlowNextFunc) {
 	if doEval {
 		env := DefaultProgramEnv
 		env["records"] = recs
@@ -79,7 +79,8 @@ func (ef *exprFlow) Process(recs []engine.Record) ([]engine.Record, error) {
 		if err != nil {
 			ef.ctx.LogError("flows.expr error\n" + err.Error())
 			fmt.Println("expr error:", err)
-			return nil, err
+			nextFunc(nil, err)
+			return
 		}
 		fmt.Println(">>", output)
 	} else {
@@ -89,10 +90,10 @@ func (ef *exprFlow) Process(recs []engine.Record) ([]engine.Record, error) {
 		if err != nil {
 			ef.ctx.LogError("flows.expr error\n" + err.Error())
 			fmt.Println("expr error:", err)
-			return nil, err
+			nextFunc(nil, err)
+			return
 		}
 		fmt.Println(">>", output)
 	}
-
-	return recs, nil
+	nextFunc(recs, nil)
 }

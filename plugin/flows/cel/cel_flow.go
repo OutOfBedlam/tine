@@ -63,7 +63,7 @@ func (cf *CelFlow) Parallelism() int {
 	return cf.ctx.Config().GetInt("parallelism", 1)
 }
 
-func (cf *CelFlow) Process(records []engine.Record) ([]engine.Record, error) {
+func (cf *CelFlow) Process(records []engine.Record, cb engine.FlowNextFunc) {
 	defer func() {
 		if r := recover(); r != nil {
 			slog.Error("CEL panic", "error", fmt.Sprintf("%v", r))
@@ -74,11 +74,12 @@ func (cf *CelFlow) Process(records []engine.Record) ([]engine.Record, error) {
 	})
 	if err != nil {
 		slog.Error("CEL", "error", err.Error())
-		return nil, err
+		cb(nil, err)
+		return
 	}
 	records = append(records, engine.NewRecord(
 		engine.NewField("NAME", "CEL"),
 		engine.NewField("VALUE", fmt.Sprintf("%v", out.Value())),
 	))
-	return records, nil
+	cb(records, nil)
 }

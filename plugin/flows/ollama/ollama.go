@@ -1,6 +1,7 @@
 package ollama
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
@@ -118,8 +119,7 @@ type GenerateResponse struct {
 	Context            []int         `json:"-"`                              // context: [32010,3750,338,278,...,6575,4366,1213,13,29913]
 }
 
-func (of *ollamaFlow) Process(recs []engine.Record) ([]engine.Record, error) {
-	ret := make([]engine.Record, 0, len(recs))
+func (of *ollamaFlow) Process(recs []engine.Record, cb engine.FlowNextFunc) {
 	for _, rec := range recs {
 		genReq := &GenerateRequest{Model: of.model, Stream: of.stream}
 		genReq.Prompt = "Where is the capital city of Australia?"
@@ -157,80 +157,105 @@ func (of *ollamaFlow) Process(recs []engine.Record) ([]engine.Record, error) {
 		}
 		of.ctx.LogDebug("flows.ollama", "model", genReq.Model, "prompt", genReq.Prompt, "stream", genReq.Stream, "images", len(genReq.Images))
 
-		rt, err := of.process0(genReq)
-		if err != nil {
-			return nil, err
-		}
-		reFields := make([]*engine.Field, 0, len(rec.Fields()))
-		for _, f := range rec.Fields() {
-			if f.Name == "prompt" || f.Name == "image" || f.Name == "model" || f.Name == "stream" || f.Name == "format" {
-				continue
-			}
-			reFields = append(reFields, f)
-		}
-		for i, rtRec := range rt {
-			rt[i] = rtRec.Append(reFields...)
-		}
-
-		ret = append(ret, rt...)
+		of.process0(genReq, cb)
 	}
-	return ret, nil
 }
 
-func (of *ollamaFlow) process0(genReq *GenerateRequest) ([]engine.Record, error) {
+func (of *ollamaFlow) process0(genReq *GenerateRequest, nextFunc engine.FlowNextFunc) {
 	uri, err := url.JoinPath(of.addr, "/api/generate")
 	if err != nil {
-		return nil, err
+		nextFunc(nil, err)
+		return
 	}
 	successCode := 200
 	reqBody, err := json.Marshal(genReq)
 	if err != nil {
-		return nil, err
+		nextFunc(nil, err)
+		return
 	}
 	rsp, err := of.client.Post(uri, "application/json", bytes.NewBuffer(reqBody))
 	if err != nil {
-		return nil, err
+		nextFunc(nil, err)
+		return
 	}
 	defer rsp.Body.Close()
 
 	body, err := io.ReadAll(rsp.Body)
 	if err != nil {
-		return nil, err
+		nextFunc(nil, err)
+		return
 	}
 
 	if rsp.StatusCode != successCode {
 		of.ctx.LogWarn("flows.ollama", "status", rsp.StatusCode, "body", string(body))
 		rec := engine.NewRecord(engine.NewField("status", int64(rsp.StatusCode)))
-		return []engine.Record{rec}, nil
+		nextFunc([]engine.Record{rec}, nil)
+		return
+	}
+
+	feedCb := func(rec engine.Record, err error) {
+		if rec != nil {
+			reFields := make([]*engine.Field, 0, len(rec.Fields()))
+			for _, f := range rec.Fields() {
+				if f.Name == "prompt" || f.Name == "image" || f.Name == "model" || f.Name == "stream" || f.Name == "format" {
+					continue
+				}
+				reFields = append(reFields, f)
+			}
+			rec = rec.Append(reFields...)
+		}
+		nextFunc([]engine.Record{rec}, err)
 	}
 
 	if contentType := rsp.Header.Get("Content-Type"); strings.Contains(contentType, "application/json") {
 		genRsp := GenerateResponse{}
 		if err := json.Unmarshal(body, &genRsp); err != nil {
 			of.ctx.LogWarn("flows.ollama", "status", rsp.StatusCode, "unmarshal error", err.Error())
-			return nil, err
+			nextFunc(nil, err)
+			return
 		}
 		rec := of.parseResponse(&genRsp)
-		return []engine.Record{rec}, nil
+		feedCb(rec, nil)
+		return
 	} else if strings.Contains(contentType, "application/x-ndjson") {
-		dec := json.NewDecoder(bytes.NewReader(body))
-		ret := make([]engine.Record, 0, 30)
+		bufbody := bufio.NewReader(bytes.NewReader(body))
+		var line []byte
 		for {
+			if ln, isPrefix, err := bufbody.ReadLine(); err != nil {
+				if err == io.EOF {
+					break
+				}
+				of.ctx.LogWarn("flows.ollama", "status", rsp.StatusCode, "read error", err.Error())
+				nextFunc(nil, err)
+				return
+			} else {
+				if isPrefix {
+					line = append(line, ln...)
+					continue
+				} else {
+					line = ln
+				}
+			}
+			if len(line) == 0 {
+				break
+			}
 			genRsp := GenerateResponse{}
+			dec := json.NewDecoder(bytes.NewReader(line))
 			if err := dec.Decode(&genRsp); err != nil {
 				if err == io.EOF {
 					break
 				}
 				of.ctx.LogWarn("flows.ollama", "status", rsp.StatusCode, "decode error", err.Error())
-				return nil, err
+				nextFunc(nil, err)
+				return
 			}
+			line = line[:0]
 			rec := of.parseResponse(&genRsp)
-			ret = append(ret, rec)
+			feedCb(rec, nil)
 		}
-		return ret, nil
 	} else {
 		of.ctx.LogWarn("flows.ollama", "status", rsp.StatusCode, "unsupported content-type", contentType)
-		return nil, nil
+		nextFunc(nil, fmt.Errorf("unsupported content-type: %s", contentType))
 	}
 }
 

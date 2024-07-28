@@ -7,14 +7,6 @@ import (
 	"github.com/OutOfBedlam/tine/engine"
 )
 
-type mergeFlow struct {
-	ctx           *engine.Context
-	table         *engine.Table[int64]
-	waitLimit     time.Duration
-	joinTag       string // joinTag should be time.Time type, for now.
-	namePrefixTag string
-}
-
 func MergeFlow(ctx *engine.Context) engine.Flow {
 	waitLimit := ctx.Config().GetDuration("wait_limit", 10*time.Second)
 	return &mergeFlow{
@@ -26,19 +18,30 @@ func MergeFlow(ctx *engine.Context) engine.Flow {
 	}
 }
 
+type mergeFlow struct {
+	ctx           *engine.Context
+	table         *engine.Table[int64]
+	waitLimit     time.Duration
+	joinTag       string // joinTag should be time.Time type, for now.
+	namePrefixTag string
+}
+
+var _ = engine.Flow((*mergeFlow)(nil))
+var _ = engine.BufferedFlow((*mergeFlow)(nil))
+
 func (mf *mergeFlow) Open() error      { return nil }
 func (mf *mergeFlow) Close() error     { return nil }
 func (mf *mergeFlow) Parallelism() int { return 1 }
 
-func (mf *mergeFlow) Flush() []engine.Record {
+func (mf *mergeFlow) Flush(cb engine.FlowNextFunc) {
 	ret := []engine.Record{}
 	for _, r := range mf.table.Rows() {
 		ret = append(ret, engine.NewRecord(r...))
 	}
-	return ret
+	cb(ret, nil)
 }
 
-func (mf *mergeFlow) Process(records []engine.Record) ([]engine.Record, error) {
+func (mf *mergeFlow) Process(records []engine.Record, nextFunc engine.FlowNextFunc) {
 	for _, rec := range records {
 		var tsValue *engine.Value
 		var ts time.Time
@@ -79,5 +82,5 @@ func (mf *mergeFlow) Process(records []engine.Record) ([]engine.Record, error) {
 	for _, r := range selected.Rows() {
 		ret = append(ret, engine.NewRecord(r...))
 	}
-	return ret, nil
+	nextFunc(ret, nil)
 }

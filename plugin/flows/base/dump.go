@@ -38,7 +38,7 @@ func (df *dumpFlow) Open() error      { return nil }
 func (df *dumpFlow) Close() error     { return nil }
 func (df *dumpFlow) Parallelism() int { return 1 }
 
-func (df *dumpFlow) Process(recs []engine.Record) ([]engine.Record, error) {
+func (df *dumpFlow) Process(recs []engine.Record, nextFunc engine.FlowNextFunc) {
 	formatOpt := engine.ValueFormat{Timeformat: df.tf, Decimal: df.precision}
 	for idx, r := range recs {
 		list := make([]any, 0, len(r.Fields())*2)
@@ -48,5 +48,5 @@ func (df *dumpFlow) Process(recs []engine.Record) ([]engine.Record, error) {
 		}
 		df.logger("flow-dump", append([]any{"rec", fmt.Sprintf("%d/%d", idx+1, len(recs))}, list...)...)
 	}
-	return recs, nil
+	nextFunc(recs, nil)
 }

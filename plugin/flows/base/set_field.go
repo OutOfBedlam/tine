@@ -47,10 +47,10 @@ func (sf *setFieldFlow) Open() error {
 func (sf *setFieldFlow) Close() error     { return nil }
 func (sf *setFieldFlow) Parallelism() int { return 1 }
 
-func (sf *setFieldFlow) Process(recs []engine.Record) ([]engine.Record, error) {
+func (sf *setFieldFlow) Process(recs []engine.Record, nextFunc engine.FlowNextFunc) {
 	ret := []engine.Record{}
 	for _, r := range recs {
 		ret = append(ret, r.AppendOrReplace(sf.fields...))
 	}
-	return ret, nil
+	nextFunc(ret, nil)
 }
