@@ -48,18 +48,28 @@ Add `format="json"` at the end of the file, it changes the out `outlets.file` ap
 ```
 
 ```
-2024-07-28 22:04:16 +0900 INF pipeline example.toml start inlets=1 flows=1 outlets=1
+2024-07-28 22:04:16 +0900 INF pipeline cpu.toml start inlets=1 flows=1 outlets=1
 [{"_in":"cpu","_ts":1722171856,"total_percent":8.296722122944592}]
 [{"_in":"cpu","_ts":1722171859,"total_percent":5.32841823082893}]
 [{"_in":"cpu","_ts":1722171862,"total_percent":5.522088353490716}]
 [{"_in":"cpu","_ts":1722171865,"total_percent":4.525645323428138}]
 ^C
-2024-07-28 22:04:26 +0900 INF pipeline example.toml stop
+2024-07-28 22:04:26 +0900 INF pipeline cpu.toml stop
 ```
 
 ### Using shebang
 
 Edit the `cpu.toml` file and add the following line at the beginning: `#!/path/to/tine run`. Replace `/path/to/tine` with the actual path to the tine executable file on your system.
+
+```bash
+#!/usr/local/bin/tine run
+[[inlets.cpu]]
+    interval = "3s"
+[[flows.select]]
+    includes = ["**"]
+[[outlets.file]]
+    path  = "-"
+```
 
 The `chmod +x cpu.toml` to make it executable.
 
@@ -67,11 +77,11 @@ Run
 
 ```bash
 $./cpu.toml
-2024-07-28 22:12:13 +0900 INF pipeline example.toml start inlets=1 flows=1 outlets=1
+2024-07-28 22:12:13 +0900 INF pipeline cpu.toml start inlets=1 flows=1 outlets=1
 [{"_in":"cpu","_ts":1722172333,"total_percent":8.287984091499398}]
 [{"_in":"cpu","_ts":1722172336,"total_percent":6.224899598711208}]
 [{"_in":"cpu","_ts":1722172339,"total_percent":5.395442359208408}]
 ^C
-2024-07-28 22:12:19 +0900 INF pipeline example.toml stop
+2024-07-28 22:12:19 +0900 INF pipeline cpu.toml stop
 ```
 
