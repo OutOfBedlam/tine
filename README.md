@@ -150,38 +150,46 @@ Run this program, it shows the output like ...
 1721510215,cpu,7.14
 ```
 
-## Pipelines as HTTP Handler
+## Examples
 
-Use pipelines as your HTTP Handler, See the full code [./example/httpsvr](./example/httpsvr/httpsvr.go).
+**How to use TINE as a library for your applicaton.**
 
-```go
-var helloWorldPipeline = `
-[[inlets.cpu]]
-    interval = "3s"
-    count = 1
-    totalcpu = true
-    percpu = true
-[[outlets.file]]
-    format = "json"
-`
-var screenshotPipeline = `
-[[inlets.screenshot]]
-    count = 1
-    displays = [0]
-[[outlets.image]]
-    path = "nonamed.png"
-`
+- [helloworld](./example/helloworld/helloworld.go)
 
-router := http.NewServeMux()
-router.HandleFunc("GET /helloworld", engine.HttpHandleFunc(helloWorldPipeline))
-router.HandleFunc("GET /screenshot", engine.HttpHandleFunc(screenshotPipeline))
-http.ListenAndServe(":8080", router)
-```
+**How to set a custom inlet/outlet/flows.**
 
-## Examples & recipes
+- [custom_out](./example/custom_out/custom_out.go)
+- [custom_in](./example/custom_in/custom_in.go)
+- [custom_flow](./example/custom_flow/custom_flow.go)
+- [custom_out_reg](./example/custom_out_reg/custom_out_reg.go)
+- [custom_in_reg](./example/custom_in_reg/custom_in_reg.go)
+- [custom_flow_reg](./example/custom_flow_reg/custom_flow_reg.go)
 
-- See more [examples](./example/).
+**How to use piplelines as a HTTP handler**
 
+- [httpsvr](./example/httpsvr/httpsvr.go)
+
+
+**How to collect metrics into RRD and display rrdgraph in a web page**
+
+- [rrd_graph_web](./example/rrd_graph_web/rrd_graph_web.go)
+
+<img src="./example/rrd_graph_web/rrd_graph_web.png" alt="image" width="300" height="auto">
+
+**How to collect metrics into Sqlite and display it on web page**
+
+This example also shows how to utilize HTTP query parameters 
+as variables of Go Templates to build pipeline configuration.
+
+- [sqlite_graph_web](./example/sqlite_graph_web/sqlite_graph_web.go)
+
+## Recipes
+
+- [ollama flow](./docs/recipes/ollama-cli.md)
+- [sqlite out](./docs/recipes/sqlite-out.md)
+- [rrd out](./docs/recipes/rrd-out.md)
+- [rrd-graph in](./docs/recipes/rrd-graph.md)
+  
 ## Plugin system
 
 **Inbound**
