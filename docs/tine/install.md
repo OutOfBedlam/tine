@@ -6,9 +6,9 @@
 pkgx install tine
 ```
 
-### Installing with `go install`
+### Install with `go install`
 
-It requires Go >= 1.22.
+It requires Go >= 1.22
 
 ```bash
 go install github.com/OutOfBedlam/tine
