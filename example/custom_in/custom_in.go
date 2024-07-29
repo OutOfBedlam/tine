@@ -40,7 +40,7 @@ func main() {
 		}
 		return result, nil
 	}
-	pipeline.AddInlet("custom", engine.InletWithPullFunc(custom, engine.WithInterval(interval)))
+	pipeline.AddInlet("custom", engine.InletWithFunc(custom, engine.WithInterval(interval)))
 
 	// Start the pipeline
 	go pipeline.Start()

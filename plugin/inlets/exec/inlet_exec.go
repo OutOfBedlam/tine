@@ -22,7 +22,7 @@ func init() {
 
 func ExecInlet(ctx *engine.Context) engine.Inlet {
 	conf := ctx.Config()
-	ret := &execPull{ctx: ctx}
+	ret := &execInlet{ctx: ctx}
 	ret.commands = conf.GetStringSlice("commands", []string{})
 	ret.environments = conf.GetStringSlice("environments", []string{})
 	ret.interval = conf.GetDuration("interval", 0)
@@ -35,7 +35,7 @@ func ExecInlet(ctx *engine.Context) engine.Inlet {
 	return ret
 }
 
-type execPull struct {
+type execInlet struct {
 	ctx *engine.Context
 
 	commands      []string
@@ -54,16 +54,16 @@ type execPull struct {
 	runcount int64
 }
 
-var _ = engine.Inlet((*execPull)(nil))
+var _ = engine.Inlet((*execInlet)(nil))
 
-func (ei *execPull) Open() error {
+func (ei *execInlet) Open() error {
 	if len(ei.commands) == 0 {
 		return fmt.Errorf("exec commands not specified")
 	}
 	return nil
 }
 
-func (ei *execPull) Close() error {
+func (ei *execInlet) Close() error {
 	if ei.cmd != nil {
 		ei.cmd.Process.Kill()
 		ei.cmd.Wait()
@@ -72,14 +72,11 @@ func (ei *execPull) Close() error {
 	return nil
 }
 
-// Implements engine.PullInlet, for batch mode
-func (ei *execPull) Interval() time.Duration {
+func (ei *execInlet) Interval() time.Duration {
 	return ei.interval
 }
 
-// Implements engine.PullInlet, for batch mode
-// return io.EOF when countLimit reached
-func (ei *execPull) Process(next engine.InletNextFunc) {
+func (ei *execInlet) Process(next engine.InletNextFunc) {
 	if ei.runCountLimit > 0 && atomic.LoadInt64(&ei.runcount) >= ei.runCountLimit {
 		next(nil, io.EOF)
 		return
@@ -99,12 +96,9 @@ func (ei *execPull) Process(next engine.InletNextFunc) {
 	} else {
 		ei.stderr = stderr
 	}
-	defer func() {
-		ei.cmd = nil
-	}()
 
 	runCount := atomic.AddInt64(&ei.runcount, 1)
-	ei.ctx.LogDebug("exec run", "cmd", strings.Join(ei.commands, " "), "count", runCount, "countLimit", ei.runCountLimit)
+	ei.ctx.LogDebug("exec run", "cmd", strings.Join(ei.commands, " "), "interval", ei.interval, "count", runCount, "countLimit", ei.runCountLimit)
 
 	if err := ei.cmd.Start(); err != nil {
 		ei.ctx.LogError("exec start error", "err", err)
@@ -116,43 +110,47 @@ func (ei *execPull) Process(next engine.InletNextFunc) {
 		buff := make([]byte, 4096)
 		offset := 0
 		for {
+			var yieldErr error
+			var yieldRecs []engine.Record
+
 			n, err := ei.stdout.Read(buff[offset:])
 			if err != nil {
-				if err != io.EOF {
-					next(nil, err)
+				if err != io.EOF || (err == io.EOF && ei.interval == 0) {
+					yieldErr = err
+				} else {
+					yieldErr = nil
 				}
+			}
+			if n > 0 {
+				if len(ei.separator) == 0 {
+					result := buff[:n]
+					if ei.trimSpace {
+						result = bytes.TrimSpace(result)
+					}
+					yieldRecs = []engine.Record{
+						engine.NewRecord(engine.NewField(ei.namePrefix+"stdout", string(result))),
+					}
+				} else {
+					lines := bytes.Split(buff[:n], ei.separator)
+					if len(lines) > 1 {
+						offset = copy(buff, lines[len(lines)-1])
+						lines = lines[0 : len(lines)-1]
+					}
+
+					ret := []engine.Record{}
+					for _, line := range lines {
+						ret = append(ret, engine.NewRecord(
+							engine.NewField(ei.namePrefix+"stdout", string(line)),
+						))
+					}
+					yieldRecs = ret
+				}
+			}
+			next(yieldRecs, yieldErr)
+			if yieldErr != nil {
 				break
 			}
-			if len(ei.separator) == 0 {
-				result := buff[:n]
-				if ei.trimSpace {
-					result = bytes.TrimSpace(result)
-				}
-				next([]engine.Record{engine.NewRecord(
-					engine.NewField(ei.namePrefix+"stdout", string(result)),
-				)}, nil)
-			} else {
-				lines := bytes.Split(buff[:n], ei.separator)
-				if len(lines) > 1 {
-					offset = copy(buff, lines[len(lines)-1])
-					lines = lines[0 : len(lines)-1]
-				}
-
-				ret := []engine.Record{}
-				for _, line := range lines {
-					ret = append(ret, engine.NewRecord(
-						engine.NewField(ei.namePrefix+"stdout", string(line)),
-					))
-				}
-				next(ret, nil)
-			}
 		}
-	}()
-
-	done := make(chan *os.ProcessState, 1)
-	go func() {
-		state, _ := ei.cmd.Process.Wait()
-		done <- state
 	}()
 
 	if ei.timeout > 0 {
@@ -180,9 +178,8 @@ func (ei *execPull) Process(next engine.InletNextFunc) {
 		}()
 	}
 
-	state := <-done
-	if !ei.ignoreError && state.ExitCode() != 0 {
-		next(nil, fmt.Errorf("exec [%s] error: %s", ei.commands[0], state.String()))
-		return
+	state, err := ei.cmd.Process.Wait()
+	if !ei.ignoreError && state.ExitCode() != 0 && err != nil {
+		next(nil, fmt.Errorf("exec [%s] error: %s", ei.commands[0], err))
 	}
 }

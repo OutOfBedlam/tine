@@ -22,30 +22,30 @@ func init() {
 func RRDGraphInlet(ctx *engine.Context) engine.Inlet {
 	interval := ctx.Config().GetDuration("interval", 0)
 	if interval <= 0 {
-		return &rrdGraphPushInlet{
-			ctx: ctx,
-		}
-	} else {
-		return &rrdGraphPullInlet{
-			ctx:      ctx,
-			interval: interval,
-		}
+		interval = 0
+	} else if interval < time.Second {
+		interval = time.Second
+	}
+
+	return &rrdGraphInlet{
+		ctx:      ctx,
+		interval: interval,
 	}
 }
 
-type rrdGraphPullInlet struct {
+type rrdGraphInlet struct {
 	ctx      *engine.Context
 	interval time.Duration
 	runLimit int64
 	runCount int64
 }
 
-var _ = (engine.Inlet)((*rrdGraphPullInlet)(nil))
+var _ = (engine.Inlet)((*rrdGraphInlet)(nil))
 
-func (ri *rrdGraphPullInlet) Open() error             { return nil }
-func (ri *rrdGraphPullInlet) Close() error            { return nil }
-func (ri *rrdGraphPullInlet) Interval() time.Duration { return ri.interval }
-func (ri *rrdGraphPullInlet) Process(next engine.InletNextFunc) {
+func (ri *rrdGraphInlet) Open() error             { return nil }
+func (ri *rrdGraphInlet) Close() error            { return nil }
+func (ri *rrdGraphInlet) Interval() time.Duration { return ri.interval }
+func (ri *rrdGraphInlet) Process(next engine.InletNextFunc) {
 	runCount := atomic.AddInt64(&ri.runCount, 1)
 	if ri.runLimit > 0 && runCount > ri.runLimit {
 		next(nil, io.EOF)
@@ -56,27 +56,6 @@ func (ri *rrdGraphPullInlet) Process(next engine.InletNextFunc) {
 		err = io.EOF
 	}
 	next(recs, err)
-}
-
-type rrdGraphPushInlet struct {
-	ctx *engine.Context
-}
-
-var _ = (engine.Inlet)((*rrdGraphPushInlet)(nil))
-
-func (ri *rrdGraphPushInlet) Open() error  { return nil }
-func (ri *rrdGraphPushInlet) Close() error { return nil }
-func (ri *rrdGraphPushInlet) Interval() time.Duration {
-	return ri.ctx.Config().GetDuration("interval", 0)
-}
-
-func (ri *rrdGraphPushInlet) Process(next engine.InletNextFunc) {
-	recs, err := generate(ri.ctx)
-	if err != nil {
-		next(nil, err)
-	} else {
-		next(recs, io.EOF)
-	}
 }
 
 func generate(ctx *engine.Context) ([]engine.Record, error) {

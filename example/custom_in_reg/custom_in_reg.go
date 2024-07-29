@@ -35,7 +35,7 @@ func main() {
 		Name: "random",
 		Factory: func(ctx *engine.Context) engine.Inlet {
 			interval := ctx.Config().GetDuration("interval", 10*time.Second)
-			return engine.InletWithPullFunc(customInletFunc, engine.WithInterval(interval))
+			return engine.InletWithFunc(customInletFunc, engine.WithInterval(interval))
 		},
 	})
 

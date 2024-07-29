@@ -52,7 +52,7 @@ func GetInletRegistry(name string) *InletReg {
 	return nil
 }
 
-func InletWithPullFunc(fn func() ([]Record, error), opts ...InletFuncOption) Inlet {
+func InletWithFunc(fn func() ([]Record, error), opts ...InletFuncOption) Inlet {
 	ret := &InletFuncWrap{fn: fn}
 	for _, opt := range opts {
 		opt(ret)
