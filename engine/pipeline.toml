@@ -4,11 +4,7 @@
 ## name of the pipeline, default is the filename
 # name = "my-pipeline"
 
-## define pipeline default values
-[defaults]
-	## default interval 
-	interval = "10s"
-
+## define pipeline default logs
 [log]
     ## log file path, "-" for stdout, "" for no log
     ## default is "-"

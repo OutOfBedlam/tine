@@ -32,7 +32,7 @@ type httpInlet struct {
 	successCode int
 }
 
-var _ = engine.PullInlet((*httpInlet)(nil))
+var _ = engine.Inlet((*httpInlet)(nil))
 
 func (hi *httpInlet) Open() error {
 	hi.addr = hi.ctx.Config().GetString("address", "")
@@ -59,34 +59,40 @@ func (hi *httpInlet) Interval() time.Duration {
 	return hi.ctx.Config().GetDuration("interval", hi.client.Timeout)
 }
 
-func (hi *httpInlet) Pull() ([]engine.Record, error) {
+func (hi *httpInlet) Process(next engine.InletNextFunc) {
 	rsp, err := hi.client.Get(hi.addr)
 	if err != nil {
-		return nil, err
+		next(nil, err)
+		return
 	}
 	defer rsp.Body.Close()
 
 	body, err := io.ReadAll(rsp.Body)
 	if err != nil {
-		return nil, err
+		next(nil, err)
+		return
 	}
 
 	if rsp.StatusCode != hi.successCode {
 		slog.Warn("inlet.http", "status", rsp.StatusCode, "body", string(body))
-		return nil, nil
+		next(nil, nil)
+		return
 	}
 
 	if contentType := rsp.Header.Get("Content-Type"); strings.Contains(contentType, "application/json") {
 		obj := map[string]any{}
 		if err := json.Unmarshal(body, &obj); err != nil {
 			slog.Warn("inlet.http", "status", rsp.StatusCode, "unmarshal error", err.Error())
-			return nil, err
+			next(nil, err)
+			return
 		}
 		ret := Map2Records("http.", obj)
-		return ret, nil
+		next(ret, nil)
+		return
 	} else {
 		slog.Warn("inlet.http", "status", rsp.StatusCode, "unsupported content-type", contentType)
-		return nil, nil
+		next(nil, nil)
+		return
 	}
 }
 

@@ -21,66 +21,43 @@ func init() {
 
 func SqliteInlet(ctx *engine.Context) engine.Inlet {
 	interval := ctx.Config().GetDuration("interval", 0)
-	if interval > 0 {
-		countLimit := ctx.Config().GetInt64("count", 0)
-		ret := &sqlitePullInlet{SqliteBase: sqlite3.New(ctx)}
-		ret.countLimit = countLimit
-		ret.interval = interval
-		return ret
-	} else {
-		return &sqlitePushInlet{sqlite3.New(ctx)}
+	if interval <= 0 {
+		interval = 0
+	} else if interval < time.Second {
+		interval = time.Second
 	}
+
+	ret := &sqliteInlet{SqliteBase: sqlite3.New(ctx)}
+	ret.countLimit = ctx.Config().GetInt64("count", 0)
+	ret.interval = interval
+	return ret
 }
 
-// ///////////////
-// pull
-type sqlitePullInlet struct {
+type sqliteInlet struct {
 	*sqlite3.SqliteBase
 	interval   time.Duration
 	countLimit int64
 	runCount   int64
 }
 
-var _ = (engine.PullInlet)((*sqlitePullInlet)(nil))
+var _ = (engine.Inlet)((*sqliteInlet)(nil))
 
-func (si *sqlitePullInlet) Interval() time.Duration {
-	return time.Second
+func (si *sqliteInlet) Interval() time.Duration {
+	return si.interval
 }
 
-func (si *sqlitePullInlet) Pull() ([]engine.Record, error) {
+func (si *sqliteInlet) Process(next engine.InletNextFunc) {
 	runCount := atomic.AddInt64(&si.runCount, 1)
 	if si.countLimit > 0 && runCount > si.countLimit {
-		return nil, io.EOF
+		next(nil, io.EOF)
+		return
 	}
-	ret := []engine.Record{}
-	var retErr error
 	for _, act := range si.Actions {
-		doAction(si.DB, si.Ctx, act, func(r []engine.Record, err error) {
-			ret = append(ret, r...)
-			retErr = err
-		})
+		doAction(si.DB, si.Ctx, act, next)
 	}
 	if si.countLimit > 0 && runCount >= si.countLimit {
-		if retErr == nil {
-			retErr = io.EOF
-		}
+		next(nil, io.EOF)
 	}
-	return ret, retErr
-}
-
-// ///////////////
-// push
-type sqlitePushInlet struct {
-	*sqlite3.SqliteBase
-}
-
-var _ = (engine.PushInlet)((*sqlitePushInlet)(nil))
-
-func (si *sqlitePushInlet) Push(cb func([]engine.Record, error)) {
-	for _, act := range si.Actions {
-		doAction(si.DB, si.Ctx, act, cb)
-	}
-	cb(nil, io.EOF)
 }
 
 func doAction(db *sql.DB, ctx context.Context, act sqlite3.Action, cb func([]engine.Record, error)) {

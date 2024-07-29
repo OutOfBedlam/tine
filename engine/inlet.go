@@ -9,18 +9,13 @@ import (
 	"time"
 )
 
-type Inlet OpenCloser
-
-type PullInlet interface {
-	Inlet
-	Pull() ([]Record, error)
+type Inlet interface {
+	OpenCloser
+	Process(InletNextFunc)
 	Interval() time.Duration
 }
 
-type PushInlet interface {
-	Inlet
-	Push(func([]Record, error))
-}
+type InletNextFunc func([]Record, error)
 
 var inletRegistry map[string]*InletReg = make(map[string]*InletReg)
 var inletNames = []string{}
@@ -57,63 +52,66 @@ func GetInletRegistry(name string) *InletReg {
 	return nil
 }
 
-func InletWithPullFunc(fn func() ([]Record, error), opts ...InletPullFuncOption) Inlet {
-	ret := &InletPullFuncWrap{fn: fn}
+func InletWithFunc(fn func() ([]Record, error), opts ...InletFuncOption) Inlet {
+	ret := &InletFuncWrap{fn: fn}
 	for _, opt := range opts {
 		opt(ret)
 	}
 	return ret
 }
 
-type InletPullFuncWrap struct {
+type InletFuncWrap struct {
 	interval      time.Duration
 	runCountLimit int64
 	runCount      int64
 	fn            func() ([]Record, error)
 }
 
-type InletPullFuncOption func(*InletPullFuncWrap)
+type InletFuncOption func(*InletFuncWrap)
 
-func WithInterval(interval time.Duration) InletPullFuncOption {
-	return func(w *InletPullFuncWrap) {
+func WithInterval(interval time.Duration) InletFuncOption {
+	return func(w *InletFuncWrap) {
 		w.interval = interval
 	}
 }
 
-func WithRunCountLimit(limit int64) InletPullFuncOption {
-	return func(w *InletPullFuncWrap) {
+func WithRunCountLimit(limit int64) InletFuncOption {
+	return func(w *InletFuncWrap) {
 		w.runCountLimit = limit
 	}
 }
 
-var _ = PullInlet((*InletPullFuncWrap)(nil))
+var _ = Inlet((*InletFuncWrap)(nil))
 
-func (in *InletPullFuncWrap) Pull() ([]Record, error) {
+func (in *InletFuncWrap) Process(next InletNextFunc) {
 	count := atomic.AddInt64(&in.runCount, 1)
 	if in.runCountLimit > 0 && count > in.runCountLimit {
 		// already exceed the limit
-		return nil, io.EOF
+		next(nil, io.EOF)
+		return
 	}
 	recs, err := in.fn()
 	if err != nil {
-		return recs, err
+		next(recs, err)
+		return
 	}
 	if in.runCountLimit > 0 && count >= in.runCountLimit {
 		// it reaches the limit
-		return recs, io.EOF
+		next(recs, io.EOF)
+		return
 	}
-	return recs, nil
+	next(recs, nil)
 }
 
-func (in *InletPullFuncWrap) Interval() time.Duration {
+func (in *InletFuncWrap) Interval() time.Duration {
 	return in.interval
 }
 
-func (in *InletPullFuncWrap) Open() error {
+func (in *InletFuncWrap) Open() error {
 	return nil
 }
 
-func (in *InletPullFuncWrap) Close() error {
+func (in *InletFuncWrap) Close() error {
 	return nil
 }
 
@@ -144,19 +142,17 @@ func NewInletHandler(ctx *Context, name string, inlet Inlet, outCh chan<- []Reco
 		trigger: make(chan struct{}, 1),
 	}
 
-	if _, ok := inlet.(PushInlet); ok {
-		ret.runner = ret.runPush
-		ret.stopper = ret.stopPush
-	} else if pullInlet, ok := inlet.(PullInlet); ok {
+	interval := inlet.Interval()
+	if interval > 0 {
 		ret.runner = ret.runPull
 		ret.stopper = ret.stopPull
-		interval := pullInlet.Interval()
 		if interval < 1*time.Second {
 			interval = 1 * time.Second
 		}
 		ret.interval = time.NewTicker(interval)
 	} else {
-		return nil, fmt.Errorf("unsupported inlet type: %T", inlet)
+		ret.runner = ret.runPush
+		ret.stopper = ret.stopPush
 	}
 
 	return ret, nil
@@ -239,8 +235,8 @@ func (in *InletHandler) runPull() error {
 		}
 	}()
 	for range in.trigger {
-		if pull, ok := in.inlet.(PullInlet); ok {
-			recs, err := pull.Pull()
+		doBreak := false
+		in.inlet.Process(func(recs []Record, err error) {
 			if len(recs) > 0 {
 				in.outCh <- prependInletNameTimestamp(recs, in.name)
 				atomic.AddUint64(&in.sent, uint64(len(recs)))
@@ -251,11 +247,13 @@ func (in *InletHandler) runPull() error {
 				} else {
 					in.ctx.LogError("failed to get input", "error", err.Error())
 				}
-				break
+				doBreak = true
 			}
+		})
+		if doBreak {
+			break
 		}
 	}
-
 	in.Stop()
 	return nil
 }
@@ -267,11 +265,6 @@ func (in *InletHandler) stopPush() {
 }
 
 func (in *InletHandler) runPush() error {
-	push, ok := in.inlet.(PushInlet)
-	if !ok {
-		return fmt.Errorf("inlet does not support push")
-	}
-
 	defer func() {
 		e := recover()
 		if e != nil {
@@ -279,7 +272,7 @@ func (in *InletHandler) runPush() error {
 		}
 	}()
 
-	push.Push(func(recs []Record, err error) {
+	in.inlet.Process(func(recs []Record, err error) {
 		if len(recs) > 0 {
 			in.outCh <- prependInletNameTimestamp(recs, in.name)
 			atomic.AddUint64(&in.sent, uint64(len(recs)))

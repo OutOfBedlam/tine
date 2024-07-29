@@ -45,7 +45,7 @@ type screenshotInlet struct {
 	format   string
 }
 
-var _ = engine.PullInlet((*screenshotInlet)(nil))
+var _ = engine.Inlet((*screenshotInlet)(nil))
 
 func (si *screenshotInlet) Open() error {
 	return nil
@@ -59,10 +59,11 @@ func (si *screenshotInlet) Interval() time.Duration {
 	return si.interval
 }
 
-func (si *screenshotInlet) Pull() ([]engine.Record, error) {
+func (si *screenshotInlet) Process(next engine.InletNextFunc) {
 	runCount := atomic.AddInt32(&si.runCount, 1)
 	if si.count > 0 && int(runCount) > si.count {
-		return nil, io.EOF
+		next(nil, io.EOF)
+		return
 	}
 
 	rec := engine.NewRecord()
@@ -85,7 +86,8 @@ func (si *screenshotInlet) Pull() ([]engine.Record, error) {
 		bounds := screenshot.GetDisplayBounds(disp)
 		img, err := screenshot.CaptureRect(bounds)
 		if err != nil {
-			return nil, err
+			next(nil, err)
+			return
 		}
 		var name = fmt.Sprintf("display_%d", disp)
 		var bin *engine.Field
@@ -99,7 +101,8 @@ func (si *screenshotInlet) Pull() ([]engine.Record, error) {
 		case "png":
 			buf := &bytes.Buffer{}
 			if err := png.Encode(buf, img); err != nil {
-				return nil, err
+				next(nil, err)
+				return
 			}
 			bin = engine.NewField(name, buf.Bytes())
 			bin.Tags = engine.Tags{}
@@ -107,7 +110,8 @@ func (si *screenshotInlet) Pull() ([]engine.Record, error) {
 		case "jpeg":
 			buf := &bytes.Buffer{}
 			if err := jpeg.Encode(buf, img, nil); err != nil {
-				return nil, err
+				next(nil, err)
+				return
 			}
 			bin = engine.NewField(name, buf.Bytes())
 			bin.Tags = engine.Tags{}
@@ -115,7 +119,8 @@ func (si *screenshotInlet) Pull() ([]engine.Record, error) {
 		case "gif":
 			buf := &bytes.Buffer{}
 			if err := gif.Encode(buf, img, nil); err != nil {
-				return nil, err
+				next(nil, err)
+				return
 			}
 			bin = engine.NewField(name, buf.Bytes())
 			bin.Tags = engine.Tags{}
@@ -130,7 +135,8 @@ func (si *screenshotInlet) Pull() ([]engine.Record, error) {
 
 	ret := []engine.Record{rec}
 	if si.count > 0 && int(runCount) >= si.count {
-		return ret, io.EOF
+		next(ret, io.EOF)
+	} else {
+		next(ret, nil)
 	}
-	return ret, nil
 }

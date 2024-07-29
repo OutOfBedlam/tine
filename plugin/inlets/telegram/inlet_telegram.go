@@ -32,7 +32,7 @@ type telegramInlet struct {
 	httpClient *http.Client
 }
 
-var _ = engine.PushInlet((*telegramInlet)(nil))
+var _ = engine.Inlet((*telegramInlet)(nil))
 
 func (ti *telegramInlet) Open() error {
 	token := ti.ctx.Config().GetString("token", "")
@@ -55,7 +55,11 @@ func (ti *telegramInlet) Close() error {
 	return nil
 }
 
-func (ti *telegramInlet) Push(cb func([]engine.Record, error)) {
+func (ti *telegramInlet) Interval() time.Duration {
+	return 0
+}
+
+func (ti *telegramInlet) Process(next engine.InletNextFunc) {
 	u := tgbot.NewUpdate(0)
 	u.Timeout = int((ti.ctx.Config().GetDuration("timeout", 5*time.Second)).Seconds())
 	updates := ti.bot.GetUpdatesChan(u)
@@ -107,9 +111,9 @@ func (ti *telegramInlet) Push(cb func([]engine.Record, error)) {
 				}
 			}
 		}
-		cb([]engine.Record{rec}, nil)
+		next([]engine.Record{rec}, nil)
 	}
-	cb(nil, io.EOF)
+	next(nil, io.EOF)
 }
 
 func (ai *telegramInlet) fetchHttp(addr string) ([]byte, string, error) {

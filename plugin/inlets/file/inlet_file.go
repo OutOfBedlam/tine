@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/OutOfBedlam/tine/engine"
 	"github.com/OutOfBedlam/tine/util"
@@ -29,7 +30,7 @@ type fileInlet struct {
 	closer io.Closer
 }
 
-var _ = engine.PushInlet((*fileInlet)(nil))
+var _ = engine.Inlet((*fileInlet)(nil))
 
 func (fi *fileInlet) Open() error {
 	path := fi.ctx.Config().GetString("path", "")
@@ -74,7 +75,11 @@ func (fi *fileInlet) Close() error {
 	return nil
 }
 
-func (si *fileInlet) Push(cb func([]engine.Record, error)) {
+func (fi *fileInlet) Interval() time.Duration {
+	return 0
+}
+
+func (si *fileInlet) Process(cb engine.InletNextFunc) {
 	for {
 		r, err := si.reader.Read()
 		cb(r, err)

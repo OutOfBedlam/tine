@@ -22,56 +22,40 @@ func init() {
 func RRDGraphInlet(ctx *engine.Context) engine.Inlet {
 	interval := ctx.Config().GetDuration("interval", 0)
 	if interval <= 0 {
-		return &rrdGraphPushInlet{
-			ctx: ctx,
-		}
-	} else {
-		return &rrdGraphPullInlet{
-			ctx:      ctx,
-			interval: interval,
-		}
+		interval = 0
+	} else if interval < time.Second {
+		interval = time.Second
+	}
+
+	return &rrdGraphInlet{
+		ctx:      ctx,
+		interval: interval,
 	}
 }
 
-type rrdGraphPullInlet struct {
+type rrdGraphInlet struct {
 	ctx      *engine.Context
 	interval time.Duration
 	runLimit int64
 	runCount int64
 }
 
-var _ = (engine.PullInlet)((*rrdGraphPullInlet)(nil))
+var _ = (engine.Inlet)((*rrdGraphInlet)(nil))
 
-func (ri *rrdGraphPullInlet) Open() error             { return nil }
-func (ri *rrdGraphPullInlet) Close() error            { return nil }
-func (ri *rrdGraphPullInlet) Interval() time.Duration { return ri.interval }
-func (ri *rrdGraphPullInlet) Pull() ([]engine.Record, error) {
+func (ri *rrdGraphInlet) Open() error             { return nil }
+func (ri *rrdGraphInlet) Close() error            { return nil }
+func (ri *rrdGraphInlet) Interval() time.Duration { return ri.interval }
+func (ri *rrdGraphInlet) Process(next engine.InletNextFunc) {
 	runCount := atomic.AddInt64(&ri.runCount, 1)
 	if ri.runLimit > 0 && runCount > ri.runLimit {
-		return nil, io.EOF
+		next(nil, io.EOF)
+		return
 	}
 	recs, err := generate(ri.ctx)
 	if ri.runLimit > 0 && runCount >= ri.runLimit {
 		err = io.EOF
 	}
-	return recs, err
-}
-
-type rrdGraphPushInlet struct {
-	ctx *engine.Context
-}
-
-var _ = (engine.PushInlet)((*rrdGraphPushInlet)(nil))
-
-func (ri *rrdGraphPushInlet) Open() error  { return nil }
-func (ri *rrdGraphPushInlet) Close() error { return nil }
-func (ri *rrdGraphPushInlet) Push(cb func([]engine.Record, error)) {
-	recs, err := generate(ri.ctx)
-	if err != nil {
-		cb(nil, err)
-	} else {
-		cb(recs, io.EOF)
-	}
+	next(recs, err)
 }
 
 func generate(ctx *engine.Context) ([]engine.Record, error) {

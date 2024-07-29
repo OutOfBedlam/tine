@@ -75,7 +75,7 @@ func CpuInlet(ctx *engine.Context) engine.Inlet {
 	totalCpu := conf.GetBool("totalcpu", true)
 	interval := conf.GetDuration("interval", defaultInterval)
 	count := conf.GetInt64("count", 0)
-	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
+	return engine.InletWithFunc(func() ([]engine.Record, error) {
 		tv, err := cpu.Percent(0, false)
 		if err != nil {
 			fmt.Println("ERR", err)
@@ -109,7 +109,7 @@ func LoadInlet(ctx *engine.Context) engine.Inlet {
 	loads := conf.GetIntSlice("loads", []int{1, 5, 15})
 	interval := conf.GetDuration("interval", defaultInterval)
 	count := conf.GetInt64("count", 0)
-	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
+	return engine.InletWithFunc(func() ([]engine.Record, error) {
 		stat, err := load.Avg()
 		if err != nil {
 			return nil, err
@@ -133,7 +133,7 @@ func MemInlet(ctx *engine.Context) engine.Inlet {
 	conf := ctx.Config()
 	interval := conf.GetDuration("interval", defaultInterval)
 	count := conf.GetInt64("count", 0)
-	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
+	return engine.InletWithFunc(func() ([]engine.Record, error) {
 		stat, err := mem.VirtualMemory()
 		if err != nil {
 			return nil, err
@@ -154,7 +154,7 @@ func DiskInlet(ctx *engine.Context) engine.Inlet {
 	ignorefs := conf.GetStringSlice("ignore_fs", []string{})
 	interval := conf.GetDuration("interval", defaultInterval)
 	count := conf.GetInt64("count", 0)
-	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
+	return engine.InletWithFunc(func() ([]engine.Record, error) {
 		stat, err := disk.Partitions(false)
 		if err != nil {
 			return nil, err
@@ -209,7 +209,7 @@ func DiskioInlet(ctx *engine.Context) engine.Inlet {
 	devPatterns := conf.GetStringSlice("devices", []string{})
 	interval := conf.GetDuration("interval", defaultInterval)
 	count := conf.GetInt64("count", 0)
-	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
+	return engine.InletWithFunc(func() ([]engine.Record, error) {
 		stat, err := disk.IOCounters()
 		if err != nil {
 			return nil, err
@@ -255,7 +255,7 @@ func NetInlet(ctx *engine.Context) engine.Inlet {
 	nicPatterns := conf.GetStringSlice("devices", []string{"*"})
 	interval := conf.GetDuration("interval", defaultInterval)
 	count := conf.GetInt64("count", 0)
-	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
+	return engine.InletWithFunc(func() ([]engine.Record, error) {
 		stat, err := net.IOCounters(true)
 		if err != nil {
 			return nil, err
@@ -298,7 +298,7 @@ func NetstatInlet(ctx *engine.Context) engine.Inlet {
 	protos := conf.GetStringSlice("protocols", []string{})
 	interval := conf.GetDuration("interval", defaultInterval)
 	count := conf.GetInt64("count", 0)
-	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
+	return engine.InletWithFunc(func() ([]engine.Record, error) {
 		stat, err := net.ProtoCounters(protos)
 		if err != nil {
 			return nil, err
@@ -336,7 +336,7 @@ func SensorsInlet(ctx *engine.Context) engine.Inlet {
 	conf := ctx.Config()
 	interval := conf.GetDuration("interval", defaultInterval)
 	count := conf.GetInt64("count", 0)
-	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
+	return engine.InletWithFunc(func() ([]engine.Record, error) {
 		stat, err := sensors.SensorsTemperatures()
 		if err != nil {
 			return nil, err
@@ -360,7 +360,7 @@ func HostInlet(ctx *engine.Context) engine.Inlet {
 	conf := ctx.Config()
 	interval := conf.GetDuration("interval", defaultInterval)
 	count := conf.GetInt64("count", 0)
-	return engine.InletWithPullFunc(func() ([]engine.Record, error) {
+	return engine.InletWithFunc(func() ([]engine.Record, error) {
 		stat, err := host.Info()
 		if err != nil {
 			return nil, err

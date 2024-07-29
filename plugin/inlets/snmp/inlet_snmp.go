@@ -64,7 +64,7 @@ type snmpInlet struct {
 	translator      Translator
 }
 
-var _ = engine.PullInlet((*snmpInlet)(nil))
+var _ = engine.Inlet((*snmpInlet)(nil))
 
 func (si *snmpInlet) Open() error {
 	conf := si.ctx.Config()
@@ -134,8 +134,9 @@ func (si *snmpInlet) Interval() time.Duration {
 	return si.ctx.Config().GetDuration("interval", si.clientConf.Timeout)
 }
 
-func (si *snmpInlet) Pull() ([]engine.Record, error) {
-	return si.Gather()
+func (si *snmpInlet) Process(next engine.InletNextFunc) {
+	recs, err := si.Gather()
+	next(recs, err)
 }
 
 func (si *snmpInlet) Gather() ([]engine.Record, error) {

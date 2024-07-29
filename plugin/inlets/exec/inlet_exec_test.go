@@ -6,6 +6,7 @@ import (
 	"github.com/OutOfBedlam/tine/engine"
 	_ "github.com/OutOfBedlam/tine/plugin/codec/csv"
 	_ "github.com/OutOfBedlam/tine/plugin/codec/json"
+	_ "github.com/OutOfBedlam/tine/plugin/flows/base"
 	_ "github.com/OutOfBedlam/tine/plugin/inlets/exec"
 	_ "github.com/OutOfBedlam/tine/plugin/outlets/file"
 )
@@ -18,13 +19,18 @@ func ExampleExecInlet() {
 	[[inlets.exec]]
 		commands = ["echo", "hello", "world"]
 		trim_space = true
+		count = 1
+		ignore_error = true
+	[[flows.select]]
+		includes= ["#_ts", "stdout"]
 	[[outlets.file]]
 		path = "-"
 		format = "csv"
 	`
 	// Make the output timestamp deterministic, so we can compare it
 	// This line is required only for testing
-	engine.Now = func() time.Time { return time.Unix(1721954797, 0) }
+	count := int64(0)
+	engine.Now = func() time.Time { count++; return time.Unix(1721954797+count, 0) }
 	// Build pipeline
 	pipeline, err := engine.New(engine.WithConfig(dsl))
 	if err != nil {
@@ -34,5 +40,5 @@ func ExampleExecInlet() {
 		panic(err)
 	}
 	// Output:
-	// hello world
+	// 1721954798,hello world
 }

@@ -24,7 +24,9 @@ func ExampleMergeFlow() {
 		format = "csv"
 	[[inlets.exec]]
 		commands = ["echo", "hello world"]
+		count = 1
 		trim_space = true
+		ignore_error = true
 	[[flows.merge]]
 		wait_limit = "1s"
 	[[outlets.file]]
