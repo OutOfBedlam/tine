@@ -49,8 +49,6 @@ type execInlet struct {
 	trimSpace     bool
 
 	cmd      *exec.Cmd
-	stdout   io.ReadCloser
-	stderr   io.ReadCloser
 	runcount int64
 }
 
