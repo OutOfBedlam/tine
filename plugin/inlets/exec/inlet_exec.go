@@ -115,11 +115,7 @@ func (ei *execInlet) Process(next engine.InletNextFunc) {
 
 			n, err := ei.stdout.Read(buff[offset:])
 			if err != nil {
-				if err != io.EOF || (err == io.EOF && ei.interval == 0) {
-					yieldErr = err
-				} else {
-					yieldErr = nil
-				}
+				yieldErr = err
 			}
 			if n > 0 {
 				if len(ei.separator) == 0 {
