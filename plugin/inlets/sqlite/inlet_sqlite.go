@@ -41,16 +41,17 @@ type sqlitePullInlet struct {
 	runCount   int64
 }
 
-var _ = (engine.PullInlet)((*sqlitePullInlet)(nil))
+var _ = (engine.Inlet)((*sqlitePullInlet)(nil))
 
 func (si *sqlitePullInlet) Interval() time.Duration {
 	return time.Second
 }
 
-func (si *sqlitePullInlet) Pull() ([]engine.Record, error) {
+func (si *sqlitePullInlet) Process(next engine.InletNextFunc) {
 	runCount := atomic.AddInt64(&si.runCount, 1)
 	if si.countLimit > 0 && runCount > si.countLimit {
-		return nil, io.EOF
+		next(nil, io.EOF)
+		return
 	}
 	ret := []engine.Record{}
 	var retErr error
@@ -65,7 +66,7 @@ func (si *sqlitePullInlet) Pull() ([]engine.Record, error) {
 			retErr = io.EOF
 		}
 	}
-	return ret, retErr
+	next(ret, retErr)
 }
 
 // ///////////////
@@ -74,9 +75,13 @@ type sqlitePushInlet struct {
 	*sqlite3.SqliteBase
 }
 
-var _ = (engine.PushInlet)((*sqlitePushInlet)(nil))
+var _ = (engine.Inlet)((*sqlitePushInlet)(nil))
 
-func (si *sqlitePushInlet) Push(cb func([]engine.Record, error)) {
+func (si *sqlitePushInlet) Interval() time.Duration {
+	return 0
+}
+
+func (si *sqlitePushInlet) Process(cb engine.InletNextFunc) {
 	for _, act := range si.Actions {
 		doAction(si.DB, si.Ctx, act, cb)
 	}

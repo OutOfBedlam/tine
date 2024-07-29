@@ -39,7 +39,7 @@ type natsInlet struct {
 	client  *http.Client
 }
 
-var _ = engine.PullInlet((*natsInlet)(nil))
+var _ = engine.Inlet((*natsInlet)(nil))
 
 func (ni *natsInlet) Open() error {
 	address, err := url.Parse(ni.Server)
@@ -59,7 +59,7 @@ func (ni *natsInlet) Interval() time.Duration {
 	return ni.ctx.Config().GetDuration("interval", ni.Timeout)
 }
 
-func (ni *natsInlet) Pull() ([]engine.Record, error) {
+func (ni *natsInlet) Process(next engine.InletNextFunc) {
 	if ni.client == nil {
 		timeout := ni.Timeout
 		if timeout == time.Duration(0) {
@@ -69,22 +69,25 @@ func (ni *natsInlet) Pull() ([]engine.Record, error) {
 	}
 	resp, err := ni.client.Get(ni.address.String())
 	if err != nil {
-		return nil, err
+		next(nil, err)
+		return
 	}
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		next(nil, err)
+		return
 	}
 	resp.Body.Close()
 
 	stats := new(gonatsd.Varz)
 	err = json.Unmarshal(data, stats)
 	if err != nil {
-		return nil, err
+		next(nil, err)
+		return
 	}
 
-	return []engine.Record{
+	next([]engine.Record{
 		engine.NewRecord(
 			engine.NewField("server_id", stats.ID),
 			engine.NewField("server_name", stats.Name),
@@ -105,7 +108,7 @@ func (ni *natsInlet) Pull() ([]engine.Record, error) {
 			engine.NewField("slow_consumers", stats.SlowConsumers),
 			engine.NewField("subscriptions", int64(stats.Subscriptions)),
 		),
-	}, nil
+	}, nil)
 }
 
 func createHttpClient(timeout time.Duration) *http.Client {

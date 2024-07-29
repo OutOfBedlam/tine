@@ -8,6 +8,7 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"time"
 	"unicode"
 
 	"github.com/OutOfBedlam/tine/engine"
@@ -49,7 +50,7 @@ type syslogInlet struct {
 	pktConn net.PacketConn
 }
 
-var _ = engine.PushInlet((*syslogInlet)(nil))
+var _ = engine.Inlet((*syslogInlet)(nil))
 
 type Data struct {
 	reccords []engine.Record
@@ -115,9 +116,13 @@ func (si *syslogInlet) Close() error {
 	return nil
 }
 
-func (si *syslogInlet) Push(cb func([]engine.Record, error)) {
+func (si *syslogInlet) Interval() time.Duration {
+	return 0
+}
+
+func (si *syslogInlet) Process(next engine.InletNextFunc) {
 	for d := range si.pushCh {
-		cb(d.reccords, d.err)
+		next(d.reccords, d.err)
 	}
 }
 

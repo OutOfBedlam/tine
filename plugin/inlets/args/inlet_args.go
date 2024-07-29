@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/OutOfBedlam/tine/engine"
 )
@@ -28,17 +29,13 @@ type argsInlet struct {
 	httpClient *http.Client
 }
 
-var _ = engine.PushInlet((*argsInlet)(nil))
+var _ = engine.Inlet((*argsInlet)(nil))
 
-func (ai *argsInlet) Open() error {
-	return nil
-}
+func (ai *argsInlet) Open() error             { return nil }
+func (ai *argsInlet) Close() error            { return nil }
+func (ai *argsInlet) Interval() time.Duration { return 0 }
 
-func (ai *argsInlet) Close() error {
-	return nil
-}
-
-func (ai *argsInlet) Push(cb func([]engine.Record, error)) {
+func (ai *argsInlet) Process(cb engine.InletNextFunc) {
 	foundDoubleDash := false
 	keys := []string{}
 	vals := []string{}
