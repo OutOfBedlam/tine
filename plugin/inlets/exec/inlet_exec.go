@@ -84,18 +84,19 @@ func (ei *execInlet) Process(next engine.InletNextFunc) {
 
 	ei.cmd = exec.Command(ei.commands[0], ei.commands[1:]...)
 	ei.cmd.Env = append(os.Environ(), ei.environments...)
-	if stdout, err := ei.cmd.StdoutPipe(); err != nil {
-		next(nil, err)
-		return
-	} else {
-		ei.stdout = stdout
-	}
-	if stderr, err := ei.cmd.StderrPipe(); err != nil {
-		next(nil, err)
-		return
-	} else {
-		ei.stderr = stderr
-	}
+	stdoutWriter := &execWriter{name: ei.namePrefix + "stdout", next: next, separator: ei.separator, trimSpace: ei.trimSpace}
+	stderrWriter := &execWriter{name: ei.namePrefix + "stderr", next: next, separator: ei.separator, trimSpace: ei.trimSpace}
+	ei.cmd.Stdout = stdoutWriter
+	ei.cmd.Stderr = stderrWriter
+
+	var resultErr error
+	defer func() {
+		stdoutWriter.Close()
+		stderrWriter.Close()
+		if resultErr != nil {
+			next(nil, resultErr)
+		}
+	}()
 
 	runCount := atomic.AddInt64(&ei.runcount, 1)
 	ei.ctx.LogDebug("exec run", "cmd", strings.Join(ei.commands, " "), "interval", ei.interval, "count", runCount, "countLimit", ei.runCountLimit)
@@ -106,76 +107,75 @@ func (ei *execInlet) Process(next engine.InletNextFunc) {
 		return
 	}
 
+	doneC := make(chan struct{})
 	go func() {
-		buff := make([]byte, 4096)
-		offset := 0
-		for {
-			var yieldErr error
-			var yieldRecs []engine.Record
-
-			n, err := ei.stdout.Read(buff[offset:])
-			if err != nil {
-				yieldErr = err
-			}
-			if n > 0 {
-				if len(ei.separator) == 0 {
-					result := buff[:n]
-					if ei.trimSpace {
-						result = bytes.TrimSpace(result)
-					}
-					yieldRecs = []engine.Record{
-						engine.NewRecord(engine.NewField(ei.namePrefix+"stdout", string(result))),
-					}
-				} else {
-					lines := bytes.Split(buff[:n], ei.separator)
-					if len(lines) > 1 {
-						offset = copy(buff, lines[len(lines)-1])
-						lines = lines[0 : len(lines)-1]
-					}
-
-					ret := []engine.Record{}
-					for _, line := range lines {
-						ret = append(ret, engine.NewRecord(
-							engine.NewField(ei.namePrefix+"stdout", string(line)),
-						))
-					}
-					yieldRecs = ret
-				}
-			}
-			next(yieldRecs, yieldErr)
-			if yieldErr != nil {
-				break
-			}
+		ei.cmd.Wait()
+		state, err := ei.cmd.Process.Wait()
+		if !ei.ignoreError && state.ExitCode() != 0 && err != nil {
+			resultErr = fmt.Errorf("exec [%s] error: %s", ei.commands[0], err)
+		} else if ei.runCountLimit > 0 && runCount > ei.runCountLimit {
+			resultErr = io.EOF
 		}
+		close(doneC)
 	}()
 
 	if ei.timeout > 0 {
-		go func() {
-			<-time.After(ei.timeout)
-			outbytes, err := io.ReadAll(ei.stdout)
-			if err != nil {
-				next(nil, err)
-				return
-			}
-			errbytes, err := io.ReadAll(ei.stderr)
-			if err != nil {
-				next(nil, err)
-				return
-			}
-			strout := string(outbytes)
-			strerr := string(errbytes)
-			if ei.trimSpace {
-				strout = strings.TrimSpace(strout)
-				strerr = strings.TrimSpace(strerr)
-			}
+		select {
+		case <-doneC:
+		case <-time.After(ei.timeout):
 			ei.cmd.Process.Kill()
-			ei.ctx.LogDebug("exec timeout", "cmd", strings.Join(ei.commands, " "), "stdout", strout, "stderr", strerr)
+			ei.ctx.LogDebug("exec timeout", "cmd", strings.Join(ei.commands, " "))
 			next(nil, fmt.Errorf("exec [%s] timeout", ei.commands[0]))
-		}()
+		}
+	} else {
+		<-doneC
 	}
+}
 
-	state, err := ei.cmd.Process.Wait()
-	if !ei.ignoreError && state.ExitCode() != 0 && err != nil {
-		next(nil, fmt.Errorf("exec [%s] error: %s", ei.commands[0], err))
+type execWriter struct {
+	name      string
+	next      engine.InletNextFunc
+	separator []byte
+	trimSpace bool
+	buff      []byte
+	offset    int
+}
+
+func (ew *execWriter) Write(p []byte) (n int, err error) {
+	if ew.buff == nil {
+		ew.buff = make([]byte, 4096)
+		ew.offset = 0
 	}
+	if len(ew.separator) == 0 {
+		if ew.trimSpace {
+			p = bytes.TrimSpace(p)
+		}
+		ew.next([]engine.Record{
+			engine.NewRecord(engine.NewField(ew.name, string(p))),
+		}, nil)
+	} else {
+		lines := bytes.Split(p, ew.separator)
+		if len(lines) > 1 {
+			ew.offset = copy(ew.buff, lines[len(lines)-1])
+			lines = lines[0 : len(lines)-1]
+		}
+
+		ret := []engine.Record{}
+		for _, line := range lines {
+			ret = append(ret, engine.NewRecord(
+				engine.NewField(ew.name, string(line)),
+			))
+		}
+		ew.next(ret, nil)
+	}
+	return len(p), nil
+}
+
+func (ew *execWriter) Close() error {
+	if ew.buff != nil && ew.offset > 0 {
+		ew.next([]engine.Record{
+			engine.NewRecord(engine.NewField(ew.name, string(ew.buff[:ew.offset]))),
+		}, nil)
+	}
+	return nil
 }
