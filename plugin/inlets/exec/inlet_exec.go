@@ -109,12 +109,15 @@ func (ei *execInlet) Process(next engine.InletNextFunc) {
 
 	doneC := make(chan struct{})
 	go func() {
-		ei.cmd.Wait()
-		state, err := ei.cmd.Process.Wait()
-		if !ei.ignoreError && state.ExitCode() != 0 && err != nil {
+		if err := ei.cmd.Wait(); err != nil {
 			resultErr = fmt.Errorf("exec [%s] error: %s", ei.commands[0], err)
-		} else if ei.runCountLimit > 0 && runCount > ei.runCountLimit {
-			resultErr = io.EOF
+		} else {
+			state := ei.cmd.ProcessState
+			if !ei.ignoreError && state.ExitCode() != 0 {
+				resultErr = fmt.Errorf("exec [%s] exit: %d", ei.commands[0], state.ExitCode())
+			} else if ei.runCountLimit > 0 && runCount > ei.runCountLimit {
+				resultErr = io.EOF
+			}
 		}
 		close(doneC)
 	}()
@@ -142,6 +145,7 @@ type execWriter struct {
 }
 
 func (ew *execWriter) Write(p []byte) (n int, err error) {
+	ret := len(p)
 	if ew.buff == nil {
 		ew.buff = make([]byte, 4096)
 		ew.offset = 0
@@ -168,7 +172,7 @@ func (ew *execWriter) Write(p []byte) (n int, err error) {
 		}
 		ew.next(ret, nil)
 	}
-	return len(p), nil
+	return ret, nil
 }
 
 func (ew *execWriter) Close() error {
