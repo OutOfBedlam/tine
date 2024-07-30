@@ -12,10 +12,14 @@ import (
 type Inlet interface {
 	OpenCloser
 	Process(InletNextFunc)
-	Interval() time.Duration
 }
 
 type InletNextFunc func([]Record, error)
+
+type PeriodicInlet interface {
+	Inlet
+	Interval() time.Duration
+}
 
 var inletRegistry map[string]*InletReg = make(map[string]*InletReg)
 var inletNames = []string{}
@@ -142,7 +146,10 @@ func NewInletHandler(ctx *Context, name string, inlet Inlet, outCh chan<- []Reco
 		trigger: make(chan struct{}, 1),
 	}
 
-	interval := inlet.Interval()
+	interval := time.Duration(0)
+	if ii, ok := inlet.(PeriodicInlet); ok {
+		interval = ii.Interval()
+	}
 	if interval > 0 {
 		ret.runner = ret.runPull
 		ret.stopper = ret.stopPull
@@ -214,16 +221,6 @@ func (in *InletHandler) stopPull() {
 }
 
 func (in *InletHandler) runPull() error {
-	go func() {
-		in.trigger <- struct{}{}
-		for range in.interval.C {
-			if in.trigger == nil {
-				break
-			}
-			in.trigger <- struct{}{}
-		}
-	}()
-
 	defer func() {
 		e := recover()
 		if e != nil {
@@ -234,6 +231,17 @@ func (in *InletHandler) runPull() error {
 			}
 		}
 	}()
+
+	go func() {
+		in.trigger <- struct{}{}
+		for range in.interval.C {
+			if in.trigger == nil {
+				break
+			}
+			in.trigger <- struct{}{}
+		}
+	}()
+
 	for range in.trigger {
 		doBreak := false
 		in.inlet.Process(func(recs []Record, err error) {

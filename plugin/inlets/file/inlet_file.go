@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/OutOfBedlam/tine/engine"
 	"github.com/OutOfBedlam/tine/util"
@@ -73,10 +72,6 @@ func (fi *fileInlet) Close() error {
 		}
 	}
 	return nil
-}
-
-func (fi *fileInlet) Interval() time.Duration {
-	return 0
 }
 
 func (si *fileInlet) Process(cb engine.InletNextFunc) {

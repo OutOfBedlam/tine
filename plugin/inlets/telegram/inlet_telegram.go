@@ -55,10 +55,6 @@ func (ti *telegramInlet) Close() error {
 	return nil
 }
 
-func (ti *telegramInlet) Interval() time.Duration {
-	return 0
-}
-
 func (ti *telegramInlet) Process(next engine.InletNextFunc) {
 	u := tgbot.NewUpdate(0)
 	u.Timeout = int((ti.ctx.Config().GetDuration("timeout", 5*time.Second)).Seconds())

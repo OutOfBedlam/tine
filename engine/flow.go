@@ -5,9 +5,6 @@ import (
 	"sync/atomic"
 )
 
-var flowRegistry = make(map[string]*FlowReg)
-var flowsLock sync.RWMutex
-
 type Flow interface {
 	OpenCloser
 	Process([]Record, FlowNextFunc)
@@ -17,8 +14,12 @@ type Flow interface {
 type FlowNextFunc func([]Record, error)
 
 type BufferedFlow interface {
+	Flow
 	Flush(FlowNextFunc)
 }
+
+var flowRegistry = make(map[string]*FlowReg)
+var flowsLock sync.RWMutex
 
 type FlowReg struct {
 	Name    string
@@ -127,6 +128,9 @@ func (fh *FlowHandler) Start() error {
 					}()
 					fh.flow.Process(records, flowCallback)
 				}(records)
+			}
+			if buffered, ok := fh.flow.(BufferedFlow); ok {
+				buffered.Flush(flowCallback)
 			}
 			fh.closeWg.Done()
 		}()

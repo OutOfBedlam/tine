@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/OutOfBedlam/tine/engine"
 )
@@ -31,9 +30,8 @@ type argsInlet struct {
 
 var _ = engine.Inlet((*argsInlet)(nil))
 
-func (ai *argsInlet) Open() error             { return nil }
-func (ai *argsInlet) Close() error            { return nil }
-func (ai *argsInlet) Interval() time.Duration { return 0 }
+func (ai *argsInlet) Open() error  { return nil }
+func (ai *argsInlet) Close() error { return nil }
 
 func (ai *argsInlet) Process(cb engine.InletNextFunc) {
 	foundDoubleDash := false

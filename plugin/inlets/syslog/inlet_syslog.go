@@ -8,7 +8,6 @@ import (
 	"net"
 	"strings"
 	"sync"
-	"time"
 	"unicode"
 
 	"github.com/OutOfBedlam/tine/engine"
@@ -114,10 +113,6 @@ func (si *syslogInlet) Close() error {
 		si.closeWg.Wait()
 	})
 	return nil
-}
-
-func (si *syslogInlet) Interval() time.Duration {
-	return 0
 }
 
 func (si *syslogInlet) Process(next engine.InletNextFunc) {
