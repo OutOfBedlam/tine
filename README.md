@@ -33,7 +33,7 @@ Set the pipeline's inputs and outputs.
 [[inlets.cpu]]
     interval = "3s"
 [[flows.select]]
-    includes = ["#*", "*"] // all tags, all fields
+    includes = ["#*", "*"]  # all tags and all fields
 [[outlets.file]]
     path  = "-"
 ```
