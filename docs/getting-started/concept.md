@@ -53,7 +53,7 @@ The first line of the result can be visualized in the following diagram.
 
 <figure><img src="../.gitbook/assets/pipeline-load-file.png" alt="" width="563"><figcaption><p>A record</p></figcaption></figure>
 
-The first record has three fields named `load1`, `load5`, and `load15`. The two tags `_in` that informs which inlet makes the data, and `_ts` (timestamp) which shows when the data is captured, are not exported into the result becuase tags are hidden from the final result by default.
+The first record has three fields named `load1`, `load5`, and `load15`. The two tags `_in` that informs which inlet makes the data, and `_ts` (timestamp) which shows when the data is captured, are not exported into the result because tags are hidden from the final result by default.
 
 To reveal the tags into the result, use `flows.select` with `includes = ["**"]` expression. It "select"s which fields and tags can pass to the next step. "\*\*" means all tags and all fields.
 
@@ -113,7 +113,7 @@ Tag is name and value pair which is similar to fields but tags are auxiliary dat
 
 A "value" represents the unit of an actual value. The field and tag have its own value. Each value have specific type.
 
-The avaliable value types:
+The available value types:
 
 * BOOL boolean type (true or false)
 * INT 64bits signed integer

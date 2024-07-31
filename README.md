@@ -25,7 +25,7 @@ go build
 
 ### Define pipeline in TOML
 
-Set the pipline's inputs and outputs.
+Set the pipeline's inputs and outputs.
 
 ```toml
 [log]
@@ -150,7 +150,7 @@ Run this program, it shows the output like ...
 
 ## Examples
 
-**How to use TINE as a library for your applicaton.**
+**How to use TINE as a library for your application.**
 
 - [helloworld](./example/helloworld/helloworld.go)
 
@@ -163,7 +163,7 @@ Run this program, it shows the output like ...
 - [custom_in_reg](./example/custom_in_reg/custom_in_reg.go)
 - [custom_flow_reg](./example/custom_flow_reg/custom_flow_reg.go)
 
-**How to use piplelines as a HTTP handler**
+**How to use pipelines as a HTTP handler**
 
 - [httpsvr](./example/httpsvr/httpsvr.go)
 
@@ -255,7 +255,7 @@ Pipeline configuration examples are in [docs/recipes](./docs/recipes).
 | merge          | Merge multiple records into a wide record  |
 | flatten        | Split a record into multiple records       |
 | set_field_name | Manipulate field name of records           |
-| set_field      | Forcely set a field                        |
+| set_field      | Force to set a field                       |
 | fan-in         | Aggregate messages from multiple sources   |
 | fan-out        | Distribute messages to multiple sinks      |
 | damper         | Combine multiple records                   |
@@ -271,7 +271,7 @@ Input: data -> [inlet] -> [decompress] -> [decoder] -> records
   Decompress  flate,gzip,inflate,lzw,snappy,zlib
   Inlets      exec,file,http,cpu,load,mem,disk,diskio,net,sensors,host,screenshot,syslog,rrd_graph,nats
 
-Ouput: records -> [encoder] -> [compress] -> [outlet] -> data
+Output: records -> [encoder] -> [compress] -> [outlet] -> data
   Encoders    csv,json
   Compress    deflate,flate,gzip,lzw,snappy,zlib
   Outlets     excel,file,http,image,rrd,mqtt
