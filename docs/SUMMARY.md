@@ -9,6 +9,7 @@
 ## GETTING STARTED
 
 * [Quick start](getting-started/quick-start.md)
+* [Concept](getting-started/concept.md)
 
 ## RECIPES
 
