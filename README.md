@@ -30,11 +30,10 @@ Set the pipline's inputs and outputs.
 ```toml
 [log]
     level = "WARN"
-[defaults]
-    interval = "3s"
 [[inlets.cpu]]
+    interval = "3s"
 [[flows.select]]
-    includes = ["#_ts", "#_in", "*"]
+    includes = ["#*", "*"] // all tags, all fields
 [[outlets.file]]
     path  = "-"
 ```
@@ -77,12 +76,11 @@ Change output format to "json" from "csv", add `format = "json"` at the end of t
 #!/path/to/tine run
 [log]
     level = "WARN"
-[defaults]
-    interval = "3s"
 [[inlets.load]]
     loads = [1, 5]
+    interval = "3s"
 [[flows.select]]
-    includes = ["#_ts", "#_in", "*"]
+    includes = ["**"]  # equivalent to ["#*", "*"]
 [[outlets.file]]
     path  = "-"
     decimal = 2
