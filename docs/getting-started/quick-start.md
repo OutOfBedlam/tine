@@ -26,7 +26,6 @@ Copy the example below and save it as `cpu.toml`.
 [[flows.select]]
     includes = ["**"]
 [[outlets.file]]
-    path  = "-"
 ```
 
 Run tine passing the `cpu.toml` path  as argument.
@@ -59,7 +58,6 @@ Add `format="json"` at the end of the file, it changes the out `outlets.file` ap
 
 ```toml
 [[outlets.file]]
-    path  = "-"
     format = "json"
 ```
 
@@ -84,7 +82,6 @@ Edit the `cpu.toml` file and add the following line at the beginning: `#!/path/t
 [[flows.select]]
     includes = ["**"]
 [[outlets.file]]
-    path  = "-"
 ```
 
 The `chmod +x cpu.toml` to make it executable.

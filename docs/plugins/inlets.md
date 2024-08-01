@@ -33,7 +33,7 @@ tine run example.toml -- hello=world test=values
 *Output*
 
 ```json
-[{"_in":"args","_ts":1722515124,"hello":"world","test":"values"}]
+[{"hello":"world","test":"values"}]
 ```
 
 ### EXEC
@@ -81,6 +81,8 @@ Execute external command and yields records for the output of stdout of the comm
     interval = "3s"
     count = 3
     trim_space = true
+[[flows.select]]
+    includes = ["#_in", "#_ts", "*"]
 [[outlets.file]]
     format = "json"
 ```
@@ -88,9 +90,9 @@ Execute external command and yields records for the output of stdout of the comm
 *Output*
 
 ```json
-[{"_in":"exec","_ts":1722515161,"stdout":"1722515161"}]
-[{"_in":"exec","_ts":1722515164,"stdout":"1722515164"}]
-[{"_in":"exec","_ts":1722515167,"stdout":"1722515167"}]
+[{"_in":"exec","_ts":1722516453,"stdout":"1722516453"}]
+[{"_in":"exec","_ts":1722516456,"stdout":"1722516456"}]
+[{"_in":"exec","_ts":1722516459,"stdout":"1722516459"}]
 ```
 
 ### FILE
