@@ -11,6 +11,7 @@ import (
 	"syscall"
 
 	"github.com/OutOfBedlam/tine/engine"
+	"github.com/OutOfBedlam/tine/tools/pipeviz"
 	"github.com/containerd/console"
 	"github.com/spf13/cobra"
 
@@ -58,6 +59,13 @@ func NewCmd() *cobra.Command {
 	}
 	versionCmd.Flags().BoolP("short", "s", false, "print the version only")
 
+	graphCmd := &cobra.Command{
+		Use:   "graph",
+		Short: "Generate a graph of the pipeline",
+		RunE:  GraphHandler,
+	}
+	graphCmd.Flags().StringP("output", "o", "-", "output file name")
+
 	runCmd := &cobra.Command{
 		Use:   "run [flags] FILE [, FILE ...]",
 		Short: "Run tine pipelines from the specified one or more files",
@@ -68,6 +76,7 @@ func NewCmd() *cobra.Command {
 
 	rootCmd.AddCommand(
 		runCmd,
+		graphCmd,
 		listCmd,
 		versionCmd,
 	)
@@ -87,6 +96,18 @@ func ListHandler(cmd *cobra.Command, args []string) error {
 	fmt.Println("")
 	fmt.Println("Flows        ", strings.Join(engine.FlowNames(), ","))
 	return nil
+}
+
+func GraphHandler(cmd *cobra.Command, args []string) error {
+	if pos := cmd.ArgsLenAtDash(); pos >= 0 {
+		// passthroughArgs := args[pos+1:]
+		args = args[0:pos]
+	}
+	if err := cmd.ParseFlags(args); err != nil {
+		return err
+	}
+	output, _ := cmd.Flags().GetString("output")
+	return pipeviz.Graph(args, output)
 }
 
 func RunHandler(cmd *cobra.Command, args []string) error {

@@ -55,7 +55,7 @@ The first line of the result can be visualized in the following diagram.
 
 The first record has three fields named `load1`, `load5`, and `load15`. The two tags `_in` that informs which inlet makes the data, and `_ts` (timestamp) which shows when the data is captured, are not exported into the result because tags are hidden from the final result by default.
 
-To reveal the tags into the result, use `flows.select` with `includes = ["**"]` expression. It "select"s which fields and tags can pass to the next step. "\*\*" means all tags and all fields.
+To include tags in the result, you can use the `flows.select` expression with `includes = ["**"]`. This expression selects which fields can be passed to the next step and converts specified tags, indicated by `#tag_name`, into fields. In the example below, the `**` notation is used to include all tags and fields.
 
 ```toml
 [[inlets.load]]
@@ -70,13 +70,13 @@ To reveal the tags into the result, use `flows.select` with `includes = ["**"]` 
 
 The pipeline generates the result might be like below.
 
-```
+```csv
 load,1722427244,1.87,1.93,1.83
 load,1722427247,1.87,1.93,1.83
 load,1722427250,1.80,1.91,1.83
 ```
 
-The first column "load" is the value of `_in` tag followed by `_ts`  value and all other fields in order.
+The first column "load" came from the value of `_in` tag followed by `_ts` tag's value and all other fields in order.
 
 To make the result clearer, change the output format to "json".
 

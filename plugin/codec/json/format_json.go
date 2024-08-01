@@ -2,7 +2,6 @@ package json
 
 import (
 	gojson "encoding/json"
-	"time"
 
 	"github.com/OutOfBedlam/tine/engine"
 )
@@ -37,24 +36,7 @@ func (jw *JSONEncoder) Encode(recs []engine.Record) error {
 		if rec.Empty() {
 			continue
 		}
-		var ts time.Time = engine.Now()
-		if v := rec.Tags().Get(engine.TAG_TIMESTAMP); v != nil {
-			if t, ok := v.Time(); ok {
-				ts = t
-			}
-		}
-		var timestamp any
-		if jw.FormatOption.Timeformat.IsEpoch() {
-			timestamp = jw.FormatOption.Timeformat.Epoch(ts)
-		} else {
-			timestamp = jw.FormatOption.Timeformat.Format(ts)
-		}
-		r := map[string]any{engine.TAG_TIMESTAMP: timestamp}
-		if v := rec.Tags().Get(engine.TAG_INLET); v != nil {
-			if s, ok := v.String(); ok {
-				r[engine.TAG_INLET] = s
-			}
-		}
+		r := map[string]any{}
 		for _, f := range rec.Fields() {
 			if f == nil {
 				continue

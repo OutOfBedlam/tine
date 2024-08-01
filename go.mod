@@ -7,6 +7,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/containerd/console v1.0.4
 	github.com/eclipse/paho.mqtt.golang v1.4.3
+	github.com/emicklei/dot v1.6.2
 	github.com/expr-lang/expr v1.16.9
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/golang/snappy v0.0.4

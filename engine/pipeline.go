@@ -184,7 +184,7 @@ func New(opts ...Option) (*Pipeline, error) {
 	return p, nil
 }
 
-// HttpHandleFunc is a convience function to create a http.HandlerFunc
+// HttpHandleFunc is a convenience function to create a http.HandlerFunc
 // from a pipeline configuration
 func HttpHandleFunc(config string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -323,6 +323,18 @@ func (p *Pipeline) Build() (returnErr error) {
 	return
 }
 
+func (p *Pipeline) Walk(walker func(pipelineName string, kind string, step string)) {
+	for _, input := range p.inputs {
+		walker(p.Name, "inlets", input.name)
+	}
+	for _, flow := range p.flows {
+		walker(p.Name, "flows", flow.name)
+	}
+	for _, output := range p.outputs {
+		walker(p.Name, "outlets", output.name)
+	}
+}
+
 // Start the pipeline, this will start all inlets, outlets and flows
 // and returns immediately without waiting for the pipeline to stop
 func (p *Pipeline) Start() {
@@ -356,12 +368,12 @@ func (p *Pipeline) run0() error {
 	}
 	p.outputs = openOutlets
 
-	// fanout flow attached
-	fanout := FanOutFlow(p.ctx).(*fanOutFlow)
-	fanoutHandler := NewFlowHandler(p.ctx, "fan-out", fanout)
-	fanout.LinkOutlets(p.outputs...)
-	p.flows[len(p.flows)-1].Via(fanoutHandler)
-	p.flows = append(p.flows, fanoutHandler)
+	// fanOut flow attached
+	fanOut := FanOutFlow(p.ctx).(*fanOutFlow)
+	fanOutHandler := NewFlowHandler(p.ctx, "fan-out", fanOut)
+	fanOut.LinkOutlets(p.outputs...)
+	p.flows[len(p.flows)-1].Via(fanOutHandler)
+	p.flows = append(p.flows, fanOutHandler)
 
 	// start flows
 	for _, flow := range p.flows {
