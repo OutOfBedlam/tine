@@ -18,16 +18,56 @@ If value has prefix `binary+` followed by `http://`, `https://`, or `file://`, t
 
 Execute external command and yields records for the output of stdout of the command.&#x20;
 
-#### Parameters
+#### Config
 
-* commands (string array)
-* environment (string array)
-* prefix (string)
-* timeout (string duration)
-* ignore\_error (bool)
-* interval (string duration)
-* count (integer)
-* trim\_space (bool)
+```toml
+[[inlets.exec]]
+    ## Commands array
+    commands = ["uname", "-m"]
+
+    ## Environment variables
+    ## Array of "key=value" pairs
+    ## e.g. ["key1=value1", "key2=value2"]
+    environments = []
+
+    ## Field name prefix
+    prefix = ""
+
+    ## Timeout
+    timeout = "3s"
+
+    ## Ignore non-zero exit code
+    ignore_error = false
+
+    ## Interval
+    interval = "10s"
+
+    ## How many times to run the command, 0 for infinite
+    count = 0
+
+    ## Trim space of output
+    trim_space = false
+```
+
+#### Example
+
+```
+[[inlets.exec]]
+    commands = ["date", "+%s"]
+    interval = "3s"
+    count = 3
+    trim_space = true
+[[outlets.file]]
+    path = "-"
+```
+
+```
+2024-08-01 21:16:15 INF pipeline example.toml start inlets=1 flows=0 outlets=1
+1722514575
+1722514578
+1722514581
+2024-08-01 21:16:24 INF pipeline example.toml stop
+```
 
 ### FILE
 
