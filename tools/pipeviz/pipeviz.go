@@ -2,6 +2,7 @@ package pipeviz
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/OutOfBedlam/tine/engine"
@@ -9,7 +10,7 @@ import (
 )
 
 // Usage: tine graph ./tmp/ollama.toml -o - | dot -Tpng -o./tmp/graph.png
-func Graph(args []string, output string) error {
+func Graph(writer io.Writer, args []string) error {
 	pipelineConfigs := []string{}
 	for _, arg := range args {
 		if _, err := os.Stat(arg); err != nil {
@@ -38,20 +39,35 @@ func Graph(args []string, output string) error {
 	gg := dot.NewGraph(dot.Directed)
 	for pIdx, p := range pipelines {
 		g := gg.Subgraph(p.Name)
-		g.Attr("fontname", "Helvetica,Arial,sans-serif")
+		g.Attr("fontname", "sans-serif,Arial,Helvetica")
 		inlets, outlets, flows := []dot.Node{}, []dot.Node{}, []dot.Node{}
 		nodeIdx := 0
-		p.Walk(func(pipelineName, kind, step string) {
-			fullName := fmt.Sprintf("%s.%s", kind, step)
+		p.Walk(func(pipelineName, kind, name string, step any) {
+			fullName := fmt.Sprintf("%s.%s", kind, name)
 			nodeId := fmt.Sprintf("%d.%d", pIdx, nodeIdx)
 			nodeIdx++
 			node := g.Node(nodeId)
 			node.Box()
-			node.Label(fmt.Sprintf("[[%s]]", fullName))
+			node.Label(fullName)
 			node.Attr("weight", 0)
 
 			if kind == "inlets" {
-				inlets = append(inlets, node)
+				theLastOfThisNode := node
+				if handler, ok := step.(*engine.InletHandler); ok {
+					subFlowIdx := 0
+					handler.Walk(func(inletName string, subKind string, subStep string, subHandler any) {
+						subNodeFullName := fmt.Sprintf("%s.%s.%s.%s", kind, inletName, subKind, subStep)
+						subNodeId := fmt.Sprintf("%d.%d.%d", pIdx, nodeIdx, subFlowIdx)
+						subFlowIdx++
+						subNode := g.Node(subNodeId)
+						subNode.Box()
+						subNode.Label(subNodeFullName)
+						subNode.Attr("weight", 0)
+						theLastOfThisNode.Edge(subNode)
+						theLastOfThisNode = subNode
+					})
+				}
+				inlets = append(inlets, theLastOfThisNode)
 			} else if kind == "outlets" {
 				outlets = append(outlets, node)
 			} else if kind == "flows" {
@@ -78,14 +94,6 @@ func Graph(args []string, output string) error {
 		}
 	}
 
-	writer := os.Stdout
-	if output != "-" {
-		if w, err := os.OpenFile(output, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644); err != nil {
-			return err
-		} else {
-			writer = w
-		}
-	}
 	_, err := writer.Write([]byte(gg.String()))
 	return err
 }

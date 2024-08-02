@@ -180,6 +180,9 @@ func New(opts ...Option) (*Pipeline, error) {
 
 	// context
 	p.ctx = newContext(p).WithLogger(p.logger)
+	// add fan-in flow
+	// If the pipeline is built by programmatically, the fan-in flow should exist.
+	// TODO: Add fan-in flow only when it is needed.
 	p.flows = []*FlowHandler{NewFlowHandler(p.ctx, "fan-in", FanInFlow(p.ctx))}
 	return p, nil
 }
@@ -306,6 +309,13 @@ func (p *Pipeline) Build() (returnErr error) {
 			}
 		}
 
+		// fan-out flow attached
+		// TODO: Add fan-out flow only when it is needed.
+		fanOut := FanOutFlow(p.ctx).(*fanOutFlow)
+		fanOutHandler := NewFlowHandler(p.ctx, "fan-out", fanOut)
+		p.flows[len(p.flows)-1].Via(fanOutHandler)
+		p.flows = append(p.flows, fanOutHandler)
+
 		// outlets
 		for _, outletCfg := range p.Outlets {
 			if reg := GetOutletRegistry(outletCfg.Plugin); reg != nil {
@@ -323,15 +333,15 @@ func (p *Pipeline) Build() (returnErr error) {
 	return
 }
 
-func (p *Pipeline) Walk(walker func(pipelineName string, kind string, step string)) {
+func (p *Pipeline) Walk(walker func(pipelineName string, kind string, step string, handler any)) {
 	for _, input := range p.inputs {
-		walker(p.Name, "inlets", input.name)
+		walker(p.Name, "inlets", input.name, input)
 	}
 	for _, flow := range p.flows {
-		walker(p.Name, "flows", flow.name)
+		walker(p.Name, "flows", flow.name, flow)
 	}
 	for _, output := range p.outputs {
-		walker(p.Name, "outlets", output.name)
+		walker(p.Name, "outlets", output.name, output)
 	}
 }
 
@@ -369,11 +379,9 @@ func (p *Pipeline) run0() error {
 	p.outputs = openOutlets
 
 	// fanOut flow attached
-	fanOut := FanOutFlow(p.ctx).(*fanOutFlow)
-	fanOutHandler := NewFlowHandler(p.ctx, "fan-out", fanOut)
-	fanOut.LinkOutlets(p.outputs...)
-	p.flows[len(p.flows)-1].Via(fanOutHandler)
-	p.flows = append(p.flows, fanOutHandler)
+	if fanOut, ok := p.flows[len(p.flows)-1].flow.(*fanOutFlow); ok {
+		fanOut.LinkOutlets(p.outputs...)
+	}
 
 	// start flows
 	for _, flow := range p.flows {

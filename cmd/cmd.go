@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -106,8 +107,21 @@ func GraphHandler(cmd *cobra.Command, args []string) error {
 	if err := cmd.ParseFlags(args); err != nil {
 		return err
 	}
+	var writer io.Writer
 	output, _ := cmd.Flags().GetString("output")
-	return pipeviz.Graph(args, output)
+	if output == "-" {
+		writer = os.Stdout
+	} else if output == "" {
+		writer = io.Discard
+	} else {
+		if w, err := os.OpenFile(output, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644); err != nil {
+			return err
+		} else {
+			writer = w
+		}
+	}
+
+	return pipeviz.Graph(writer, args)
 }
 
 func RunHandler(cmd *cobra.Command, args []string) error {

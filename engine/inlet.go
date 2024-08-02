@@ -178,6 +178,12 @@ func (in *InletHandler) Stop() {
 	})
 }
 
+func (in *InletHandler) Walk(walker func(inletName string, kind string, step string, handler any)) {
+	for _, flow := range in.flows {
+		walker(in.name, "flows", flow.name, flow)
+	}
+}
+
 // AddFlow adds a sub-flow to the inlet handler
 func (in *InletHandler) AddFlow(flow *FlowHandler) {
 	in.flows = append(in.flows, flow)

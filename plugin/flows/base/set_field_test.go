@@ -22,6 +22,8 @@ func ExampleSetFieldFlow() {
 			"c,3",
 		]
 		format = "csv"
+	[[flows.select]]
+		includes = ["**"]
 	[[outlets.file]]
 		path = "-"
 		format = "json"

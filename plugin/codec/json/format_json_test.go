@@ -23,6 +23,8 @@ func ExampleJSONEncoder() {
 		]
 		format = "csv"
 		fields = ["area"]
+	[[flows.select]]
+		includes = ["**"]
 	[[outlets.file]]
 		path = "-"
 		format = "json"
