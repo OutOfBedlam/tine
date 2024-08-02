@@ -20,7 +20,6 @@ Here's an example of how a data pipeline works:
 [[flows.select]]
     includes = ["**"]
 [[outlets.file]]
-    path  = "-"
 ```
 
 <figure><img src="../.gitbook/assets/pipeline-cpu-select-file.png" alt="" width="563"><figcaption><p>A simple pipeline</p></figcaption></figure>
@@ -36,7 +35,6 @@ The data flowing through a pipeline consists of a sequence of records. Each reco
     interval = "3s"
     loads = [1, 5, 15]
 [[outlets.file]]
-    path  = "-"
     decimal = 2
 ```
 
@@ -87,7 +85,6 @@ To make the result clearer, change the output format to "json".
 [[flows.select]]
     includes = ["**"]
 [[outlets.file]]
-    path  = "-"
     format = "json"
 ```
 
