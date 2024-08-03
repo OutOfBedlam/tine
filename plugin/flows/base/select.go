@@ -1,6 +1,7 @@
 package base
 
 import (
+	"fmt"
 	"slices"
 	"strings"
 
@@ -13,18 +14,30 @@ type selectFlow struct {
 }
 
 func SelectFlow(ctx *engine.Context) engine.Flow {
-	includes := ctx.Config().GetStringSlice("includes", []string{"#*", "*"})
-	for i := 0; i < len(includes); i++ {
-		if includes[i] == "**" {
-			includes[i] = "#*"
-			i++
-			includes = slices.Insert(includes, i, "*")
-		}
-	}
-	return &selectFlow{ctx: ctx, includes: includes}
+	return &selectFlow{ctx: ctx}
 }
 
-func (sf *selectFlow) Open() error      { return nil }
+func (sf *selectFlow) Open() error {
+	conf := sf.ctx.Config()
+	for k := range conf {
+		switch k {
+		case "includes":
+			includes := conf.GetStringSlice(k, []string{"#*", "*"})
+			for i := 0; i < len(includes); i++ {
+				if includes[i] == "**" {
+					includes[i] = "#*"
+					i++
+					includes = slices.Insert(includes, i, "*")
+				}
+			}
+			sf.includes = includes
+		default:
+			return fmt.Errorf("select: unknown config key %q", k)
+		}
+	}
+	return nil
+}
+
 func (sf *selectFlow) Close() error     { return nil }
 func (sf *selectFlow) Parallelism() int { return 1 }
 

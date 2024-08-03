@@ -15,23 +15,20 @@
 [[flows.merge]]
     wait_limit = "2s"
 
-[[flows.set_field]]
-    ## Add or update fields in a record with the given fields.
+[[flows.update]]
+    ## Update name and value of fields and tags in a record with the new value and name.
     ## The toml syntax does not allow newlines within inline tables, 
     ## so all fields are specified in a single line
-    set = { my_field = 1.23, my_machine = "machine123", test_flag = true }
-    ## If there are too many fields to fit in a line, use array of inline tables. like this:
-    # set = [
-    #     { my_field = 1.23, my_machine = "machine123", test_flag = true },
-    #     { extra_field = "extra" },
-    #     { more = true }
-    # ]
-
-[[flows.set_field_name]]
-    ## Rename fields in a record with the given prefix and suffix.
-    prefix = "hello_"
-    suffix = "_world"
-    replace = [ ["old_name", "new_name"], ["old_key", "new_key"] ]
+    set = [
+        ## "field" is the field name to be updated.
+        ## "name" is the new name of the field. If not specified, the original name is used.
+        ## "value" is the new value of the field. If not specified, the original value is used.
+        { field = "my_name", name = "new_name" },
+        { field = "my_int", value = 10 },
+        { field = "my_float", value = 9.87, name = "new_float" },
+        { field = "flag", value = true, name = "new_flag" },
+        { tag = "_in", value = "my" },
+    ]
 
 [[flows.flatten]]
     ## This flow flattens a record into multiple records,

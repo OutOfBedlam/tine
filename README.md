@@ -252,10 +252,9 @@ Pipeline configuration examples are in [docs/recipes](./docs/recipes).
 |  Name          |    Description                             |
 |:---------------|:-------------------------------------------|
 | select         | Filter fields and promote tags to fields of a record |
+| update         | Manipulate name and value of fields and tags |
 | merge          | Merge multiple records into a wide record  |
 | flatten        | Split a record into multiple records       |
-| set_field_name | Manipulate field name of records           |
-| set_field      | Force to set a field                       |
 | fan-in         | Aggregate messages from multiple sources   |
 | fan-out        | Distribute messages to multiple sinks      |
 | damper         | Combine multiple records                   |
@@ -276,5 +275,5 @@ Output: records -> [encoder] -> [compress] -> [outlet] -> data
   Compress    deflate,flate,gzip,lzw,snappy,zlib
   Outlets     excel,file,http,image,rrd,mqtt
 
-Flows         set_field_name,fan-in,fan-out,merge,flatten,damper,dump,set_field
+Flows         fan-in,fan-out,merge,flatten,damper,dump,select,update
 ```

@@ -21,8 +21,11 @@ Create Telegram chat bot with OLLAMA
 ## change the field name from "text" to "prompt" which is expected by flows.ollama
 ## inlets.telegram set the "photo" field for the image file attached  in the message.
 ## change the field name from "photo" to "image" which is expected by flows.ollama
-[[flows.set_field_name]]
-    replaces = [ ["text", "prompt"], ["photo", "image"] ]
+[[flows.update]]
+    set = [
+        { field = "text", name = "prompt" },
+        { field = "photo", name = "image" },
+    ]
 
 [[flows.ollama]]
     address = "http://_OLLAMA_HOST_:_OLLAMA_PORT_"
@@ -32,8 +35,10 @@ Create Telegram chat bot with OLLAMA
 
 ## flows.ollama yield a record that has "response" field for the result
 ## outlets.telegram is expecting "text" for outgoing message.
-[[flows.set_field_name]]
-    replaces = [ ["response", "text"] ]
+[[flows.update]]
+    set = [
+        { field = "response", name = "text"}
+    ]
 
 [[outlets.telegram]]
     token = "_YOUR_TELEGRAM_BOT_TOKEN_"

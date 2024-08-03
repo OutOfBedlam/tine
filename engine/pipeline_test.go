@@ -17,12 +17,11 @@ import (
 func ExampleNew() {
 	// This example demonstrates how to use the exec inlet to run a command and
 	dsl := `
-	[log]
-		level = "warn"
 	[[inlets.args]]
-	[[flows.set_field_name]]
-		prefix = "pre_"
-		suffix = "_suf"
+	[[flows.update]]
+		set = [
+			{ field = "msg", name_format = "pre_%s_suf" },
+		]
 	[[flows.select]]
 		includes = ["**"]
 	[[outlets.file]]
