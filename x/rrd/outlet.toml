@@ -14,7 +14,7 @@
     ##       If ds contains invalid characters for RRD(e.g. ':'), it will be replaced with "_"
     ## dst   Data Source Type
     ##       GAUGE, COUNTER, DCOUNTER, DERIVE, DDERIVE, ABSOLUTE, COMPUTE
-    ## heartbeat  hould be larger than step
+    ## heartbeat should be larger than step
     ## min   minimum value, "U" means unknown,
     ##       if input value is less than min, it will be treated as unknown
     ## max   maximum value, "U" means unknown,
