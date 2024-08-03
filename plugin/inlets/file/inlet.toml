@@ -9,6 +9,7 @@
     ### input format
     format = "csv"
     ### name of the fields in the input data
+    ### If not specified, the default field names (number string) are used
     field_names = ["line", "name", "time", "value"]
     ### Is input data compressed
     compress = ""

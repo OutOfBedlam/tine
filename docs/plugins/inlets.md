@@ -113,11 +113,11 @@ Execute external command and yields records for the output of stdout of the comm
         "and,here",
     ]
     ### input format
-    format     = "csv"
+    format = "csv"
     ### name of the fields in the input data
     field_names = ["name", "time","value"]
     ### Is input data compressed
-    compress   = ""
+    compress = ""
     ### time format (default: s)
     ### s, ms, us, ns, Golang timeformat string")
     ### e.g. timeformat = "2006-01-02 15:04:05 07:00"
@@ -224,6 +224,9 @@ tine run example.toml
 **Config**
 
 ```toml
+[[inlets.cpu]]
+    percpu = false
+    totalcpu = true
 ```
 
 **Example**
@@ -248,6 +251,8 @@ tine run example.toml
 **Config**
 
 ```toml
+[[inlets.load]]
+    loads = [1, 5, 15]
 ```
 
 **Example**
@@ -272,6 +277,7 @@ tine run example.toml
 **Config**
 
 ```toml
+[[inlets.mem]]
 ```
 
 **Example**
@@ -296,6 +302,11 @@ tine run example.toml
 **Config**
 
 ```toml
+[[inlets.disk]]
+    # default is all mount points
+    mount_points = ["/", "/mnt"]
+    ignore_fs = ["tmpfs", "devtmpfs", "devfs", "iso9660", "overlay", "aufs", "squashfs"]
+
 ```
 
 **Example**
@@ -320,6 +331,9 @@ tine run example.toml
 **Config**
 
 ```toml
+[[inlets.diskio]]
+    # default is all devices
+    devices = ["sda*", "sdb*"]
 ```
 
 **Example**
@@ -344,6 +358,8 @@ tine run example.toml
 **Config**
 
 ```toml
+[[inlets.net]]
+    devices = ["eth*"]
 ```
 
 **Example**
@@ -368,6 +384,10 @@ tine run example.toml
 **Config**
 
 ```toml
+[[inlets.netstat]]
+    # macOS does not support netstat
+    # supported protocols: ip, icmp, icmpmsg, tcp, udp, udplite
+    protocols = ["tcp", "udp"]
 ```
 
 **Example**
@@ -392,6 +412,7 @@ tine run example.toml
 **Config**
 
 ```toml
+[[inlets.sensor]]
 ```
 
 **Example**
@@ -416,6 +437,7 @@ tine run example.toml
 **Config**
 
 ```toml
+[[inlets.host]]
 ```
 
 **Example**
