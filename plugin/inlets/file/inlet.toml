@@ -3,15 +3,15 @@
     path = "/data/input.csv"
     ### input data in form of a string, if specified, "path" is ignored
     data = [
-        "some,data,can,be,here",
-        "and,here",
+        "1,key1,1722642405,1.234",
+        "2,key2,1722642406,2.345",
     ]
     ### input format
-    format     = "csv"
-    ### output fields
-    fields     = ["name", "time","value"]
-    ### output compression
-    compress   = ""
+    format = "csv"
+    ### name of the fields in the input data
+    field_names = ["line", "name", "time", "value"]
+    ### Is input data compressed
+    compress = ""
     ### time format (default: s)
     ### s, ms, us, ns, Golang timeformat string")
     ### e.g. timeformat = "2006-01-02 15:04:05 07:00"

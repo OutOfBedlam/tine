@@ -10,13 +10,15 @@ If value has prefix `base64+` followed by `http://`, `https://`, or `file://`, t
 
 If value has prefix `binary+` followed by `http://`, `https://`, or `file://`, then a `BinaryField` will be added instead of `StringField` within content that are fetched from the URL or file.
 
-*Package* `github.com/OutOfBedlam/tine/plugin/inlets/args`
+*Source* [plugin/inlets/args](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/args)
 
-#### Config
+**Config**
 
-*N/A*
+```toml
+[[inlets.args]]
+```
 
-#### Example
+**Example**
 
 ```toml
 [[inlets.args]]
@@ -38,11 +40,11 @@ tine run example.toml -- hello=world test=values
 
 ### EXEC
 
-Execute external command and yields records for the output of stdout of the command.&#x20;
+Execute external command and yields records for the output of stdout of the command.
 
-*Package* `github.com/OutOfBedlam/tine/plugin/inlets/exec`
+*Source* [plugin/inlets/exec](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/exec)
 
-#### Config
+**Config**
 
 ```toml
 [[inlets.exec]]
@@ -73,7 +75,7 @@ Execute external command and yields records for the output of stdout of the comm
     trim_space = false
 ```
 
-#### Example
+**Example**
 
 ```toml
 [[inlets.exec]]
@@ -97,31 +99,412 @@ Execute external command and yields records for the output of stdout of the comm
 
 ### FILE
 
+*Source* [plugin/inlets/file](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/file)
+
+**Config**
+
+```toml
+[[inlets.file]]
+    ### input file path, "-" for stdin, if "data" is specified, this field is ignored
+    path = "/data/input.csv"
+    ### input data in form of a string, if specified, "path" is ignored
+    data = [
+        "some,data,can,be,here",
+        "and,here",
+    ]
+    ### input format
+    format     = "csv"
+    ### name of the fields in the input data
+    field_names = ["name", "time","value"]
+    ### Is input data compressed
+    compress   = ""
+    ### time format (default: s)
+    ### s, ms, us, ns, Golang timeformat string")
+    ### e.g. timeformat = "2006-01-02 15:04:05 07:00"
+    timeformat = "s"
+    ### timezone (default: Local)
+    ### e.g. tz = "Local"
+    ### e.g. tz = "UTC"
+    ### e.g. tz = "America/New_York"
+    tz = "Local"
+```
+
+**Example**
+
+```toml
+[[inlets.file]]
+    data = [
+        "1,key1,1722642405,1.234",
+        "2,key2,1722642406,2.345",
+    ]
+    format = "csv"
+    field_names = ["line", "name", "time", "value"]
+[[outlets.file]]
+    format = "json"
+    indent = "  "
+```
+
+*Run*
+
+```sh
+tine run example.toml
+```
+
+*Output*
+
+```json
+[
+  {
+    "line": "1",
+    "name": "key1",
+    "time": "1722642405",
+    "value": "1.234"
+  },
+  {
+    "line": "2",
+    "name": "key2",
+    "time": "1722642406",
+    "value": "2.345"
+  }
+]
+```
+
 ### HTTP
+
+*Source* [plugin/inlets/http](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/http)
+
+**Config**
+
+```toml
+```
+
+**Example**
+
+```toml
+```
+
+*Run*
+
+```sh
+```
+
+*Output*
+
+```json
+```
 
 ### NATS
 
+*Source* [plugin/inlets/nats](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/nats)
+
+**Config**
+
+```toml
+```
+
+**Example**
+
+```toml
+```
+
+*Run*
+
+```sh
+```
+
+*Output*
+
+```json
+```
+
 ### CPU
+
+*Source* [plugin/inlets/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/psutil)
+
+**Config**
+
+```toml
+```
+
+**Example**
+
+```toml
+```
+
+*Run*
+
+```sh
+```
+
+*Output*
+
+```json
+```
 
 ### LOAD
 
+*Source* [plugin/inlets/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/psutil)
+
+**Config**
+
+```toml
+```
+
+**Example**
+
+```toml
+```
+
+*Run*
+
+```sh
+```
+
+*Output*
+
+```json
+```
+
 ### MEM
+
+*Source* [plugin/inlets/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/psutil)
+
+**Config**
+
+```toml
+```
+
+**Example**
+
+```toml
+```
+
+*Run*
+
+```sh
+```
+
+*Output*
+
+```json
+```
 
 ### DISK
 
+*Source* [plugin/inlets/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/psutil)
+
+**Config**
+
+```toml
+```
+
+**Example**
+
+```toml
+```
+
+*Run*
+
+```sh
+```
+
+*Output*
+
+```json
+```
+
 ### DISKIO
+
+*Source* [plugin/inlets/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/psutil)
+
+**Config**
+
+```toml
+```
+
+**Example**
+
+```toml
+```
+
+*Run*
+
+```sh
+```
+
+*Output*
+
+```json
+```
 
 ### NET
 
+*Source* [plugin/inlets/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/psutil)
+
+**Config**
+
+```toml
+```
+
+**Example**
+
+```toml
+```
+
+*Run*
+
+```sh
+```
+
+*Output*
+
+```json
+```
+
 ### NETSTAT
+
+*Source* [plugin/inlets/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/psutil)
+
+**Config**
+
+```toml
+```
+
+**Example**
+
+```toml
+```
+
+*Run*
+
+```sh
+```
+
+*Output*
+
+```json
+```
 
 ### SENSOR
 
+*Source* [plugin/inlets/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/psutil)
+
+**Config**
+
+```toml
+```
+
+**Example**
+
+```toml
+```
+
+*Run*
+
+```sh
+```
+
+*Output*
+
+```json
+```
+
 ### HOST
+
+*Source* [plugin/inlets/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/psutil)
+
+**Config**
+
+```toml
+```
+
+**Example**
+
+```toml
+```
+
+*Run*
+
+```sh
+```
+
+*Output*
+
+```json
+```
 
 ### SCREENSHOT
 
+*Source* [plugin/inlets/screenshot](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/screenshot)
+
+**Config**
+
+```toml
+```
+
+**Example**
+
+```toml
+```
+
+*Run*
+
+```sh
+```
+
+*Output*
+
+```json
+```
+
 ### SQLITE
+
+{% hint style="danger" %}
+WIP
+{% endhint %}
+
+*Source* [plugin/inlets/sqlite](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/sqlite)
+
+**Config**
+
+```toml
+```
+
+**Example**
+
+```toml
+```
+
+*Run*
+
+```sh
+```
+
+*Output*
+
+```json
+```
 
 ### TELEGRAM
 
+*Source* [plugin/inlets/telegram](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/telegram)
+
+**Config**
+
+```toml
+```
+
+**Example**
+
+```toml
+```
+
+*Run*
+
+```sh
+```
+
+*Output*
+
+```json
+```

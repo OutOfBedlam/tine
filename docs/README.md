@@ -17,7 +17,7 @@ layout:
 TINE is a data-pipeline runner.&#x20;
 
 {% hint style="danger" %}
-Tine is currently under active development, and both the API and syntax are subject to change.
+TINE is currently under active development, and both the API and syntax are subject to change.
 {% endhint %}
 
 
