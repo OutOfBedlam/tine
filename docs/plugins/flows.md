@@ -9,7 +9,8 @@
 ```toml
 [[flows.damper]]
     ## damper makes the stream of records to be delayed by the given duration.
-    ## It collects records those _ts time is older thant now-"interval" time, and send thme to the next flow in a time.
+    ## It collects records those _ts time is older thant now-"interval" time, 
+    ## and send them to the next flow in a time.
     interval = "3s"
 ```
 
