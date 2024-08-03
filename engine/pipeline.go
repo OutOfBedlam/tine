@@ -401,7 +401,7 @@ func (p *Pipeline) run0() error {
 		return errors.New("no outlet to start")
 	}
 
-	p.ctx.LogInfo("start", "inlets", len(p.inputs), "flows", len(p.flows)-2, "outlets", len(p.outputs))
+	p.ctx.LogDebug("start", "inlets", len(p.inputs), "flows", len(p.flows)-2, "outlets", len(p.outputs))
 
 	// start inputs
 	inputWg := sync.WaitGroup{}
@@ -419,7 +419,7 @@ func (p *Pipeline) run0() error {
 	p.ctx.LogDebug("inlets completed")
 
 	p.Stop()
-	p.ctx.LogInfo("stop")
+	p.ctx.LogDebug("stop")
 
 	return nil
 }
