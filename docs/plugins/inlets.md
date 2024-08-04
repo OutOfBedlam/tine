@@ -176,6 +176,17 @@ tine run example.toml
 **Config**
 
 ```toml
+[[in.http]]
+    ### address e.g. http://localhost:8080
+    address = ""
+
+    ### success code (default: 200)
+    success = 200
+
+    ### timeout (default: 3s)
+    timeout = "3s"
+
+    interval = "10s"
 ```
 
 **Example**
@@ -200,6 +211,14 @@ tine run example.toml
 **Config**
 
 ```toml
+[[in.nats]]
+    ### nats server statz endpoint
+    server = ""
+
+    ### timeout (default: 3s)
+    timeout = "3s"
+
+    interval = "10s"
 ```
 
 **Example**
@@ -232,16 +251,27 @@ tine run example.toml
 **Example**
 
 ```toml
+[[inlets.cpu]]
+    percpu = true
+    totalcpu = true
+    interval = "3s"
+[[flows.select]]
+    includes = ["**"]
+[[outlets.file]]
+    format = "json"
 ```
 
 *Run*
 
 ```sh
+tine run example.toml
 ```
 
 *Output*
 
 ```json
+[{"0_percent":33.207320361243234,"1_percent":32.53797979613833,"2_percent":6.87165938794736,"3_percent":3.8726567063664827,"_in":"cpu","_ts":1722755030,"total_percent":8.2044917374524}]
+[{"0_percent":17.7474402743563,"1_percent":16.949152543944706,"2_percent":8.474576271152998,"3_percent":3.6666666662010052,"_in":"cpu","_ts":1722755033,"total_percent":5.130784707591248}]
 ```
 
 ### LOAD
@@ -258,16 +288,26 @@ tine run example.toml
 **Example**
 
 ```toml
+[[inlets.load]]
+    loads = [1, 5, 15]
+    interval = "3s"
+[[flows.select]]
+    includes = ["**"]
+[[outlets.file]]
+    format = "json"
 ```
 
 *Run*
 
 ```sh
+tine run example.toml
 ```
 
 *Output*
 
 ```json
+[{"_in":"load","_ts":1722755103,"load1":1.55224609375,"load15":2.19921875,"load5":2.1376953125}]
+[{"_in":"load","_ts":1722755106,"load1":1.5078125,"load15":2.19189453125,"load5":2.11865234375}]
 ```
 
 ### MEM
@@ -283,16 +323,25 @@ tine run example.toml
 **Example**
 
 ```toml
+[[inlets.mem]]
+    interval = "3s"
+[[flows.select]]
+    includes = ["**"]
+[[outlets.file]]
+    format = "json"
 ```
 
 *Run*
 
 ```sh
+tine run example.toml
 ```
 
 *Output*
 
 ```json
+[{"_in":"mem","_ts":1722755153,"free":336723968,"total":34359738368,"used":20005076992,"used_percent":58.22243690490723}]
+[{"_in":"mem","_ts":1722755156,"free":441221120,"total":34359738368,"used":19877855232,"used_percent":57.8521728515625}]
 ```
 
 ### DISK
@@ -312,16 +361,26 @@ tine run example.toml
 **Example**
 
 ```toml
+[[inlets.disk]]
+    mount_points = ["/"]
+    interval = "3s"
+[[flows.select]]
+    includes = ["**"]
+[[outlets.file]]
+    format = "json"
 ```
 
 *Run*
 
 ```sh
+tine run example.toml
 ```
 
 *Output*
 
 ```json
+[{"_in":"disk","_ts":1722755225,"device":"/dev/disk3s1s1","free":334269898752,"fstype":"apfs","inodes_free":3264354480,"inodes_total":3264758647,"inodes_used":404167,"inodes_used_percent":0.012379690007755724,"mount_point":"/","total":994662584320,"used":660392685568,"used_percent":66.39363900668654}]
+[{"_in":"disk","_ts":1722755228,"device":"/dev/disk3s1s1","free":334269898752,"fstype":"apfs","inodes_free":3264354480,"inodes_total":3264758647,"inodes_used":404167,"inodes_used_percent":0.012379690007755724,"mount_point":"/","total":994662584320,"used":660392685568,"used_percent":66.39363900668654}]
 ```
 
 ### DISKIO
@@ -339,16 +398,26 @@ tine run example.toml
 **Example**
 
 ```toml
+[[inlets.diskio]]
+    devices = ["disk0"]
+    interval = "3s"
+[[flows.select]]
+    includes = ["**"]
+[[outlets.file]]
+    format = "json"
 ```
 
 *Run*
 
 ```sh
+tine run example.toml
 ```
 
 *Output*
 
 ```json
+[{"_in":"diskio","_ts":1722755372,"device":"disk0","io_time":11680599,"iops_in_progress":0,"label":"","merged_read_count":0,"merged_write_count":0,"read_bytes":752462053376,"read_count":70590345,"read_time":10718681,"serial_number":"","weighted_io":0,"write_bytes":178813861888,"write_count":9640875,"write_time":961918}]
+[{"_in":"diskio","_ts":1722755375,"device":"disk0","io_time":11680599,"iops_in_progress":0,"label":"","merged_read_count":0,"merged_write_count":0,"read_bytes":752462053376,"read_count":70590345,"read_time":10718681,"serial_number":"","weighted_io":0,"write_bytes":178813861888,"write_count":9640875,"write_time":961918}]
 ```
 
 ### NET
@@ -365,16 +434,26 @@ tine run example.toml
 **Example**
 
 ```toml
+[[inlets.net]]
+    devices = ["en0"]
+    interval = "3s"
+[[flows.select]]
+    includes = ["**"]
+[[outlets.file]]
+    format = "json"
 ```
 
 *Run*
 
 ```sh
+tine run example.toml
 ```
 
 *Output*
 
 ```json
+[{"_in":"net","_ts":1722755428,"bytes_recv":6124558288,"bytes_sent":947180141,"device":"en0","drop_in":0,"drop_out":11,"err_in":0,"err_out":0,"fifos_in":0,"fifos_out":0,"packets_recv":7065267,"packets_sent":0}]
+[{"_in":"net","_ts":1722755431,"bytes_recv":6124558853,"bytes_sent":947180654,"device":"en0","drop_in":0,"drop_out":11,"err_in":0,"err_out":0,"fifos_in":0,"fifos_out":0,"packets_recv":7065273,"packets_sent":0}]
 ```
 
 ### NETSTAT
@@ -413,6 +492,7 @@ tine run example.toml
 
 ```toml
 [[inlets.sensor]]
+    # macOS does not support sensor
 ```
 
 **Example**
@@ -443,16 +523,25 @@ tine run example.toml
 **Example**
 
 ```toml
+[[inlets.host]]
+    interval = "3s"
+[[flows.select]]
+    includes = ["**"]
+[[outlets.file]]
+    format = "json"
 ```
 
 *Run*
 
 ```sh
+tine run example.toml
 ```
 
 *Output*
 
 ```json
+[{"_in":"host","_ts":1722755502,"host_id":"b493ab81-9581-5523-807f-d28b04a3ca4f","hostname":"localhost.local","kernel_arch":"arm64","kernel_version":"23.5.0","os":"darwin","platform":"darwin","platform_family":"Standalone Workstation","platform_version":"14.5","procs":746,"uptime":756732,"virtualization_role":"","virtualization_system":""}]
+[{"_in":"host","_ts":1722755505,"host_id":"b493ab81-9581-5523-807f-d28b04a3ca4f","hostname":"localhost.local","kernel_arch":"arm64","kernel_version":"23.5.0","os":"darwin","platform":"darwin","platform_family":"Standalone Workstation","platform_version":"14.5","procs":746,"uptime":756735,"virtualization_role":"","virtualization_system":""}]
 ```
 
 ### SCREENSHOT
@@ -462,6 +551,17 @@ tine run example.toml
 **Config**
 
 ```toml
+[[inlets.screenshot]]
+    ## The interval to run
+    interval = "3s"
+    ## How many times run before stop (0 is infinite)
+    count = 1
+    ## The display number to capture
+    ## if it is empty, it will capture all displays
+    displays = [0, 1]
+    ## capture image format
+    ## rgba | png | jpeg | gif
+    format = "png"
 ```
 
 **Example**
@@ -514,6 +614,10 @@ WIP
 **Config**
 
 ```toml
+[[inlets.telegram]]
+    token = "<bot_token>"
+    debug = false
+    timeout = "3s"
 ```
 
 **Example**
