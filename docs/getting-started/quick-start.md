@@ -36,21 +36,17 @@ tine run ./cpu.toml
 
 Press ^C to stop.
 
-{% code lineNumbers="true" %}
-```
-2024-07-28 21:53:50 INF pipeline cpu.toml start inlets=1 flows=1 outlets=1
+{% code %}
+```csv
 cpu,1722171230,8.305903745046313
 cpu,1722171233,11.401743796163146
 cpu,1722171236,9.507754551438795
 cpu,1722171239,8.965748824811843
 ^C
-2024-07-28 21:54:01 INF pipeline cpu.toml stop
 ```
 {% endcode %}
 
-Line 1 and 7 are log messages that are printed out on stdout by default with an INF (info) level.
-
-From line 2 to 5, the TINE process prints out a CSV line every 3 seconds until it is stopped by pressing ^C.
+TINE prints out a CSV line per every 3 seconds until it is stopped by pressing ^C.
 
 Each line in the content represents the "cpu" inlet, which generates data consisting of a timestamp in UNIX epoch time and the corresponding system CPU usage percentage.
 
