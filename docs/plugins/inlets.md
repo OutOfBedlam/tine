@@ -163,7 +163,7 @@ tine run example.toml
 **Config**
 
 ```toml
-[[in.http]]
+[[inlets.http]]
     ### address e.g. http://localhost:8080
     address = ""
 
@@ -174,21 +174,22 @@ tine run example.toml
     timeout = "3s"
 
     interval = "10s"
+    ### run count limit
     count = 1
 ```
 
 **Example**
 
 ```toml
-	[[inlets.http]]
-		address = "http://127.0.0.1:5555"
-		success = 200
-		timeout = "3s"
-		count = 1
-	[[flows.select]]
-		includes = ["**"]
-	[[outlets.file]]
-		format = "json"
+[[inlets.http]]
+    address = "http://127.0.0.1:5555"
+    success = 200
+    timeout = "3s"
+    count = 1
+[[flows.select]]
+    includes = ["**"]
+[[outlets.file]]
+    format = "json"
 ```
 
 *Run*
@@ -199,7 +200,8 @@ tine run example.toml
 
 *Output*
 
-If http server responded in JSON `{"a":1, "b":{"c":true, "d":3.14}}`.
+If the http server responded in JSON `{"a":1, "b":{"c":true, "d":3.14}}`.
+
 The pipeline result will be:
 
 ```json
@@ -213,7 +215,7 @@ The pipeline result will be:
 **Config**
 
 ```toml
-[[in.nats]]
+[[inlets.nats]]
     ### nats server statz endpoint
     server = ""
 

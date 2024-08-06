@@ -1,4 +1,4 @@
-[[in.nats]]
+[[inlets.nats]]
     ### nats server statz endpoint
     server = ""
 
