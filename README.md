@@ -12,14 +12,10 @@ TINE a data pipeline runner.
 ## Install
 
 ```bash
-go install github.com/OutOfBedlam/tine
+go install github.com/OutOfBedlam/tine@latest
 ```
 
-## Build
-
-```bash
-go build
-```
+Find more options in (https://tine.thingsme.xyz/)[https://tine.thingsme.xyz/tine/install]
 
 ## Usage
 
@@ -28,8 +24,6 @@ go build
 Set the pipeline's inputs and outputs.
 
 ```toml
-[log]
-    level = "WARN"
 [[inlets.cpu]]
     interval = "3s"
 [[flows.select]]
@@ -74,8 +68,6 @@ Change output format to "json" from "csv", add `format = "json"` at the end of t
 
 ```toml
 #!/path/to/tine run
-[log]
-    level = "WARN"
 [[inlets.load]]
     loads = [1, 5]
     interval = "3s"

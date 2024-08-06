@@ -75,8 +75,8 @@ type OutletHandler struct {
 	closeCh chan bool
 	closeWg sync.WaitGroup
 	buffer  []Record
-	recv    uint64
-	flushed uint64
+	recvCnt uint64
+	doneCnt uint64
 }
 
 func NewOutletHandler(ctx *Context, name string, outlet Outlet) (*OutletHandler, error) {
@@ -102,12 +102,13 @@ func (out *OutletHandler) Start() error {
 	out.closeWg.Add(1)
 	go func() {
 		out.isOpen = true
+		out.ctx.LogDebug("outlet started", "name", out.name)
 	loop:
 		for {
 			select {
 			case r := <-out.inCh:
 				out.buffer = append(out.buffer, r...)
-				atomic.AddUint64(&out.recv, uint64(len(r)))
+				atomic.AddUint64(&out.recvCnt, uint64(len(r)))
 				out.flush(false)
 			case <-out.closeCh:
 				break loop
@@ -127,7 +128,7 @@ func (out *OutletHandler) flush(_ /*force*/ bool) {
 	if err := out.outlet.Handle(out.buffer); err != nil {
 		out.ctx.LogError("failed to output flush", "error", err.Error())
 	} else {
-		atomic.AddUint64(&out.flushed, uint64(len(out.buffer)))
+		atomic.AddUint64(&out.doneCnt, uint64(len(out.buffer)))
 	}
 	out.buffer = out.buffer[:0]
 }
@@ -143,7 +144,7 @@ func (out *OutletHandler) Stop() {
 	if err := out.outlet.Close(); err != nil {
 		out.ctx.LogError("failed to open output", "error", err.Error())
 	}
-	out.ctx.LogDebug("outlet stopped", "name", out.name, "recv", out.recv, "flushed", out.flushed)
+	out.ctx.LogDebug("outlet stopped", "name", out.name, "recv", out.recvCnt, "done", out.doneCnt)
 }
 
 func (out *OutletHandler) Sink() chan<- []Record {

@@ -149,6 +149,7 @@ func (fh *FlowHandler) Start() error {
 			fh.closeWg.Done()
 		}()
 	}
+	fh.ctx.LogDebug("flow started", "name", fh.name)
 	return nil
 }
 

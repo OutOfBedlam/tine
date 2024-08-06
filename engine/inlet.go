@@ -168,6 +168,7 @@ func NewInletHandler(ctx *Context, name string, inlet Inlet, outCh chan<- []Reco
 func (in *InletHandler) Start() {
 	in.startSubFlows()
 	go in.runner()
+	in.ctx.LogDebug("inlet started", "name", in.name)
 }
 
 func (in *InletHandler) Stop() {

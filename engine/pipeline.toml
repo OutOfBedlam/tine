@@ -7,8 +7,8 @@
 ## define pipeline default logs
 [log]
     ## log file path, "-" for stdout, "" for no log
-    ## default is "-"
-    filename = "-"
+    ## default is ""
+    filename = ""
     ## log level: DEBUG, INFO, WARN, ERROR
     level = "INFO"
     ## max log file size in MB
