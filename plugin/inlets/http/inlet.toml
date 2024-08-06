@@ -1,4 +1,4 @@
-[[in.http]]
+[[inlets.http]]
     ### address e.g. http://localhost:8080
     address = ""
 
@@ -9,3 +9,5 @@
     timeout = "3s"
 
     interval = "10s"
+
+    count = 1
