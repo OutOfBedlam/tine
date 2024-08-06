@@ -14,8 +14,6 @@ import (
 func ExampleArgsInlet() {
 	// This example demonstrates how to use the exec inlet to run a command and
 	dsl := `
-	[log]
-		level = "warn"
 	[[inlets.args]]
 	[[outlets.file]]
 		path = "-"

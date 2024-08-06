@@ -14,8 +14,6 @@ type EncoderReg struct {
 
 type EncoderConfig struct {
 	Writer       io.Writer
-	Indent       string
-	Prefix       string
 	Fields       []string
 	FormatOption ValueFormat
 }

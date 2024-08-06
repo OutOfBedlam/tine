@@ -6,9 +6,6 @@ import (
 )
 
 var config = `
-[log]
-	level = "error"
-
 [[inlets.exec]]
 	commands = ["echo", "Hello, World!"]
 	count = 1

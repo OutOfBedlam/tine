@@ -10,7 +10,7 @@ func init() {
 	engine.RegisterEncoder(&engine.EncoderReg{
 		Name:        "json",
 		Factory:     NewJSONEncoder,
-		ContentType: "application/json",
+		ContentType: "application/x-ndjson",
 	})
 }
 
@@ -28,10 +28,8 @@ type JSONEncoder struct {
 func (jw *JSONEncoder) Encode(recs []engine.Record) error {
 	if jw.enc == nil {
 		jw.enc = gojson.NewEncoder(jw.Writer)
-		jw.enc.SetIndent(jw.Prefix, jw.Indent)
 	}
 
-	rs := []map[string]any{}
 	for _, rec := range recs {
 		if rec.Empty() {
 			continue
@@ -56,8 +54,7 @@ func (jw *JSONEncoder) Encode(recs []engine.Record) error {
 				}
 			}
 		}
-		rs = append(rs, r)
+		jw.enc.Encode(r)
 	}
-	jw.enc.Encode(rs)
 	return nil
 }

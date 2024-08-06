@@ -13,8 +13,6 @@ import (
 
 func ExampleFlattenFlow() {
 	dsl := `
-	[log]
-		level = "warn"
 	[[inlets.file]]
 		data = [
 			"a,1", 

@@ -43,14 +43,12 @@ func ExampleNew() {
 		panic(err)
 	}
 	// Output:
-	// [{"_in":"args","_ts":1721954797,"pre_msg_suf":"hello world"}]
+	// {"_in":"args","_ts":1721954797,"pre_msg_suf":"hello world"}
 }
 
 func ExampleNew_multi_inlets() {
 	// This example demonstrates how to use the merge flow.
 	dsl := `
-	[log]
-		level = "warn"
 	[[inlets.file]]
 		data = [
 			"a,1",
@@ -80,5 +78,5 @@ func ExampleNew_multi_inlets() {
 		panic(err)
 	}
 	// Output:
-	// [{"_ts":1721954797,"exec.stdout":"hello world","file.0":"a","file.1":"1"}]
+	// {"_ts":1721954797,"exec.stdout":"hello world","file.0":"a","file.1":"1"}
 }

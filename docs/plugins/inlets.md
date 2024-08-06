@@ -35,7 +35,7 @@ tine run example.toml -- hello=world test=values
 *Output*
 
 ```json
-[{"hello":"world","test":"values"}]
+{"hello":"world","test":"values"}
 ```
 
 ### EXEC
@@ -92,9 +92,9 @@ Execute external command and yields records for the output of stdout of the comm
 *Output*
 
 ```json
-[{"_in":"exec","_ts":1722516453,"stdout":"1722516453"}]
-[{"_in":"exec","_ts":1722516456,"stdout":"1722516456"}]
-[{"_in":"exec","_ts":1722516459,"stdout":"1722516459"}]
+{"_in":"exec","_ts":1722516453,"stdout":"1722516453"}
+{"_in":"exec","_ts":1722516456,"stdout":"1722516456"}
+{"_in":"exec","_ts":1722516459,"stdout":"1722516459"}
 ```
 
 ### FILE
@@ -141,7 +141,6 @@ Execute external command and yields records for the output of stdout of the comm
     field_names = ["line", "name", "time", "value"]
 [[outlets.file]]
     format = "json"
-    indent = "  "
 ```
 
 *Run*
@@ -153,20 +152,8 @@ tine run example.toml
 *Output*
 
 ```json
-[
-  {
-    "line": "1",
-    "name": "key1",
-    "time": "1722642405",
-    "value": "1.234"
-  },
-  {
-    "line": "2",
-    "name": "key2",
-    "time": "1722642406",
-    "value": "2.345"
-  }
-]
+{"line":"1","name":"key1","time":"1722642405","value":"1.234"}
+{"line":"2","name":"key2","time":"1722642406","value":"2.345"}
 ```
 
 ### HTTP
@@ -271,8 +258,8 @@ tine run example.toml
 
 {% code overflow="wrap" %}
 ```json
-[{"0_percent":33.207320361243234,"1_percent":32.53797979613833,"2_percent":6.87165938794736,"3_percent":3.8726567063664827,"_in":"cpu","_ts":1722755030,"total_percent":8.2044917374524}]
-[{"0_percent":17.7474402743563,"1_percent":16.949152543944706,"2_percent":8.474576271152998,"3_percent":3.6666666662010052,"_in":"cpu","_ts":1722755033,"total_percent":5.130784707591248}]
+{"0_percent":33.207320361243234,"1_percent":32.53797979613833,"2_percent":6.87165938794736,"3_percent":3.8726567063664827,"_in":"cpu","_ts":1722755030,"total_percent":8.2044917374524}
+{"0_percent":17.7474402743563,"1_percent":16.949152543944706,"2_percent":8.474576271152998,"3_percent":3.6666666662010052,"_in":"cpu","_ts":1722755033,"total_percent":5.130784707591248}
 ```
 {% endcode %}
 
@@ -309,8 +296,8 @@ tine run example.toml
 
 {% code overflow="wrap" %}
 ```json
-[{"_in":"load","_ts":1722755103,"load1":1.55224609375,"load15":2.19921875,"load5":2.1376953125}]
-[{"_in":"load","_ts":1722755106,"load1":1.5078125,"load15":2.19189453125,"load5":2.11865234375}]
+{"_in":"load","_ts":1722755103,"load1":1.55224609375,"load15":2.19921875,"load5":2.1376953125}
+{"_in":"load","_ts":1722755106,"load1":1.5078125,"load15":2.19189453125,"load5":2.11865234375}
 ```
 {% endcode %}
 
@@ -345,8 +332,8 @@ tine run example.toml
 
 {% code overflow="wrap" %}
 ```json
-[{"_in":"mem","_ts":1722755153,"free":336723968,"total":34359738368,"used":20005076992,"used_percent":58.22243690490723}]
-[{"_in":"mem","_ts":1722755156,"free":441221120,"total":34359738368,"used":19877855232,"used_percent":57.8521728515625}]
+{"_in":"mem","_ts":1722755153,"free":336723968,"total":34359738368,"used":20005076992,"used_percent":58.22243690490723}
+{"_in":"mem","_ts":1722755156,"free":441221120,"total":34359738368,"used":19877855232,"used_percent":57.8521728515625}
 ```
 {% endcode %}
 
@@ -386,8 +373,8 @@ tine run example.toml
 
 {% code overflow="wrap" %}
 ```json
-[{"_in":"disk","_ts":1722755225,"device":"/dev/disk3s1s1","free":334269898752,"fstype":"apfs","inodes_free":3264354480,"inodes_total":3264758647,"inodes_used":404167,"inodes_used_percent":0.012379690007755724,"mount_point":"/","total":994662584320,"used":660392685568,"used_percent":66.39363900668654}]
-[{"_in":"disk","_ts":1722755228,"device":"/dev/disk3s1s1","free":334269898752,"fstype":"apfs","inodes_free":3264354480,"inodes_total":3264758647,"inodes_used":404167,"inodes_used_percent":0.012379690007755724,"mount_point":"/","total":994662584320,"used":660392685568,"used_percent":66.39363900668654}]
+{"_in":"disk","_ts":1722755225,"device":"/dev/disk3s1s1","free":334269898752,"fstype":"apfs","inodes_free":3264354480,"inodes_total":3264758647,"inodes_used":404167,"inodes_used_percent":0.012379690007755724,"mount_point":"/","total":994662584320,"used":660392685568,"used_percent":66.39363900668654}
+{"_in":"disk","_ts":1722755228,"device":"/dev/disk3s1s1","free":334269898752,"fstype":"apfs","inodes_free":3264354480,"inodes_total":3264758647,"inodes_used":404167,"inodes_used_percent":0.012379690007755724,"mount_point":"/","total":994662584320,"used":660392685568,"used_percent":66.39363900668654}
 ```
 {% endcode %}
 
@@ -425,8 +412,8 @@ tine run example.toml
 
 {% code overflow="wrap" %}
 ```json
-[{"_in":"diskio","_ts":1722755372,"device":"disk0","io_time":11680599,"iops_in_progress":0,"label":"","merged_read_count":0,"merged_write_count":0,"read_bytes":752462053376,"read_count":70590345,"read_time":10718681,"serial_number":"","weighted_io":0,"write_bytes":178813861888,"write_count":9640875,"write_time":961918}]
-[{"_in":"diskio","_ts":1722755375,"device":"disk0","io_time":11680599,"iops_in_progress":0,"label":"","merged_read_count":0,"merged_write_count":0,"read_bytes":752462053376,"read_count":70590345,"read_time":10718681,"serial_number":"","weighted_io":0,"write_bytes":178813861888,"write_count":9640875,"write_time":961918}]
+{"_in":"diskio","_ts":1722755372,"device":"disk0","io_time":11680599,"iops_in_progress":0,"label":"","merged_read_count":0,"merged_write_count":0,"read_bytes":752462053376,"read_count":70590345,"read_time":10718681,"serial_number":"","weighted_io":0,"write_bytes":178813861888,"write_count":9640875,"write_time":961918}
+{"_in":"diskio","_ts":1722755375,"device":"disk0","io_time":11680599,"iops_in_progress":0,"label":"","merged_read_count":0,"merged_write_count":0,"read_bytes":752462053376,"read_count":70590345,"read_time":10718681,"serial_number":"","weighted_io":0,"write_bytes":178813861888,"write_count":9640875,"write_time":961918}
 ```
 {% endcode %}
 
@@ -463,8 +450,8 @@ tine run example.toml
 
 {% code overflow="wrap" %}
 ```json
-[{"_in":"net","_ts":1722755428,"bytes_recv":6124558288,"bytes_sent":947180141,"device":"en0","drop_in":0,"drop_out":11,"err_in":0,"err_out":0,"fifos_in":0,"fifos_out":0,"packets_recv":7065267,"packets_sent":0}]
-[{"_in":"net","_ts":1722755431,"bytes_recv":6124558853,"bytes_sent":947180654,"device":"en0","drop_in":0,"drop_out":11,"err_in":0,"err_out":0,"fifos_in":0,"fifos_out":0,"packets_recv":7065273,"packets_sent":0}]
+{"_in":"net","_ts":1722755428,"bytes_recv":6124558288,"bytes_sent":947180141,"device":"en0","drop_in":0,"drop_out":11,"err_in":0,"err_out":0,"fifos_in":0,"fifos_out":0,"packets_recv":7065267,"packets_sent":0}
+{"_in":"net","_ts":1722755431,"bytes_recv":6124558853,"bytes_sent":947180654,"device":"en0","drop_in":0,"drop_out":11,"err_in":0,"err_out":0,"fifos_in":0,"fifos_out":0,"packets_recv":7065273,"packets_sent":0}
 ```
 {% endcode %}
 
@@ -553,8 +540,8 @@ tine run example.toml
 
 {% code overflow="wrap" %}
 ```json
-[{"_in":"host","_ts":1722755502,"host_id":"b493ab81-9581-5523-807f-d28b04a3ca4f","hostname":"localhost.local","kernel_arch":"arm64","kernel_version":"23.5.0","os":"darwin","platform":"darwin","platform_family":"Standalone Workstation","platform_version":"14.5","procs":746,"uptime":756732,"virtualization_role":"","virtualization_system":""}]
-[{"_in":"host","_ts":1722755505,"host_id":"b493ab81-9581-5523-807f-d28b04a3ca4f","hostname":"localhost.local","kernel_arch":"arm64","kernel_version":"23.5.0","os":"darwin","platform":"darwin","platform_family":"Standalone Workstation","platform_version":"14.5","procs":746,"uptime":756735,"virtualization_role":"","virtualization_system":""}]
+{"_in":"host","_ts":1722755502,"host_id":"b493ab81-9581-5523-807f-d28b04a3ca4f","hostname":"localhost.local","kernel_arch":"arm64","kernel_version":"23.5.0","os":"darwin","platform":"darwin","platform_family":"Standalone Workstation","platform_version":"14.5","procs":746,"uptime":756732,"virtualization_role":"","virtualization_system":""}
+{"_in":"host","_ts":1722755505,"host_id":"b493ab81-9581-5523-807f-d28b04a3ca4f","hostname":"localhost.local","kernel_arch":"arm64","kernel_version":"23.5.0","os":"darwin","platform":"darwin","platform_family":"Standalone Workstation","platform_version":"14.5","procs":746,"uptime":756735,"virtualization_role":"","virtualization_system":""}
 ```
 {% endcode %}
 

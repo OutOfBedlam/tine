@@ -13,8 +13,6 @@ import (
 
 func ExampleSelectFlow() {
 	dsl := `
-	[log]
-		level = "warn"
 	[[inlets.file]]
 		data = [
 			"a,1", 
@@ -49,8 +47,6 @@ func ExampleSelectFlow() {
 
 func ExampleSelectFlow_tag() {
 	dsl := `
-	[log]
-		level = "warn"
 	[[inlets.file]]
 		data = [
 			"a,1", 

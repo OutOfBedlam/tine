@@ -33,7 +33,6 @@ func ExampleUpdateFlow() {
 		includes = ["#_in", "*"]
 	[[outlets.file]]
 		format = "json"
-		indent = "  "
 	`
 	// Make the output timestamp deterministic, so we can compare it
 	// This line is required only for testing
@@ -48,27 +47,7 @@ func ExampleUpdateFlow() {
 		panic(err)
 	}
 	// Output:
-	// [
-	//   {
-	//     "_in": "mine",
-	//     "my_int": "10",
-	//     "new_flag": true,
-	//     "new_float": 9.87,
-	//     "new_name": "James"
-	//   },
-	//   {
-	//     "_in": "mine",
-	//     "my_int": "10",
-	//     "new_flag": true,
-	//     "new_float": 9.87,
-	//     "new_name": "Jane"
-	//   },
-	//   {
-	//     "_in": "mine",
-	//     "my_int": "10",
-	//     "new_flag": true,
-	//     "new_float": 9.87,
-	//     "new_name": "Scott"
-	//   }
-	// ]
+	// {"_in":"mine","my_int":"10","new_flag":true,"new_float":9.87,"new_name":"James"}
+	// {"_in":"mine","my_int":"10","new_flag":true,"new_float":9.87,"new_name":"Jane"}
+	// {"_in":"mine","my_int":"10","new_flag":true,"new_float":9.87,"new_name":"Scott"}
 }

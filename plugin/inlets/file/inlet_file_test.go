@@ -12,8 +12,6 @@ import (
 
 func ExampleFileInlet() {
 	dsl := `
-	[log]
-		level = "warn"
 	[[inlets.file]]
 		data = [
 			"a,1", 
@@ -44,8 +42,6 @@ func ExampleFileInlet() {
 
 func ExampleFileInlet_fields() {
 	dsl := `
-	[log]
-		level = "warn"
 	[[inlets.file]]
 		data = [
 			"1,key1,1722642405,1.234",
@@ -68,5 +64,6 @@ func ExampleFileInlet_fields() {
 		panic(err)
 	}
 	// Output:
-	// [{"line":"1","name":"key1","time":"1722642405","value":"1.234"},{"line":"2","name":"key2","time":"1722642406","value":"2.345"}]
+	// {"line":"1","name":"key1","time":"1722642405","value":"1.234"}
+	// {"line":"2","name":"key2","time":"1722642406","value":"2.345"}
 }
