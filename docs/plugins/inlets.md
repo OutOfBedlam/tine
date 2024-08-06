@@ -174,21 +174,36 @@ tine run example.toml
     timeout = "3s"
 
     interval = "10s"
+    count = 1
 ```
 
 **Example**
 
 ```toml
+	[[inlets.http]]
+		address = "http://127.0.0.1:5555"
+		success = 200
+		timeout = "3s"
+		count = 1
+	[[flows.select]]
+		includes = ["**"]
+	[[outlets.file]]
+		format = "json"
 ```
 
 *Run*
 
 ```sh
+tine run example.toml
 ```
 
 *Output*
 
+If http server responded in JSON `{"a":1, "b":{"c":true, "d":3.14}}`.
+The pipeline result will be:
+
 ```json
+{"_in":"http","_ts":1721954797,"a":1,"b.c":true,"b.d":3.14}
 ```
 
 ### NATS

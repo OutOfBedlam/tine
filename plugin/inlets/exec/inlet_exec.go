@@ -49,7 +49,7 @@ type execInlet struct {
 	trimSpace     bool
 
 	cmd      *exec.Cmd
-	runcount int64
+	runCount int64
 }
 
 var _ = engine.Inlet((*execInlet)(nil))
@@ -75,7 +75,7 @@ func (ei *execInlet) Interval() time.Duration {
 }
 
 func (ei *execInlet) Process(next engine.InletNextFunc) {
-	if ei.runCountLimit > 0 && atomic.LoadInt64(&ei.runcount) >= ei.runCountLimit {
+	if ei.runCountLimit > 0 && atomic.LoadInt64(&ei.runCount) >= ei.runCountLimit {
 		next(nil, io.EOF)
 		return
 	}
@@ -96,7 +96,7 @@ func (ei *execInlet) Process(next engine.InletNextFunc) {
 		}
 	}()
 
-	runCount := atomic.AddInt64(&ei.runcount, 1)
+	runCount := atomic.AddInt64(&ei.runCount, 1)
 	ei.ctx.LogDebug("exec run", "cmd", strings.Join(ei.commands, " "), "interval", ei.interval, "count", runCount, "countLimit", ei.runCountLimit)
 
 	if err := ei.cmd.Start(); err != nil {

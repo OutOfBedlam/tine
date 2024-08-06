@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/OutOfBedlam/tine/engine"
@@ -25,11 +26,13 @@ func HttpInlet(ctx *engine.Context) engine.Inlet {
 }
 
 type httpInlet struct {
-	ctx    *engine.Context
-	client *http.Client
+	ctx      *engine.Context
+	client   *http.Client
+	runCount int64
 
-	addr        string
-	successCode int
+	addr          string
+	successCode   int
+	runCountLimit int64
 }
 
 var _ = engine.Inlet((*httpInlet)(nil))
@@ -38,6 +41,7 @@ func (hi *httpInlet) Open() error {
 	hi.addr = hi.ctx.Config().GetString("address", "")
 	hi.successCode = hi.ctx.Config().GetInt("success", 200)
 	timeout := hi.ctx.Config().GetDuration("timeout", 3*time.Second)
+	hi.runCountLimit = int64(hi.ctx.Config().GetInt("count", 1))
 
 	slog.Debug("inlet.http", "address", hi.addr, "success", hi.successCode, "timeout", timeout)
 
@@ -60,6 +64,12 @@ func (hi *httpInlet) Interval() time.Duration {
 }
 
 func (hi *httpInlet) Process(next engine.InletNextFunc) {
+	if hi.runCountLimit > 0 && atomic.LoadInt64(&hi.runCount) >= hi.runCountLimit {
+		next(nil, io.EOF)
+		return
+	}
+	runCount := atomic.AddInt64(&hi.runCount, 1)
+
 	rsp, err := hi.client.Get(hi.addr)
 	if err != nil {
 		next(nil, err)
@@ -79,6 +89,15 @@ func (hi *httpInlet) Process(next engine.InletNextFunc) {
 		return
 	}
 
+	var resultErr error
+	if hi.runCountLimit > 0 && runCount > hi.runCountLimit {
+		resultErr = io.EOF
+	}
+
+	// TODO: support other content-type
+	// [x] application/json
+	// [ ] application/x-ndjson
+	// [ ] text/csv
 	if contentType := rsp.Header.Get("Content-Type"); strings.Contains(contentType, "application/json") {
 		obj := map[string]any{}
 		if err := json.Unmarshal(body, &obj); err != nil {
@@ -86,46 +105,43 @@ func (hi *httpInlet) Process(next engine.InletNextFunc) {
 			next(nil, err)
 			return
 		}
-		ret := Map2Records("http.", obj)
-		next(ret, nil)
+		ret := Map2Record("", obj)
+		next([]engine.Record{ret}, resultErr)
 		return
 	} else {
 		slog.Warn("inlet.http", "status", rsp.StatusCode, "unsupported content-type", contentType)
-		next(nil, nil)
+		next(nil, resultErr)
 		return
 	}
 }
 
-func Map2Records(prefix string, obj map[string]any) []engine.Record {
-	ret := []engine.Record{}
+func Map2Record(prefix string, obj map[string]any) engine.Record {
+	ret := engine.NewRecord()
 	for k, v := range obj {
-		r := engine.NewRecord()
-		subRecs := []engine.Record{}
 		switch v := v.(type) {
 		case float64:
-			r = r.Append(engine.NewField(prefix+k, v))
+			ret = ret.Append(engine.NewField(prefix+k, v))
 		case int:
-			r = r.Append(engine.NewField(prefix+k, int64(v)))
+			ret = ret.Append(engine.NewField(prefix+k, int64(v)))
 		case int64:
-			r = r.Append(engine.NewField(prefix+k, v))
+			ret = ret.Append(engine.NewField(prefix+k, v))
 		case string:
-			r = r.Append(engine.NewField(prefix+k, v))
+			ret = ret.Append(engine.NewField(prefix+k, v))
 		case bool:
-			r = r.Append(engine.NewField(prefix+k, v))
+			ret = ret.Append(engine.NewField(prefix+k, v))
 		case time.Time:
-			r = r.Append(engine.NewField(prefix+k, v))
+			ret = ret.Append(engine.NewField(prefix+k, v))
 		case []byte:
-			r = r.Append(engine.NewField(prefix+k, v))
+			ret = ret.Append(engine.NewField(prefix+k, v))
 		case map[string]any:
-			subRecs = append(subRecs, Map2Records(prefix+k+".", v)...)
+			subRec := Map2Record(prefix+k+".", v)
+			ret = ret.Append(subRec.Fields()...)
 		case []any:
 			// TODO: support array
 			continue
 		default:
 			continue
 		}
-		ret = append(ret, r)
-		ret = append(ret, subRecs...)
 	}
 	return ret
 }
