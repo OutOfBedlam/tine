@@ -1,41 +1,41 @@
-package base_test
+package compress_test
 
 import (
+	"bytes"
+	"compress/gzip"
+	"io"
+	"strings"
+	"testing"
 	"time"
 
 	"github.com/OutOfBedlam/tine/engine"
+	_ "github.com/OutOfBedlam/tine/plugin/codec/compress"
 	_ "github.com/OutOfBedlam/tine/plugin/codec/csv"
 	_ "github.com/OutOfBedlam/tine/plugin/codec/json"
-	_ "github.com/OutOfBedlam/tine/plugin/flows/base"
-	_ "github.com/OutOfBedlam/tine/plugin/inlets/exec"
 	_ "github.com/OutOfBedlam/tine/plugin/inlets/file"
 	_ "github.com/OutOfBedlam/tine/plugin/outlets/file"
+	"github.com/stretchr/testify/require"
 )
 
-func ExampleMergeFlow() {
-	// This example demonstrates how to use the merge flow.
+func TestCompressGzip(t *testing.T) {
+	// This example demonstrates how to use the compress flow.
 	dsl := `
 	[[inlets.file]]
 		data = [
 			"a,1",
 		]
 		format = "csv"
-	[[inlets.exec]]
-		commands = ["echo", "hello world"]
-		count = 1
-		trim_space = true
-		ignore_error = true
-	[[flows.merge]]
-		wait_limit = "1s"
 	[[outlets.file]]
 		path = "-"
 		format = "json"
+		compress = "gzip"
 	`
 	// Make the output time deterministic. so we can compare it.
 	// This line is not needed in production code.
 	engine.Now = func() time.Time { return time.Unix(1721954797, 0) }
 	// Create a new engine.
-	pipeline, err := engine.New(engine.WithConfig(dsl))
+	out := &bytes.Buffer{}
+	pipeline, err := engine.New(engine.WithConfig(dsl), engine.WithWriter(out))
 	if err != nil {
 		panic(err)
 	}
@@ -43,6 +43,7 @@ func ExampleMergeFlow() {
 	if err := pipeline.Run(); err != nil {
 		panic(err)
 	}
-	// Output:
-	// {"_ts":1721954797,"exec.stdout":"hello world","file.0":"a","file.1":"1"}
+	r, _ := gzip.NewReader(out)
+	result, _ := io.ReadAll(r)
+	require.Equal(t, `{"0":"a","1":"1"}`, strings.TrimSpace(string(result)))
 }

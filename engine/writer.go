@@ -8,14 +8,12 @@ import (
 )
 
 type Writer struct {
-	Format       string
-	OutputIndent string
-	OutputPrefix string
-	Timeformat   string
-	Timezone     string
-	Decimal      int
-	Compress     string
-	Fields       []string
+	Format     string
+	Timeformat string
+	Timezone   string
+	Decimal    int
+	Compress   string
+	Fields     []string
 
 	ContentType     string
 	ContentEncoding string
@@ -25,15 +23,13 @@ type Writer struct {
 
 func NewWriter(w io.Writer, cfg Config) (*Writer, error) {
 	ret := &Writer{
-		Format:       cfg.GetString("format", "csv"),
-		OutputIndent: cfg.GetString("indent", ""),
-		OutputPrefix: cfg.GetString("prefix", ""),
-		Decimal:      cfg.GetInt("decimal", -1),
-		Timeformat:   cfg.GetString("timeformat", "s"),
-		Timezone:     cfg.GetString("tz", "Local"),
-		Compress:     cfg.GetString("compress", ""),
-		Fields:       cfg.GetStringSlice("fields", []string{}),
-		raw:          NopCloser(w),
+		Format:     cfg.GetString("format", "csv"),
+		Decimal:    cfg.GetInt("decimal", -1),
+		Timeformat: cfg.GetString("timeformat", "s"),
+		Timezone:   cfg.GetString("tz", "Local"),
+		Compress:   cfg.GetString("compress", ""),
+		Fields:     cfg.GetStringSlice("fields", []string{}),
+		raw:        NopCloser(w),
 	}
 
 	reg := GetEncoder(ret.Format)
@@ -53,24 +49,22 @@ func NewWriter(w io.Writer, cfg Config) (*Writer, error) {
 		ret.raw = NopCloser(os.Stdout)
 	}
 
-	comppress := GetCompressor(ret.Compress)
-	if comppress != nil {
-		ret.raw = comppress.Factory(ret.raw)
-		ret.ContentEncoding = comppress.ContentEncoding
+	compress := GetCompressor(ret.Compress)
+	if compress != nil {
+		ret.raw = compress.Factory(ret.raw)
+		ret.ContentEncoding = compress.ContentEncoding
 	} else {
 		ret.ContentEncoding = ""
 	}
 
 	ret.encoder = reg.Factory(EncoderConfig{
 		Writer:       ret.raw,
-		Indent:       ret.OutputIndent,
-		Prefix:       ret.OutputPrefix,
 		Fields:       ret.Fields,
 		FormatOption: ValueFormat{Timeformat: timeformatter, Decimal: ret.Decimal},
 	})
 	ret.ContentType = reg.ContentType
 	if ret.ContentType == "" {
-		ret.ContentType = "applicaton/octet-stream"
+		ret.ContentType = "application/octet-stream"
 	}
 	return ret, nil
 }

@@ -56,10 +56,10 @@ Change output format to "json" from "csv", add `format = "json"` at the end of t
 ```
 
 ```json
-[{"_in":"cpu","_ts":1721780188,"total_percent":0.9166666666362681}]
-[{"_in":"cpu","_ts":1721780191,"total_percent":1.0403662089355488}]
-[{"_in":"cpu","_ts":1721780194,"total_percent":0.2507312996272184}]
-[{"_in":"cpu","_ts":1721780197,"total_percent":1.2093411175800368}]
+{"_in":"cpu","_ts":1721780188,"total_percent":0.9166666666362681}
+{"_in":"cpu","_ts":1721780191,"total_percent":1.0403662089355488}
+{"_in":"cpu","_ts":1721780194,"total_percent":0.2507312996272184}
+{"_in":"cpu","_ts":1721780197,"total_percent":1.2093411175800368}
 ```
 
 ### Shebang

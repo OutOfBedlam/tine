@@ -13,10 +13,6 @@
     fields = []
     ## output compression
     compress = ""
-    ## json indent
-    indent = ""
-    ## json prefix
-    prefix = ""
     ## time format (default: s)
     ##  s, ms, us, ns, Golang timeformat string")
     ##  e.g. timeformat = "2006-01-02 15:04:05 07:00"

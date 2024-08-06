@@ -14,8 +14,6 @@ import (
 func ExampleExecInlet() {
 	// This example demonstrates how to use the exec inlet to run a command and
 	dsl := `
-	[log]
-		level = "warn"
 	[[inlets.exec]]
 		commands = ["echo", "hello", "world"]
 		trim_space = true

@@ -100,7 +100,7 @@ func Map2Records(prefix string, obj map[string]any) []engine.Record {
 	ret := []engine.Record{}
 	for k, v := range obj {
 		r := engine.NewRecord()
-		subrecs := []engine.Record{}
+		subRecs := []engine.Record{}
 		switch v := v.(type) {
 		case float64:
 			r = r.Append(engine.NewField(prefix+k, v))
@@ -117,7 +117,7 @@ func Map2Records(prefix string, obj map[string]any) []engine.Record {
 		case []byte:
 			r = r.Append(engine.NewField(prefix+k, v))
 		case map[string]any:
-			subrecs = append(subrecs, Map2Records(prefix+k+".", v)...)
+			subRecs = append(subRecs, Map2Records(prefix+k+".", v)...)
 		case []any:
 			// TODO: support array
 			continue
@@ -125,7 +125,7 @@ func Map2Records(prefix string, obj map[string]any) []engine.Record {
 			continue
 		}
 		ret = append(ret, r)
-		ret = append(ret, subrecs...)
+		ret = append(ret, subRecs...)
 	}
 	return ret
 }
