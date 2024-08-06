@@ -15,7 +15,7 @@ TINE a data pipeline runner.
 go install github.com/OutOfBedlam/tine@latest
 ```
 
-Find more options in (https://tine.thingsme.xyz/)[https://tine.thingsme.xyz/tine/install]
+Find documents from [https://tine.thingsme.xyz/](https://tine.thingsme.xyz/)
 
 ## Usage
 
