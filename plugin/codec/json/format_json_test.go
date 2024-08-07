@@ -15,9 +15,9 @@ func ExampleJSONEncoder() {
 	dsl := `
 	[[inlets.file]]
 		data = [
-			"a,1,1.23", 
-			"b,2,2.34", 
-			"c,3,3.45",
+			"a,1,1.2345", 
+			"b,2,2.3456", 
+			"c,3,3.4567",
 		]
 		format = "csv"
 		fields = ["area", "ival", "fval"]
@@ -27,6 +27,7 @@ func ExampleJSONEncoder() {
 	[[outlets.file]]
 		path = "-"
 		format = "json"
+		decimal = 2
 	`
 
 	// Mock the current time
@@ -43,6 +44,6 @@ func ExampleJSONEncoder() {
 	}
 	// Output:
 	// {"_in":"file","_ts":1721954798,"area":"a","fval":1.23,"ival":1}
-	// {"_in":"file","_ts":1721954799,"area":"b","fval":2.34,"ival":2}
-	// {"_in":"file","_ts":1721954800,"area":"c","fval":3.45,"ival":3}
+	// {"_in":"file","_ts":1721954799,"area":"b","fval":2.35,"ival":2}
+	// {"_in":"file","_ts":1721954800,"area":"c","fval":3.46,"ival":3}
 }
