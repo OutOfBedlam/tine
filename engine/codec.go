@@ -63,10 +63,10 @@ type DecoderReg struct {
 }
 
 type DecoderConfig struct {
-	Reader        io.Reader
-	Timeformatter *Timeformatter
-	Fields        []string
-	Types         []Type
+	Reader       io.Reader
+	FormatOption ValueFormat
+	Fields       []string
+	Types        []Type
 }
 
 var decoders = make(map[string]*DecoderReg)

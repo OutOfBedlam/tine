@@ -6,6 +6,7 @@ import (
 	"github.com/OutOfBedlam/tine/engine"
 	_ "github.com/OutOfBedlam/tine/plugin/codec/csv"
 	_ "github.com/OutOfBedlam/tine/plugin/codec/json"
+	_ "github.com/OutOfBedlam/tine/plugin/flows/base"
 	_ "github.com/OutOfBedlam/tine/plugin/inlets/file"
 	_ "github.com/OutOfBedlam/tine/plugin/outlets/file"
 )
@@ -19,6 +20,8 @@ func ExampleCSVEncoder() {
 			"c,3",
 		]
 		format = "csv"
+	[[flows.select]]
+		includes = ["#*", "1", "0"]
 	[[outlets.file]]
 		path = "-"
 		format = "csv"
@@ -36,7 +39,7 @@ func ExampleCSVEncoder() {
 		panic(err)
 	}
 	// Output:
-	// a,1
-	// b,2
-	// c,3
+	// file,1721954798,1,a
+	// file,1721954799,2,b
+	// file,1721954800,3,c
 }
