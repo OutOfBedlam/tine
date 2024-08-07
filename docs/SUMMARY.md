@@ -25,6 +25,6 @@
 * [RRD](recipes/rrd.md)
 * [SQLite](recipes/sqlite.md)
 
-***
+## LINKS
 
 * [GitHub](https://github.com/OutOfBedlam/tine)

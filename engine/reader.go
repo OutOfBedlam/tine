@@ -3,17 +3,18 @@ package engine
 import (
 	"fmt"
 	"io"
+	"os"
 	"strings"
 	"time"
 )
 
 type Reader struct {
-	format     string
-	timeformat string
-	timezone   string
-	compress   string
-	fields     []string
-	types      []string
+	Format     string
+	Timeformat string
+	Timezone   string
+	Compress   string
+	Fields     []string
+	Types      []string
 
 	decoder Decoder
 	raw     io.ReadCloser
@@ -21,59 +22,50 @@ type Reader struct {
 
 type ReaderOption func(*Reader)
 
-func WithReader(r io.Reader) ReaderOption {
-	return func(rd *Reader) {
-		rd.raw = io.NopCloser(r)
-	}
-}
-
-func WithReaderConfig(cfg Config) ReaderOption {
-	return func(rd *Reader) {
-		rd.format = cfg.GetString("format", "csv")
-		rd.timeformat = cfg.GetString("timeformat", "s")
-		rd.timezone = cfg.GetString("tz", "Local")
-		rd.compress = cfg.GetString("compress", "")
-		rd.fields = cfg.GetStringSlice("fields", nil)
-		rd.types = cfg.GetStringSlice("types", nil)
-	}
-}
-
-func NewReader(opts ...ReaderOption) (*Reader, error) {
-	ret := &Reader{}
-	for _, opt := range opts {
-		opt(ret)
+func NewReader(r io.Reader, cfg Config) (*Reader, error) {
+	ret := &Reader{
+		Format:     cfg.GetString("format", "csv"),
+		Timeformat: cfg.GetString("timeformat", "s"),
+		Timezone:   cfg.GetString("tz", "Local"),
+		Compress:   cfg.GetString("compress", ""),
+		Fields:     cfg.GetStringSlice("fields", []string{}),
+		Types:      cfg.GetStringSlice("types", []string{}),
 	}
 
-	reg := GetDecoder(ret.format)
+	reg := GetDecoder(ret.Format)
 	if reg == nil {
-		return nil, fmt.Errorf("format %q not found", ret.format)
+		return nil, fmt.Errorf("format %q not found", ret.Format)
 	}
 	timeformatter := &Timeformatter{
-		format: ret.timeformat,
+		format: ret.Timeformat,
 	}
-	if loc, err := time.LoadLocation(ret.timezone); err == nil {
+	if loc, err := time.LoadLocation(ret.Timezone); err == nil {
 		timeformatter.loc = loc
 	} else {
 		timeformatter.loc = time.Local
 	}
 
-	if ret.raw == nil {
-		return nil, fmt.Errorf("no reader specified")
+	if r == nil {
+		ret.raw = io.NopCloser(os.Stdin)
+	} else if rc, ok := r.(io.ReadCloser); ok {
+		ret.raw = rc
+	} else {
+		ret.raw = io.NopCloser(r)
 	}
 
 	var types []Type
-	if len(ret.types) == 0 {
-		types = make([]Type, len(ret.fields))
-		for i := range ret.fields {
+	if len(ret.Types) == 0 {
+		types = make([]Type, len(ret.Fields))
+		for i := range ret.Fields {
 			types[i] = STRING
 		}
 	} else {
-		if len(ret.fields) != len(ret.types) {
-			return nil, fmt.Errorf("length of fields(%d) and types(%d) is not equal", len(ret.fields), len(ret.types))
+		if len(ret.Fields) != len(ret.Types) {
+			return nil, fmt.Errorf("length of fields(%d) and types(%d) is not equal", len(ret.Fields), len(ret.Types))
 		}
-		types = make([]Type, len(ret.types))
-		for i := range ret.types {
-			switch strings.ToLower(ret.types[i]) {
+		types = make([]Type, len(ret.Types))
+		for i := range ret.Types {
+			switch strings.ToLower(ret.Types[i]) {
 			case "string":
 				types[i] = STRING
 			case "int":
@@ -87,24 +79,25 @@ func NewReader(opts ...ReaderOption) (*Reader, error) {
 			case "bool", "boolean":
 				types[i] = BOOL
 			case "any":
-				// any types, do not use this typs in other places
+				// any types, do not use this types in other places
 				types[i] = Type('?')
 			default:
-				return nil, fmt.Errorf("unknown type %q", ret.types[i])
+				return nil, fmt.Errorf("unknown type %q", ret.Types[i])
 			}
 		}
 	}
-	compress := GetDecompressor(ret.compress)
+	ret.decoder = reg.Factory(DecoderConfig{
+		Reader:       ret.raw,
+		Fields:       ret.Fields,
+		Types:        types,
+		FormatOption: ValueFormat{Timeformat: timeformatter},
+	})
+
+	compress := GetDecompressor(ret.Compress)
 	if compress != nil {
 		ret.raw = compress.Factory(ret.raw)
 	}
 
-	ret.decoder = reg.Factory(DecoderConfig{
-		Reader:        ret.raw,
-		Timeformatter: timeformatter,
-		Fields:        ret.fields,
-		Types:         types,
-	})
 	return ret, nil
 }
 

@@ -55,10 +55,7 @@ func (fi *fileInlet) Open() error {
 			fi.closer = f
 		}
 	}
-	r, err := engine.NewReader(
-		engine.WithReader(in),
-		engine.WithReaderConfig(readerConf),
-	)
+	r, err := engine.NewReader(in, fi.ctx.Config())
 	if err != nil {
 		return err
 	}

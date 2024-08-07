@@ -30,6 +30,7 @@ Set the pipeline's inputs and outputs.
     includes = ["#*", "*"]  # all tags and all fields
 [[outlets.file]]
     path  = "-"
+    decimal = 2
 ```
 
 ### Run
@@ -41,10 +42,10 @@ tine run <config.toml>
 It generates CPU usage in CSV format which is default format of 'outlets.file'.
 
 ```
-1721635296,cpu,1.5774180156295268
-1721635299,cpu,0.6677796326153481
-1721635302,cpu,1.079734219344818
-1721635305,cpu,2.084201750601381
+1721635296,cpu,1.57
+1721635299,cpu,0.66
+1721635302,cpu,1.07
+1721635305,cpu,2.08
 ```
 
 Change output format to "json" from "csv", add `format = "json"` at the end of the file.
@@ -53,13 +54,14 @@ Change output format to "json" from "csv", add `format = "json"` at the end of t
 [[outlets.file]]
     path  = "-"
     format = "json"
+    decimal = 2
 ```
 
 ```json
-{"_in":"cpu","_ts":1721780188,"total_percent":0.9166666666362681}
-{"_in":"cpu","_ts":1721780191,"total_percent":1.0403662089355488}
-{"_in":"cpu","_ts":1721780194,"total_percent":0.2507312996272184}
-{"_in":"cpu","_ts":1721780197,"total_percent":1.2093411175800368}
+{"_in":"cpu","_ts":1721780188,"total_percent":0.91}
+{"_in":"cpu","_ts":1721780191,"total_percent":1.04}
+{"_in":"cpu","_ts":1721780194,"total_percent":0.25}
+{"_in":"cpu","_ts":1721780197,"total_percent":1.20}
 ```
 
 ### Shebang
@@ -173,99 +175,6 @@ as variables of Go Templates to build pipeline configuration.
 
 - [sqlite_graph_web](./example/sqlite_graph_web/sqlite_graph_web.go)
 
-## Recipes
+## Documents
 
-Pipeline configuration examples are in [docs/recipes](./docs/recipes).
-
-## Plugin system
-
-**Inbound**
-
-`data -> [inlet] -> [decompress] -> [decoder] -> records`
-
-**Outbound**
-
-`records -> [encoder] -> [compress] -> [outlet] -> data`
-
-### Codec
-
-|  Name       |    Description                      |
-|:------------|:------------------------------------|
-| `csv`       | [csv](./plugin/codec/csv) codec     |
-| `json`      | [json](./plugin/codec/json) encoder only |
-
-### Compressor
-
-|  Name                           |    Description |
-|:--------------------------------|:---------------|
-| `gzip`, `zlib`, `lzw`, `flate`  | [compress](./plugin/codec/compress) |
-| `snappy`                        | [snappy](./plugin/codec/snappy) encoder |
-
-
-### Inlets
-
-|  Name        |    Description                             |
-|:-------------|:-------------------------------------------|
-| `args`       | Generates a record from os.Args            |
-| `exec`       | Execute external commands and reads stdout |
-| `file`       | Read a file                                |
-| `http`       | Retrieve from a http end point             |
-| `cpu`        | CPU usage percent                          |
-| `load`       | System load                                |
-| `mem`        | System memory usage percent                |
-| `disk`       | Disk usage percent                         |
-| `diskio`     | Disk IO stat                               |
-| `net`        | Network traffic stat                       |
-| `sensors`    | System sensors                             |
-| `host`       | Host stat                                  |
-| `screenshot` | Take screenshot of desktop                 |
-| `sqlite`     | sqlite query                               |
-| `syslog`     | Receive rsyslog messages via network       |
-| `telegram`   | Receive messages via Telegram              |
-| `nats`       | NATS server stat                           |
-| `rrd-graph`  | rrd graph (required rebuild `go build -tags rrd`) |
-
-### Outlets
-
-|  Name        |    Description                             |
-|:-------------|:-------------------------------------------|
-| `excel`      | Write am excel file                        |
-| `file`       | Write to a file                            |
-| `http`       | Post data to http endpoint                 |
-| `image`      | Save image files                           |
-| `sqlite`     | sqlite                                     |
-| `template`   | Apply template and write to a file         |
-| `telegram`   | Send message via Telegram                  |
-| `mqtt`       | Publish to MQTT broker                     |
-| `rrd`        | rrd (required rebuild `go build -tags rrd` ) |
-
-### Flows
-
-|  Name          |    Description                             |
-|:---------------|:-------------------------------------------|
-| select         | Filter fields and promote tags to fields of a record |
-| update         | Manipulate name and value of fields and tags |
-| merge          | Merge multiple records into a wide record  |
-| flatten        | Split a record into multiple records       |
-| fan-in         | Aggregate messages from multiple sources   |
-| fan-out        | Distribute messages to multiple sinks      |
-| damper         | Combine multiple records                   |
-| dump           | Log print records for debugging            |
-
-### Show plugin list
-
-```sh
-$ tine list
-
-Input: data -> [inlet] -> [decompress] -> [decoder] -> records
-  Decoders    csv
-  Decompress  flate,gzip,inflate,lzw,snappy,zlib
-  Inlets      exec,file,http,cpu,load,mem,disk,diskio,net,sensors,host,screenshot,syslog,rrd_graph,nats
-
-Output: records -> [encoder] -> [compress] -> [outlet] -> data
-  Encoders    csv,json
-  Compress    deflate,flate,gzip,lzw,snappy,zlib
-  Outlets     excel,file,http,image,rrd,mqtt
-
-Flows         fan-in,fan-out,merge,flatten,damper,dump,select,update
-```
+Please visit [https://tine.thingsme.xyz](https://tine.thingsme.xyz) for the documents.

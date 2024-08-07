@@ -2,7 +2,6 @@ package csv
 
 import (
 	gocsv "encoding/csv"
-	"io"
 	"strconv"
 	"strings"
 
@@ -74,25 +73,18 @@ func StringFieldsWithFormat(r engine.Record, tf *engine.Timeformatter, decimal i
 
 func NewCSVDecoder(conf engine.DecoderConfig) engine.Decoder {
 	return &CSVDecoder{
-		raw:    conf.Reader,
-		tf:     conf.Timeformatter,
-		fields: conf.Fields,
-		types:  conf.Types,
+		DecoderConfig: conf,
 	}
 }
 
 type CSVDecoder struct {
-	raw    io.Reader
-	fields []string
-	types  []engine.Type
-	tf     *engine.Timeformatter
-
+	engine.DecoderConfig
 	dec *gocsv.Reader
 }
 
 func (cr *CSVDecoder) Decode() ([]engine.Record, error) {
 	if cr.dec == nil {
-		cr.dec = gocsv.NewReader(cr.raw)
+		cr.dec = gocsv.NewReader(cr.Reader)
 	}
 	var ret = []engine.Record{}
 	var retErr error
@@ -105,7 +97,7 @@ func (cr *CSVDecoder) Decode() ([]engine.Record, error) {
 		if len(fields) == 0 {
 			continue
 		}
-		if len(cr.fields) == 0 {
+		if len(cr.Fields) == 0 {
 			// there is no fields specified, accept all fields
 			cols := []*engine.Field{}
 			for idx, str := range fields {
@@ -118,15 +110,15 @@ func (cr *CSVDecoder) Decode() ([]engine.Record, error) {
 			cols := []*engine.Field{}
 			for idx, str := range fields {
 				var fieldName string
-				if idx >= len(cr.fields) {
+				if idx >= len(cr.Fields) {
 					break
 				} else {
-					fieldName = strings.ToUpper(cr.fields[idx])
+					fieldName = cr.Fields[idx]
 				}
-				if idx >= len(cr.types) {
+				if idx >= len(cr.Types) {
 					cols = append(cols, engine.NewField(fieldName, str))
 				} else {
-					switch cr.types[idx] {
+					switch cr.Types[idx] {
 					default:
 						cols = append(cols, engine.NewField(fieldName, str))
 					case engine.Type('?'):
@@ -136,7 +128,7 @@ func (cr *CSVDecoder) Decode() ([]engine.Record, error) {
 							cols = append(cols, engine.NewField(fieldName, false))
 						} else if f, err := strconv.ParseFloat(str, 64); err == nil {
 							cols = append(cols, engine.NewField(fieldName, f))
-						} else if tm, err := cr.tf.Parse(str); err == nil {
+						} else if tm, err := cr.FormatOption.Timeformat.Parse(str); err == nil {
 							cols = append(cols, engine.NewField(fieldName, tm))
 						} else {
 							cols = append(cols, engine.NewField(fieldName, str))
@@ -168,7 +160,7 @@ func (cr *CSVDecoder) Decode() ([]engine.Record, error) {
 							cols = append(cols, engine.NewField(fieldName, b))
 						}
 					case engine.TIME:
-						if tm, err := cr.tf.Parse(str); err != nil {
+						if tm, err := cr.FormatOption.Timeformat.Parse(str); err != nil {
 							cols = append(cols, engine.NewField(fieldName, str+"; "+err.Error()))
 						} else {
 							cols = append(cols, engine.NewField(fieldName, tm))

@@ -86,13 +86,14 @@ To make the result clearer, change the output format to "json".
     includes = ["**"]
 [[outlets.file]]
     format = "json"
+    decimal = 2
 ```
 
 {% code overflow="wrap" %}
 ```json
-{"_in":"load","_ts":1722428243,"load1":1.6591796875,"load15":1.6220703125,"load5":1.6572265625}
-{"_in":"load","_ts":1722428246,"load1":1.60595703125,"load15":1.6181640625,"load5":1.64599609375}
-{"_in":"load","_ts":1722428249,"load1":1.60595703125,"load15":1.6181640625,"load5":1.64599609375}
+{"_in":"load","_ts":1722428243,"load1":1.65,"load15":1.62,"load5":1.65}
+{"_in":"load","_ts":1722428246,"load1":1.60,"load15":1.61,"load5":1.64}
+{"_in":"load","_ts":1722428249,"load1":1.60,"load15":1.61,"load5":1.64}
 ```
 {% endcode %}
 

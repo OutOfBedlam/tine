@@ -263,6 +263,7 @@ The pipeline result will be:
     includes = ["**"]
 [[outlets.file]]
     format = "json"
+    decimal = 3
 ```
 
 *Run*
@@ -275,8 +276,8 @@ tine run example.toml
 
 {% code overflow="wrap" %}
 ```json
-{"0_percent":33.207320361243234,"1_percent":32.53797979613833,"2_percent":6.87165938794736,"3_percent":3.8726567063664827,"_in":"cpu","_ts":1722755030,"total_percent":8.2044917374524}
-{"0_percent":17.7474402743563,"1_percent":16.949152543944706,"2_percent":8.474576271152998,"3_percent":3.6666666662010052,"_in":"cpu","_ts":1722755033,"total_percent":5.130784707591248}
+{"0_percent":1.0,"1_percent":0.0,"2_percent":0.3,"3_percent":0.0,"4_percent":2.6,"5_percent":0.3,"6_percent":1.0,"7_percent":0.0,"_in":"cpu","_ts":1722987660,"total_percent":0.7}
+{"0_percent":9.2,"1_percent":10.3,"2_percent":15.0,"3_percent":13.7,"4_percent":12.5,"5_percent":0.3,"6_percent":1.7,"7_percent":14.0,"_in":"cpu","_ts":1722987663,"total_percent":9.6}
 ```
 {% endcode %}
 
@@ -301,6 +302,7 @@ tine run example.toml
     includes = ["**"]
 [[outlets.file]]
     format = "json"
+    decimal = 2
 ```
 
 *Run*
@@ -313,8 +315,8 @@ tine run example.toml
 
 {% code overflow="wrap" %}
 ```json
-{"_in":"load","_ts":1722755103,"load1":1.55224609375,"load15":2.19921875,"load5":2.1376953125}
-{"_in":"load","_ts":1722755106,"load1":1.5078125,"load15":2.19189453125,"load5":2.11865234375}
+{"_in":"load","_ts":1722987721,"load1":0.22,"load15":0.30,"load5":0.28}
+{"_in":"load","_ts":1722987724,"load1":0.20,"load15":0.30,"load5":0.28}
 ```
 {% endcode %}
 
@@ -337,6 +339,7 @@ tine run example.toml
     includes = ["**"]
 [[outlets.file]]
     format = "json"
+    decimal = 2
 ```
 
 *Run*
@@ -349,8 +352,8 @@ tine run example.toml
 
 {% code overflow="wrap" %}
 ```json
-{"_in":"mem","_ts":1722755153,"free":336723968,"total":34359738368,"used":20005076992,"used_percent":58.22243690490723}
-{"_in":"mem","_ts":1722755156,"free":441221120,"total":34359738368,"used":19877855232,"used_percent":57.8521728515625}
+{"_in":"mem","_ts":1722987763,"free":4330717184,"total":8201994240,"used":2468110336,"used_percent":30.09}
+{"_in":"mem","_ts":1722987767,"free":4329897984,"total":8201994240,"used":2469056512,"used_percent":30.10}
 ```
 {% endcode %}
 
@@ -378,6 +381,7 @@ tine run example.toml
     includes = ["**"]
 [[outlets.file]]
     format = "json"
+    decimal = 0
 ```
 
 *Run*
@@ -390,8 +394,8 @@ tine run example.toml
 
 {% code overflow="wrap" %}
 ```json
-{"_in":"disk","_ts":1722755225,"device":"/dev/disk3s1s1","free":334269898752,"fstype":"apfs","inodes_free":3264354480,"inodes_total":3264758647,"inodes_used":404167,"inodes_used_percent":0.012379690007755724,"mount_point":"/","total":994662584320,"used":660392685568,"used_percent":66.39363900668654}
-{"_in":"disk","_ts":1722755228,"device":"/dev/disk3s1s1","free":334269898752,"fstype":"apfs","inodes_free":3264354480,"inodes_total":3264758647,"inodes_used":404167,"inodes_used_percent":0.012379690007755724,"mount_point":"/","total":994662584320,"used":660392685568,"used_percent":66.39363900668654}
+{"_in":"disk","_ts":1722755225,"device":"/dev/disk3s1s1","free":334269898752,"fstype":"apfs","inodes_free":3264354480,"inodes_total":3264758647,"inodes_used":404167,"inodes_used_percent":0,"mount_point":"/","total":994662584320,"used":660392685568,"used_percent":66}
+{"_in":"disk","_ts":1722755228,"device":"/dev/disk3s1s1","free":334269898752,"fstype":"apfs","inodes_free":3264354480,"inodes_total":3264758647,"inodes_used":404167,"inodes_used_percent":0,"mount_point":"/","total":994662584320,"used":660392685568,"used_percent":66}
 ```
 {% endcode %}
 
