@@ -10,7 +10,7 @@
     interval = "5s"
 
 [log]
-    filename = "-"
+    path  = "-"
     level = "DEBUG"
 
 [[inlets.load]]

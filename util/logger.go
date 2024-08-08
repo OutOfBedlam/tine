@@ -21,7 +21,10 @@ const (
 )
 
 type LogConfig struct {
-	Filename   string `toml:"filename"`
+	Path       string `toml:"path"`
+	NoColor    bool   `toml:"no_color,omitempty"`
+	AddSource  bool   `toml:"add_source,omitempty"`
+	Timeformat string `toml:"timeformat,omitempty"`
 	Level      string `toml:"level"`
 	MaxSize    int    `toml:"max_size"`
 	MaxAge     int    `toml:"max_age"`
@@ -32,11 +35,14 @@ type LogConfig struct {
 
 func NewLogger(conf LogConfig) *slog.Logger {
 	var lw io.Writer
+	if conf.Timeformat == "" {
+		conf.Timeformat = "2006-01-02 15:04:05 -0700"
+	}
 	opt := &tint.Options{
 		Level:      slog.LevelInfo,
-		TimeFormat: "2006-01-02 15:04:05 -0700",
-		AddSource:  false,
-		NoColor:    true,
+		TimeFormat: conf.Timeformat,
+		AddSource:  conf.AddSource,
+		NoColor:    conf.NoColor,
 	}
 	switch strings.ToUpper(conf.Level) {
 	case LOG_LEVEL_DEBUG:
@@ -49,15 +55,14 @@ func NewLogger(conf LogConfig) *slog.Logger {
 		opt.Level = slog.LevelError
 	}
 
-	if conf.Filename == "" {
+	if conf.Path == "" {
 		// disable logging
 		lw = io.Discard
-	} else if conf.Filename == "-" {
-		opt.NoColor = false
+	} else if conf.Path == "-" {
 		lw = os.Stdout
 	} else {
 		lw = &lumberjack.Logger{
-			Filename:   conf.Filename,
+			Filename:   conf.Path,
 			MaxSize:    conf.MaxSize,
 			MaxAge:     conf.MaxAge,
 			MaxBackups: conf.MaxBackups,
@@ -85,7 +90,7 @@ func NewLogger(conf LogConfig) *slog.Logger {
 		slog.Error("failed to parse gid for chown log file", "error", err.Error())
 		return ret
 	}
-	if err := os.Chown(conf.Filename, int(uid), int(gid)); err != nil {
+	if err := os.Chown(conf.Path, int(uid), int(gid)); err != nil {
 		slog.Error("failed to chown log file", "error", err.Error())
 	}
 	return ret

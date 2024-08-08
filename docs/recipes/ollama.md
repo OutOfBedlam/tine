@@ -6,7 +6,7 @@
 
 ```toml
 [log]
-    filename = "-"
+    path  = "-"
     level = "INFO"
 
 [[inlets.args]]

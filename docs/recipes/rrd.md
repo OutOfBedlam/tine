@@ -10,7 +10,7 @@ rrd plugins requires Tine to be built with `-tags rrd` which need `librrd-dev` p
 
 ```toml
 [log]
-    filename = "-"
+    path  = "-"
     level = "INFO"
 
 [[inlets.load]]
@@ -75,7 +75,7 @@ tine run rrd_out.toml
 
 ```toml
 [log]
-    filename = "-"
+    path  = "-"
     level = "INFO"
 
 [[inlets.rrd_graph]]
