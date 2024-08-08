@@ -10,7 +10,10 @@
     format = "csv"
     ### name of the fields in the input data
     ### If not specified, the default field names (number string) are used
-    field_names = ["line", "name", "time", "value"]
+    fields = ["line", "name", "time", "value"]
+    ### type of the fields in the input data, the number of fields and types should be equal.
+    ### if fields and types are not specified, all fields are treated as strings.
+    types  = ["string", "time", "int"]
     ### Is input data compressed
     compress = ""
     ### time format (default: s)

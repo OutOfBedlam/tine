@@ -19,7 +19,7 @@ func ExampleUpdateFlow() {
 			"Jane,2,2.34,false", 
 			"Scott,3,3.45,true",
 		]
-		field_names = ["my_name", "my_int", "my_float", "flag"]
+		fields = ["my_name", "my_int", "my_float", "flag"]
 		format = "csv"
 	[[flows.update]]
 		set = [

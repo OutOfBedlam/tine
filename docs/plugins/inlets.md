@@ -115,7 +115,10 @@ Execute external command and yields records for the output of stdout of the comm
     ### input format
     format = "csv"
     ### name of the fields in the input data
-    field_names = ["name", "time","value"]
+    fields = ["name", "time","value"]
+    ### type of the fields in the input data, the number of fields and types should be equal.
+    ### if fields and types are not specified, all fields are treated as strings.
+    types  = ["string", "time", "int"]
     ### Is input data compressed
     compress = ""
     ### time format (default: s)
@@ -138,7 +141,8 @@ Execute external command and yields records for the output of stdout of the comm
         "2,key2,1722642406,2.345",
     ]
     format = "csv"
-    field_names = ["line", "name", "time", "value"]
+    fields = ["line", "name", "time", "value"]
+    types  = ["int", "string", "time", "float"]
 [[outlets.file]]
     format = "json"
 ```
@@ -152,8 +156,8 @@ tine run example.toml
 *Output*
 
 ```json
-{"line":"1","name":"key1","time":"1722642405","value":"1.234"}
-{"line":"2","name":"key2","time":"1722642406","value":"2.345"}
+{"line":1,"name":"key1","time":1722642405,"value":1.234}
+{"line":2,"name":"key2","time":1722642406,"value":2.345}
 ```
 
 ### HTTP
