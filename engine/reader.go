@@ -47,8 +47,6 @@ func NewReader(r io.Reader, cfg Config) (*Reader, error) {
 
 	if r == nil {
 		ret.raw = io.NopCloser(os.Stdin)
-	} else if rc, ok := r.(io.ReadCloser); ok {
-		ret.raw = rc
 	} else {
 		ret.raw = io.NopCloser(r)
 	}

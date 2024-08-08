@@ -13,6 +13,10 @@ func init() {
 		Factory:     NewJSONEncoder,
 		ContentType: "application/x-ndjson",
 	})
+	engine.RegisterDecoder(&engine.DecoderReg{
+		Name:    "json",
+		Factory: NewJSONDecoder,
+	})
 }
 
 func NewJSONEncoder(c engine.EncoderConfig) engine.Encoder {
@@ -74,4 +78,55 @@ type JsonFloat struct {
 func (l JsonFloat) MarshalJSON() ([]byte, error) {
 	s := fmt.Sprintf("%.*f", l.Decimal, l.Value)
 	return []byte(s), nil
+}
+
+func NewJSONDecoder(c engine.DecoderConfig) engine.Decoder {
+	return &JSONDecoder{
+		DecoderConfig: c,
+	}
+}
+
+type JSONDecoder struct {
+	engine.DecoderConfig
+	dec *gojson.Decoder
+}
+
+func (jd *JSONDecoder) Decode() ([]engine.Record, error) {
+	if jd.dec == nil {
+		jd.dec = gojson.NewDecoder(jd.Reader)
+	}
+
+	var ret = []engine.Record{}
+	var retErr error
+	for {
+		var r map[string]any
+		if err := jd.dec.Decode(&r); err != nil {
+			retErr = err
+			break
+		}
+		if rec, err := map2Record(r); err != nil {
+			retErr = err
+			break
+		} else {
+			ret = append(ret, rec)
+		}
+	}
+	return ret, retErr
+}
+
+func map2Record(m map[string]any) (engine.Record, error) {
+	rec := engine.NewRecord()
+	for k, val := range m {
+		switch v := val.(type) {
+		case string:
+			rec = rec.Append(engine.NewField(k, v))
+		case float64:
+			rec = rec.Append(engine.NewField(k, v))
+		case bool:
+			rec = rec.Append(engine.NewField(k, v))
+		default:
+			return nil, fmt.Errorf("unsupported type %T", v)
+		}
+	}
+	return rec, nil
 }

@@ -9,7 +9,7 @@ import (
 )
 
 var testDefaultLogConfig = util.LogConfig{
-	Filename:   "-",
+	Path:       "-",
 	Level:      util.LOG_LEVEL_INFO,
 	MaxSize:    100,
 	MaxAge:     7,

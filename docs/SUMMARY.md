@@ -10,6 +10,7 @@
 
 * [Quick start](getting-started/quick-start.md)
 * [Concept](getting-started/concept.md)
+* [Log config](getting-started/log-config.md)
 
 ## Plugins
 
