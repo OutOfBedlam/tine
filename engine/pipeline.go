@@ -215,13 +215,11 @@ func HttpHandleFunc(config string) http.HandlerFunc {
 				w.Header().Set("Content-Length", fmt.Sprintf("%d", contentLength))
 			}),
 		)
-		w.Header().Set("Connection", "Close")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		err = p.Run()
-		if err != nil {
+		if err = p.Run(); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
