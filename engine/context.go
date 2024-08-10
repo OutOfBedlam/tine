@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"log/slog"
+	"runtime"
 	"time"
 )
 
@@ -93,16 +94,25 @@ func (ctx *Context) CircuitBreak() {
 }
 
 func (ctx *Context) LogDebug(msg string, keyvals ...interface{}) {
-	ctx.logger.Debug(ctx.pipeline.logMsg(msg), keyvals...)
+	ctx.log(msg, slog.LevelDebug, keyvals...)
 }
 
 func (ctx *Context) LogInfo(msg string, keyvals ...interface{}) {
-	ctx.logger.Info(ctx.pipeline.logMsg(msg), keyvals...)
+	ctx.log(msg, slog.LevelInfo, keyvals...)
 }
 
 func (ctx *Context) LogWarn(msg string, keyvals ...interface{}) {
-	ctx.logger.Warn(ctx.pipeline.logMsg(msg), keyvals...)
+	ctx.log(msg, slog.LevelWarn, keyvals...)
 }
+
 func (ctx *Context) LogError(msg string, keyvals ...interface{}) {
-	ctx.logger.Error(ctx.pipeline.logMsg(msg), keyvals...)
+	ctx.log(msg, slog.LevelError, keyvals...)
+}
+
+func (ctx *Context) log(msg string, level slog.Level, keyvals ...interface{}) {
+	var pcs [1]uintptr
+	runtime.Callers(3, pcs[:])
+	r := slog.NewRecord(time.Now(), level, ctx.pipeline.logMsg(msg), pcs[0])
+	r.Add(keyvals...)
+	ctx.logger.Handler().Handle(ctx, r)
 }

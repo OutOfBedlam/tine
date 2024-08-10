@@ -10,9 +10,9 @@ import (
 )
 
 func main() {
-	addr := "127.0.0.1:8080"
+	addr := "127.0.0.1:8083"
 	// start data collector that save metrics to rrd file
-	collect, _ := engine.New(engine.WithConfig(collectorPipleine))
+	collect, _ := engine.New(engine.WithConfig(collectorPipeline))
 	collect.Start()
 
 	router := http.NewServeMux()
@@ -99,7 +99,7 @@ name = "rrdweb-cpu"
 [[inlets.rrd_graph]]
 	path = "./tmp/rrdweb.rrd"
 	count = 1
-	title = "CPU Uage (%)"
+	title = "CPU Usage (%)"
 	range = "10m"
 	size = [600, 200]
 	theme = "gchart2"
@@ -109,20 +109,16 @@ name = "rrdweb-cpu"
 [[outlets.image]]
 	path = "nonamed.png"
 `
-const collectorPipleine = `
+const collectorPipeline = `
 name = "rrd-collector"
 [defaults]
 	interval = "1s"
-
 [[inlets.load]]
-
 [[inlets.cpu]]
 	percpu = false
 	totalcpu = true
-
 [[flows.merge]]
 	wait_limit = "2s"
-
 [[outlets.rrd]]
 	path = "./tmp/rrdweb.rrd"
 	step = "1s"

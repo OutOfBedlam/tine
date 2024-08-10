@@ -3,6 +3,7 @@ package engine
 import (
 	"fmt"
 	"io"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -283,7 +284,8 @@ func (in *InletHandler) runPush() error {
 	defer func() {
 		e := recover()
 		if e != nil {
-			in.ctx.LogError("inlethandler panic in inlet push", "error", e)
+			in.ctx.LogError("inlet handler panic in inlet push", "error", e)
+			fmt.Println("panic recover", string(debug.Stack()))
 		}
 	}()
 

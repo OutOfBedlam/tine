@@ -130,7 +130,7 @@ func (r *tagRecord) Names() []string {
 }
 
 func NewField[T RawValue](name string, value T) *Field {
-	return &Field{Name: name, Value: NewValue(value)}
+	return &Field{Name: name, Value: NewValue(value), Tags: Tags{}}
 }
 
 // if name is empty or value is nil, return nil
@@ -138,7 +138,7 @@ func NewFieldWithValue(name string, value *Value) *Field {
 	if name == "" || value == nil {
 		return nil
 	}
-	return &Field{Name: name, Value: value}
+	return &Field{Name: name, Value: value, Tags: Tags{}}
 }
 
 // Field is Value with name and Tags
