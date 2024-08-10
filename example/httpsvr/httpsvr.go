@@ -11,7 +11,7 @@ import (
 func main() {
 	addr := "127.0.0.1:8080"
 	router := http.NewServeMux()
-	router.HandleFunc("GET /helloworld", engine.HttpHandleFunc(helloWorldPipeline))
+	router.HandleFunc("GET /cpu", engine.HttpHandleFunc(cpuPipeline))
 	router.HandleFunc("GET /screenshot", engine.HttpHandleFunc(screenshotPipeline))
 	router.HandleFunc("GET /template", engine.HttpHandleFunc(templatePipeline))
 
@@ -19,12 +19,13 @@ func main() {
 	http.ListenAndServe(addr, router)
 }
 
-const helloWorldPipeline = `
+const cpuPipeline = `
 [[inlets.cpu]]
 	interval = "3s"
-	count = 1
 	totalcpu = true
 	percpu = false
+[[flows.select]]
+	includes = ["#_ts", "*"]
 [[outlets.file]]
 	format = "json"
 	decimal = 2
