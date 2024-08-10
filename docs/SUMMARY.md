@@ -9,7 +9,9 @@
 ## GETTING STARTED
 
 * [Quick start](getting-started/quick-start.md)
-* [Concept](getting-started/concept.md)
+* [Concept](getting-started/concept/README.md)
+  * [Merge Records](getting-started/concept/merge-records.md)
+  * [Pipeline as Http Handler](getting-started/concept/pipeline-as-http-handler.md)
 * [Log config](getting-started/log-config.md)
 
 ## Plugins

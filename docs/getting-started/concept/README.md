@@ -24,7 +24,7 @@ Here's an example of how a data pipeline works:
 [[outlets.file]]
 ```
 
-<figure><img src="../.gitbook/assets/pipeline-cpu-select-file.png" alt="" width="563"><figcaption><p>A simple pipeline</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/pipeline-cpu-select-file.png" alt="" width="563"><figcaption><p>A simple pipeline</p></figcaption></figure>
 
 The example above is extracting data of system's CPU usage by `inlets.cpu` and pass it to `flows.select` which is simply pass to the only outlet `outlets.file` that configured to print out on stdout.
 
@@ -51,7 +51,7 @@ The result of this pipeline might be similar to the following.
 
 The first line of the result can be visualized in the following diagram.
 
-<figure><img src="../.gitbook/assets/pipeline-load-file.png" alt="" width="563"><figcaption><p>A record</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/pipeline-load-file.png" alt="" width="563"><figcaption><p>A record</p></figcaption></figure>
 
 The first record has three fields named `load1`, `load5`, and `load15`. The two tags `_in` that informs which inlet makes the data, and `_ts` (timestamp) which shows when the data is captured, are not exported into the result because tags are hidden from the final result by default.
 
@@ -111,10 +111,10 @@ Tag is name and value pair which is similar to fields but tags are auxiliary dat
 
 All tag names that start with an underscore `_` are reserved for internal use by TINE.
 
-| TAG       | SCOPE     | TYPE       |    DESC.         |
-|:----------|:---------:|:----------:|:-----------------|
-| `_in`     | Record    | STRING     | name of inlet that yields the record |
-| `_ts`     | Record    | TIME       | timestamp of the record |
+| TAG   |  SCOPE |  TYPE  | DESC.                                |
+| ----- | :----: | :----: | ------------------------------------ |
+| `_in` | Record | STRING | name of inlet that yields the record |
+| `_ts` | Record |  TIME  | timestamp of the record              |
 
 ### Value
 
@@ -134,7 +134,7 @@ The available value types:
 
 A pipeline may have multiple inlets and outlets.
 
-<figure><img src="../.gitbook/assets/pipeline-multi-inout.png" alt="" width="563"><figcaption><p>A pipeline with multiple inlets and outlets</p></figcaption></figure>
+<figure><img src="../../.gitbook/assets/pipeline-multi-inout.png" alt="" width="563"><figcaption><p>A pipeline with multiple inlets and outlets</p></figcaption></figure>
 
 The example below shows a simple example.
 
@@ -219,7 +219,8 @@ Let's enhance the pipeline by introducing the `[[flows.merge]]`. This flow allow
     format = "json"
     decimal = 2
 ```
-<figure><img src="../.gitbook/assets/pipeline-merge.png" alt="" width="563"><figcaption><p>A pipeline with multiple inlets and merge</p></figcaption></figure>
+
+<figure><img src="../../.gitbook/assets/pipeline-merge.png" alt="" width="563"><figcaption><p>A pipeline with multiple inlets and merge</p></figcaption></figure>
 
 ```json
 {"_ts":1723255081,"cpu.total_percent":8.16,"load.load1":1.80,"load.load5":2.00}
@@ -238,4 +239,3 @@ FROM
 WHERE
     cpu._ts = load._ts
 ```
-
