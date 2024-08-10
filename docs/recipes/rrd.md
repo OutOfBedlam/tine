@@ -140,8 +140,8 @@ Running a pipeline as a HTTP Handler requires preparation, the below `HttpHandle
 ```go
 func HttpHandler(config string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		p, err := engine.New(
-			engine.WithConfigTemplate(config, r.URL.Query()),
+		p, _ := engine.New(
+			engine.WithConfig(config),
 			engine.WithWriter(w),
 			engine.WithSetContentTypeFunc(func(contentType string) {
 				w.Header().Set("Content-Type", contentType)
@@ -153,13 +153,7 @@ func HttpHandler(config string) http.HandlerFunc {
 				w.Header().Set("Content-Length", fmt.Sprintf("%d", contentLength))
 			}),
 		)
-		w.Header().Set("Connection", "Close")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		err = p.Run()
-		if err != nil {
+		if err := p.Run(); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -295,5 +289,4 @@ name = "rrdweb-cpu"
 [[outlets.image]]
     path = "./tmp/rrd.png"
     overwrite = true
-
 ```
