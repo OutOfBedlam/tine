@@ -12,6 +12,8 @@ This code starts a simple web server that serves at `http://127.0.0.1:8080` with
 
 ### Code
 
+Please find the full source from the [github repository](https://github.com/OutOfBedlam/tine/tree/main/example/rrd_graph_web).
+
 ```go
 package main
 
