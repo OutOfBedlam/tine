@@ -25,7 +25,3 @@
 * [OLLAMA Telegram Bot](recipes/ollama\_chatbot.md)
 * [RRD](recipes/rrd.md)
 * [SQLite](recipes/sqlite.md)
-
-## LINKS
-
-* [GitHub](https://github.com/OutOfBedlam/tine)
