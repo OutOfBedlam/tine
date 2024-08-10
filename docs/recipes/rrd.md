@@ -4,15 +4,13 @@
 rrd plugins requires Tine to be built with `-tags rrd` which need `librrd-dev` package to be installed in advance.
 {% endhint %}
 
-## Example Web + RRD
+Let's create an example application that collects CPU usage and system load average, saves the data into RRD, and serves a web page that displays the collected data as graphs.
 
-Let's make a example application that collects CPU usage and system load average, saves the data into RRD, serves web page shows the collected data as graph.
-
-This code starts a simple web server that serves at `http://127.0.0.1:8080` with three endpoints `/`, `/graph/load`, and `/graph/cpu`.
+The code provided starts a simple web server that listens on `http://127.0.0.1:8080` and exposes three endpoints: `/`, `/graph/load`, and `/graph/cpu`.
 
 ### Code
 
-Please find the full source from the [github repository](https://github.com/OutOfBedlam/tine/tree/main/example/rrd_graph_web).
+Please find the complete source code in the [GitHub repository](https://github.com/OutOfBedlam/tine/tree/main/example/rrd_graph_web).
 
 ```go
 package main
@@ -46,13 +44,13 @@ func main() {
 
 ### Run
 
-Create this code as `rrd_graph_web.go` and run with `-tags rrd` build flags.
+Create a file named `rrd_graph_web.go` with the provided code and build it using the `-tags rrd` build flags.
 
 ```sh
 go run --tags rrd ./rrd_graph_web.go
 ```
 
-Then open web browser, it will shows the system's load average and cpu usage in graphs.
+Then open a web browser to view the graphs displaying the system's load average and CPU usage.
 
 <figure><img src="../.gitbook/assets/web-rrd.png" alt="" width="563"><figcaption><p>RRDGraph</p></figcaption></figure>
 
@@ -70,7 +68,11 @@ collect.Start()
 collect.Stop()
 ```
 
-The `collectorPipeline` is defined as:
+In the `collectorPipeline` pipeline, the `inlets.cpu` and `inlets.load` collect CPU usage and load average data respectively. The `flows.merge` merges the collected data into a single record. The `outlets.rrd` writes the merged data to the RRD file specified by the `path` parameter.
+
+You can customize the pipeline configuration according to your requirements. Make sure to adjust the `path` parameter in the `outlets.rrd` section to specify the desired location for the RRD file.
+
+The pipeline is defined as:
 
 ```toml
 name = "rrd-collector"
@@ -100,12 +102,12 @@ name = "rrd-collector"
 	]
 ```
 
-
 #### Rendering HTML
 
-Attach `getView` handler on the `/` endpoint.
+Attach the `getView` handler to the `/` endpoint.
+
 ```go
-	router.HandleFunc("GET /", getView)
+router.HandleFunc("GET /", getView)
 ```
 
 The `getView()` handler embeds two `<img>` elements that runs on endpoints, `/graph/load` and `/graph/cpu`, and reloads them every 2 seconds.
@@ -156,8 +158,8 @@ func HttpHandler(config string) http.HandlerFunc {
 #### Attach pipelines to the endpoints
 
 ```go
-	router.HandleFunc("GET /graph/load", HttpHandler(graphLoadPipeline))
-	router.HandleFunc("GET /graph/cpu", HttpHandler(graphCpuPipeline))
+router.HandleFunc("GET /graph/load", HttpHandler(graphLoadPipeline))
+router.HandleFunc("GET /graph/cpu", HttpHandler(graphCpuPipeline))
 ```
 
 The pipeline definitions of `graphLoadPipeline` and `graphCpuPipeline` are:
