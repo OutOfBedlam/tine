@@ -143,15 +143,6 @@ func HttpHandler(config string) http.HandlerFunc {
 		p, _ := engine.New(
 			engine.WithConfig(config),
 			engine.WithWriter(w),
-			engine.WithSetContentTypeFunc(func(contentType string) {
-				w.Header().Set("Content-Type", contentType)
-			}),
-			engine.WithSetContentEncodingFunc(func(contentEncoding string) {
-				w.Header().Set("Content-Encoding", contentEncoding)
-			}),
-			engine.WithSetContentLengthFunc(func(contentLength int) {
-				w.Header().Set("Content-Length", fmt.Sprintf("%d", contentLength))
-			}),
 		)
 		if err := p.Run(); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

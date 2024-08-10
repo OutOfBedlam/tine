@@ -124,6 +124,17 @@ func WithName(name string) Option {
 func WithWriter(w io.Writer) Option {
 	return func(p *Pipeline) error {
 		p.rawWriter = w
+		if rspWriter, ok := w.(http.ResponseWriter); ok {
+			p.setContentTypeFunc = func(contentType string) {
+				rspWriter.Header().Set("Content-Type", contentType)
+			}
+			p.setContentEncodingFunc = func(contentEncoding string) {
+				rspWriter.Header().Set("Content-Encoding", contentEncoding)
+			}
+			p.setContentLengthFunc = func(contentLength int) {
+				rspWriter.Header().Set("Content-Length", fmt.Sprintf("%d", contentLength))
+			}
+		}
 		return nil
 	}
 }
