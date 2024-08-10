@@ -2,8 +2,10 @@ package engine_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"os"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -18,6 +20,7 @@ import (
 	_ "github.com/OutOfBedlam/tine/plugin/inlets/args"
 	_ "github.com/OutOfBedlam/tine/plugin/inlets/exec"
 	_ "github.com/OutOfBedlam/tine/plugin/inlets/file"
+	_ "github.com/OutOfBedlam/tine/plugin/inlets/psutil"
 	_ "github.com/OutOfBedlam/tine/plugin/outlets/file"
 	"github.com/stretchr/testify/require"
 )
@@ -118,4 +121,49 @@ func TestCompressJson(t *testing.T) {
 	r, _ := gzip.NewReader(out)
 	result, _ := io.ReadAll(r)
 	require.Equal(t, `{"0":"a","1":"1"}`, strings.TrimSpace(string(result)))
+}
+
+func TestMultiInlets(t *testing.T) {
+	dsl := `
+	[[inlets.cpu]]
+		percpu = false
+		interval = "1s"
+		count = 2
+	[[inlets.load]]
+		loads = [1, 5]
+		interval = "1s"
+		count = 1
+	[[flows.merge]]
+		wait_limit = "1s"
+	[[outlets.file]]
+		path = "-"
+		format = "json"
+		decimal = 2
+	`
+
+	out := &bytes.Buffer{}
+	pipeline, err := engine.New(engine.WithConfig(dsl), engine.WithWriter(out))
+	if err != nil {
+		panic(err)
+	}
+	if err := pipeline.Run(); err != nil {
+		panic(err)
+	}
+	dec := json.NewDecoder(out)
+	obj := map[string]interface{}{}
+
+	expectKeys := [][]string{
+		{"_ts", "cpu.total_percent", "load.load1", "load.load5"},
+		{"_ts", "cpu.total_percent"},
+	}
+	for i := 0; dec.Decode(&obj) == nil; i++ {
+		t.Log(obj)
+		keys := []string{}
+		for k := range obj {
+			keys = append(keys, k)
+		}
+		slices.Sort(keys)
+		require.Equal(t, expectKeys[i], keys)
+		clear(obj)
+	}
 }

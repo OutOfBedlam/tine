@@ -75,16 +75,34 @@
 **Example**
 
 ```toml
+[[inlets.cpu]]
+    percpu = false
+    interval = "1s"
+    count = 3
+[[inlets.load]]
+    loads = [1, 5]
+    interval = "1s"
+    count = 2
+[[flows.merge]]
+    wait_limit = "1s"
+[[outlets.file]]
+    path = "-"
+    format = "json"
+    decimal = 2
 ```
 
 *Run*
 
 ```sh
+tine run example.toml
 ```
 
 *Output*
 
 ```json
+{"_ts":1723248243,"cpu.total_percent":8.16,"load.load1":1.90,"load.load5":1.94}
+{"_ts":1723248244,"cpu.total_percent":11.67,"load.load1":1.90,"load.load5":1.94}
+{"_ts":1723248245,"cpu.total_percent":15.56}
 ```
 
 ### UPDATE
