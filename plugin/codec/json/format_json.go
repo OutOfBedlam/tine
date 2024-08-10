@@ -65,7 +65,10 @@ func (jw *JSONEncoder) Encode(recs []engine.Record) error {
 				r[f.Name] = f.Value.Raw()
 			}
 		}
-		jw.enc.Encode(r)
+		if err := jw.enc.Encode(r); err != nil {
+			// e.g. when http client socket closed, it will return error
+			return err
+		}
 	}
 	return nil
 }

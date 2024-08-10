@@ -123,17 +123,10 @@ func WithName(name string) Option {
 // WithDefaults sets the default output writer for the pipeline
 func WithWriter(w io.Writer) Option {
 	return func(p *Pipeline) error {
-		p.rawWriter = w
 		if rspWriter, ok := w.(http.ResponseWriter); ok {
-			p.setContentTypeFunc = func(contentType string) {
-				rspWriter.Header().Set("Content-Type", contentType)
-			}
-			p.setContentEncodingFunc = func(contentEncoding string) {
-				rspWriter.Header().Set("Content-Encoding", contentEncoding)
-			}
-			p.setContentLengthFunc = func(contentLength int) {
-				rspWriter.Header().Set("Content-Length", fmt.Sprintf("%d", contentLength))
-			}
+			p.setHttpResponseWriter(rspWriter)
+		} else {
+			p.rawWriter = w
 		}
 		return nil
 	}
@@ -202,19 +195,7 @@ func New(opts ...Option) (*Pipeline, error) {
 // from a pipeline configuration
 func HttpHandleFunc(config string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		p, err := New(
-			WithConfig(config),
-			WithWriter(w),
-			WithSetContentTypeFunc(func(contentType string) {
-				w.Header().Set("Content-Type", contentType)
-			}),
-			WithSetContentEncodingFunc(func(contentEncoding string) {
-				w.Header().Set("Content-Encoding", contentEncoding)
-			}),
-			WithSetContentLengthFunc(func(contentLength int) {
-				w.Header().Set("Content-Length", fmt.Sprintf("%d", contentLength))
-			}),
-		)
+		p, err := New(WithConfig(config), WithWriter(w))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -224,6 +205,19 @@ func HttpHandleFunc(config string) http.HandlerFunc {
 			return
 		}
 		p.Stop()
+	}
+}
+
+func (p *Pipeline) setHttpResponseWriter(w http.ResponseWriter) {
+	p.rawWriter = w
+	p.setContentTypeFunc = func(contentType string) {
+		w.Header().Set("Content-Type", contentType)
+	}
+	p.setContentEncodingFunc = func(contentEncoding string) {
+		w.Header().Set("Content-Encoding", contentEncoding)
+	}
+	p.setContentLengthFunc = func(contentLength int) {
+		w.Header().Set("Content-Length", fmt.Sprintf("%d", contentLength))
 	}
 }
 

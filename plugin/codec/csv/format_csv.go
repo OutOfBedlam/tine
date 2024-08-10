@@ -51,7 +51,10 @@ func (cw *CSVEncoder) encodeDefault(recs []engine.Record) error {
 			}
 			values = append(values, field.Value.Format(cw.FormatOption))
 		}
-		cw.enc.Write(values)
+		if err := cw.enc.Write(values); err != nil {
+			// e.g. when http client socket closed, it will return error
+			return err
+		}
 		values = values[:0]
 	}
 	cw.enc.Flush()

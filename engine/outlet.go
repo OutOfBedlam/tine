@@ -127,6 +127,7 @@ func (out *OutletHandler) flush(_ /*force*/ bool) {
 	}
 	if err := out.outlet.Handle(out.buffer); err != nil {
 		out.ctx.LogError("failed to output flush", "error", err.Error())
+		out.ctx.CircuitBreak()
 	} else {
 		atomic.AddUint64(&out.doneCnt, uint64(len(out.buffer)))
 	}

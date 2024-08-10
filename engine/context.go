@@ -90,7 +90,11 @@ func (ctx *Context) Value(key interface{}) interface{} {
 }
 
 func (ctx *Context) CircuitBreak() {
-	ctx.pipeline.Stop()
+	// If we do not use goroutine here,
+	// It will cause deadlock when outlets are calling ctx.CircuitBreak()
+	go func() {
+		ctx.pipeline.Stop()
+	}()
 }
 
 func (ctx *Context) LogDebug(msg string, keyvals ...interface{}) {

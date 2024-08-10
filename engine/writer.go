@@ -3,6 +3,7 @@ package engine
 import (
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"time"
 )
@@ -70,7 +71,23 @@ func NewWriter(w io.Writer, cfg Config) (*Writer, error) {
 }
 
 func (rw *Writer) Write(recs []Record) error {
-	return rw.encoder.Encode(recs)
+	var flusher Flusher
+	if nc, ok := rw.raw.(*nopCloser); ok {
+		if fr, ok := nc.Writer.(http.Flusher); ok {
+			flusher = fr
+		}
+	}
+	if err := rw.encoder.Encode(recs); err != nil {
+		//fmt.Println("handle - error", err)
+		return err
+	} else {
+		if flusher != nil {
+			// flusher is important when it responds to http client
+			// in 'Transfer-Encoding: chunked'
+			flusher.Flush()
+		}
+		return nil
+	}
 }
 
 func (rw *Writer) Close() error {
@@ -78,6 +95,10 @@ func (rw *Writer) Close() error {
 		return rw.raw.Close()
 	}
 	return nil
+}
+
+type Flusher interface {
+	Flush()
 }
 
 func NopCloser(w io.Writer) io.WriteCloser {
