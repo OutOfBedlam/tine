@@ -167,10 +167,9 @@ $ tine run example.toml
 {"total_percent":2.62}
 ```
 
-### Merge records from the multiple inlets.
+### Merge
 
-Generally we want to see the cpu usage and load average in a record by the observed *same* time.
-The example below shows each inlet just yields its records and outlet prints them out in order.
+Generally, we want to observe the CPU usage and load average in a record at the same time. The following example demonstrates each inlet yielding its records, and the outlet printing them out individually in order.
 
 ```toml
 [[inlets.cpu]]
@@ -195,7 +194,7 @@ The example below shows each inlet just yields its records and outlet prints the
 {"total_percent":12.26}
 ```
 
-Let's add `[[flows.merge]]` to combine multiple records into a record. It yields new record that *merged* from multiple records that has *same* `_ts` tag.
+Let's enhance the pipeline by introducing the `[[flows.merge]]`. This flow allows us to merge multiple records into a single record based on their `_ts` tag. The resulting record will be a combination of the merged records.
 
 ```toml
 [[inlets.cpu]]
