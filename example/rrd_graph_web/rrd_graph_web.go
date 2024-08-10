@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	addr := "127.0.0.1:8083"
+	addr := "127.0.0.1:8080"
 	// start data collector that save metrics to rrd file
 	collect, _ := engine.New(engine.WithConfig(collectorPipeline))
 	collect.Start()

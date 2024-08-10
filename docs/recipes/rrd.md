@@ -10,6 +10,8 @@ Let's make a example application that collects CPU usage and system load average
 
 This code starts a simple web server that serves at `http://127.0.0.1:8080` with three endpoints `/`, `/graph/load`, and `/graph/cpu`.
 
+### Code
+
 ```go
 package main
 
@@ -40,6 +42,8 @@ func main() {
 }
 ```
 
+### Run
+
 Create this code as `rrd_graph_web.go` and run with `-tags rrd` build flags.
 
 ```sh
@@ -51,7 +55,7 @@ Then open web browser, it will shows the system's load average and cpu usage in 
 <figure><img src="../.gitbook/assets/web-rrd.png" alt="" width="563"><figcaption><p>RRDGraph</p></figcaption></figure>
 
 
-### How this work
+### How this works
 
 #### Start collecting pipeline
 
@@ -66,8 +70,7 @@ collect.Stop()
 
 The `collectorPipeline` is defined as:
 
-```go
-const collectorPipeline = `
+```toml
 name = "rrd-collector"
 [defaults]
 	interval = "1s"
@@ -93,7 +96,6 @@ name = "rrd-collector"
         { cf = "AVERAGE", steps = "1h", rows="30d" },
         { cf = "AVERAGE", steps = "1d", rows="13M" },
 	]
-`
 ```
 
 
@@ -173,8 +175,9 @@ func HttpHandler(config string) http.HandlerFunc {
 
 The pipeline definitions of `graphLoadPipeline` and `graphCpuPipeline` are:
 
-```go
-const graphLoadPipeline = `
+**graphLoadPipeline**
+
+```toml
 name = "rrdweb-load"
 [[inlets.rrd_graph]]
 	path = "./tmp/rrdweb.rrd"
@@ -190,9 +193,11 @@ name = "rrdweb-load"
 	]
 [[outlets.image]]
 	path = "nonamed.png"
-`
+```
 
-const graphCpuPipeline = `
+**graphCpuPipeline**
+
+```toml
 name = "rrdweb-cpu"
 [[inlets.rrd_graph]]
 	path = "./tmp/rrdweb.rrd"
@@ -206,7 +211,6 @@ name = "rrdweb-cpu"
 	]
 [[outlets.image]]
 	path = "nonamed.png"
-`
 ```
 
 ## Save data into RRD
@@ -265,14 +269,7 @@ name = "rrdweb-cpu"
     ]
 ```
 
-**Execute**
-
-```sh
-tine run rrd_out.toml
-```
-
-
-## Read data from RRD and generate graph
+## Graph from RRD
 
 ```toml
 [[inlets.rrd_graph]]
