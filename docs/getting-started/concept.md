@@ -109,6 +109,13 @@ A record and a field can have zero or more tags.
 
 Tag is name and value pair which is similar to fields but tags are auxiliary data.
 
+All tag names that start with an underscore `_` are reserved for internal use by TINE.
+
+| TAG       | SCOPE     | TYPE       |    DESC.         |
+|:----------|:---------:|:----------:|:-----------------|
+| `_in`     | Record    | STRING     | name of inlet that yields the record |
+| `_ts`     | Record    | TIME       | timestamp of the record |
+
 ### Value
 
 A "value" represents the unit of an actual value. The field and tag have its own value. Each value have specific type.
