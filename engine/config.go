@@ -58,7 +58,7 @@ func LoadConfig(content string, cfg *PipelineConfig) error {
 			} else {
 				params = paramsArr[0]
 			}
-			flowCfgs := params.GetConfig("flows", nil)
+			flowConfigs := params.GetConfig("flows", nil)
 			params.Unset("flows")
 			flows := []FlowConfig{}
 			if kind != "flows" {
@@ -69,7 +69,7 @@ func LoadConfig(content string, cfg *PipelineConfig) error {
 					}
 				}
 				for _, flowName := range flowsInOrder {
-					flowParam := flowCfgs.GetConfig(flowName, nil)
+					flowParam := flowConfigs.GetConfig(flowName, nil)
 					flows = append(flows, FlowConfig{
 						Plugin: flowName,
 						Params: flowParam,
