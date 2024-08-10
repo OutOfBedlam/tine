@@ -24,9 +24,10 @@ const helloWorldPipeline = `
 	interval = "3s"
 	count = 1
 	totalcpu = true
-	percpu = true
+	percpu = false
 [[outlets.file]]
 	format = "json"
+	decimal = 2
 `
 
 const screenshotPipeline = `
