@@ -1,5 +1,7 @@
 # Concept
 
+## Entities
+
 ### Pipeline
 
 A pipeline consists of multiple inlets, flows and outlets.
@@ -121,3 +123,103 @@ The available value types:
 * TIME date and time in nano seconds
 * BINARY a chunk of bytes
 
+## Multiple Inlets and Outlets
+
+A pipeline may have multiple inlets and outlets.
+
+<figure><img src="../.gitbook/assets/pipeline-multi-inout.png" alt="" width="563"><figcaption><p>A pipeline with multiple inlets and outlets</p></figcaption></figure>
+
+The example below shows a simple example.
+
+```toml
+[[inlets.cpu]]
+    percpu = false
+    interval = "1s"
+    count = 3
+[[inlets.load]]
+    loads = [1, 5]
+    interval = "1s"
+    count = 2
+[[outlets.file]]
+    path = "-"
+    format = "json"
+    decimal = 2
+[[outlets.file]]
+    path = "-"
+    format = "csv"
+    decimal = 2
+```
+
+If you run this pipeline, it will print out the cpu usage and load average in CSV and JSON format.
+
+```sh
+$ tine run example.toml
+
+2.19,3.45
+{"load1":2.19,"load5":3.45}
+{"total_percent":8.16}
+8.16
+{"load1":2.19,"load5":3.45}
+{"total_percent":4.73}
+2.19,3.45
+4.73
+2.62
+{"total_percent":2.62}
+```
+
+### Merge records from the multiple inlets.
+
+Generally we want to see the cpu usage and load average in a record by the observed *same* time.
+The example below shows each inlet just yields its records and outlet prints them out in order.
+
+```toml
+[[inlets.cpu]]
+    percpu = false
+    interval = "1s"
+    count = 3
+[[inlets.load]]
+    loads = [1, 5]
+    interval = "1s"
+    count = 2
+[[outlets.file]]
+    path = "-"
+    format = "json"
+    decimal = 2
+```
+
+```json
+{"load1":2.14,"load5":2.11}
+{"total_percent":8.16}
+{"total_percent":11.97}
+{"load1":2.05,"load5":2.09}
+{"total_percent":12.26}
+```
+
+Let's add `[[flows.merge]]` to combine multiple records into a record. It yields new record that *merged* from multiple records that has *same* `_ts` tag.
+
+```toml
+[[inlets.cpu]]
+    percpu = false
+    interval = "1s"
+    count = 3
+[[inlets.load]]
+    loads = [1, 5]
+    interval = "1s"
+    count = 2
+[[flows.merge]]
+    wait_limit = "1s"
+[[outlets.file]]
+    path = "-"
+    format = "json"
+    decimal = 2
+```
+<figure><img src="../.gitbook/assets/pipeline-merge.png" alt="" width="563"><figcaption><p>A pipeline with multiple inlets and merge</p></figcaption></figure>
+
+
+`[[flows.merge]]` promotes the `_ts` tag to a field that has same name `_ts` and renames all other fields with the origin `_in` tag value followed by a dot and the original name. This operation is conceptually similar to joining tables in a relational database management system (RDBMS). It can be thought of as performing a `SELECT _ts, cpu.total_usage, load.load1, load.load5 FROM cpu, load WHERE cpu._ts = load._ts` query.
+
+```json
+{"_ts":1723255081,"cpu.total_percent":8.16,"load.load1":1.80,"load.load5":2.00}
+{"_ts":1723255082,"cpu.total_percent":17.14,"load.load1":1.81,"load.load5":2.00}
+{"_ts":1723255083,"cpu.total_percent":13.33}
+```
