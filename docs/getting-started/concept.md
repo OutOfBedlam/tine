@@ -214,11 +214,21 @@ Let's enhance the pipeline by introducing the `[[flows.merge]]`. This flow allow
 ```
 <figure><img src="../.gitbook/assets/pipeline-merge.png" alt="" width="563"><figcaption><p>A pipeline with multiple inlets and merge</p></figcaption></figure>
 
-
-`[[flows.merge]]` promotes the `_ts` tag to a field that has same name `_ts` and renames all other fields with the origin `_in` tag value followed by a dot and the original name. This operation is conceptually similar to joining tables in a relational database management system (RDBMS). It can be thought of as performing a `SELECT _ts, cpu.total_usage, load.load1, load.load5 FROM cpu, load WHERE cpu._ts = load._ts` query.
-
 ```json
 {"_ts":1723255081,"cpu.total_percent":8.16,"load.load1":1.80,"load.load5":2.00}
 {"_ts":1723255082,"cpu.total_percent":17.14,"load.load1":1.81,"load.load5":2.00}
 {"_ts":1723255083,"cpu.total_percent":13.33}
 ```
+
+`[[flows.merge]]` promotes the `_ts` tag to a field that has same name `_ts` and renames all other fields with the origin `_in` tag value followed by a dot and the original name. This operation is conceptually similar to joining tables in a relational database management system (RDBMS). It can be thought of as performing a query:
+
+```sql
+SELECT
+    _ts, cpu.total_usage, load.load1, load.load5
+FROM
+    cpu,
+    load
+WHERE
+    cpu._ts = load._ts
+```
+
