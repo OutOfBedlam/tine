@@ -4,8 +4,11 @@ Create Telegram chat bot with OLLAMA
 
 ### Generates text responses via OLLAMA from user's message.
 
-> Replace `_YOUR_TELEGRAM_BOT_TOKEN_`, `_OLLAMA_HOST_`, and `_OLLAMA_PORT_` from the below example with yours.
-> And the "model" parameter of flows.ollama should be pulled in advance.
+{% hint style="info" %}
+Replace `_YOUR_TELEGRAM_BOT_TOKEN_`, `_OLLAMA_HOST_`, and `_OLLAMA_PORT_` from the below example with yours.
+And the "model" parameter of flows.ollama should be pulled in advance.
+{% endhint %}
+
 
 **chatbot.toml**
 ```toml
