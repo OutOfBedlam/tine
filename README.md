@@ -97,50 +97,9 @@ $ ./load.toml
 ^C
 ```
 
-## Embed in your program
+## Embedding in Go
 
-Create an pipeline and add inlets and outlets.
-
-See the full code from the directory [./example/custom_in](./example/custom_in/custom_in.go).
-
-**Create a pipeline**
-
-```go
-pipeline, err := engine.New(engine.WithName("my_pipeline"))
-```
-
-**Set inputs of the pipeline**
-
-```go
-// Add inlet for cpu usage
-conf := engine.NewConfig().Set("percpu", false).Set("interval", 3 * time.Second)
-pipeline.AddInlet("cpu", psutil.CpuInlet(pipeline.Context().WithConfig(conf)))
-```
-
-**Set outputs of the pipeline**
-
-```go
-// Add outlet printing to stdout '-'
-conf = engine.NewConfig().Set("path", "-").Set("decimal", 2)
-pipeline.AddOutlet("file", file.FileOutlet(pipeline.Context().WithConfig(conf)))
-```
-
-**Start the pipeline**
-
-```go
-pipeline.Start()
-```
-
-Run this program, it shows the output like ...
-
-```
-1721510209,custom,random,43.01
-1721510209,cpu,7.93
-1721510212,custom,random,25.14
-1721510212,cpu,7.35
-1721510215,custom,random,83.24
-1721510215,cpu,7.14
-```
+TINE is not only designed as a standalone application, but also allows for embedding in other Go applications.
 
 ## Examples
 
