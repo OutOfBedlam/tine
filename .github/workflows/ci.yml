@@ -12,6 +12,7 @@ on:
   pull_request:
     branches: [ "main" ]
     paths-ignore:
+      - README.md
       - "docs/**"
       - "example/**"
       - "magefiles/**"
@@ -41,6 +42,7 @@ jobs:
           go run magefiles/mage.go test
 
     - name: Upload coverage reports to Codecov
+      if: ${{ matrix.platform == 'ubuntu-latest' }}
       uses: codecov/codecov-action@v4.0.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
