@@ -125,9 +125,9 @@ conf = engine.NewConfig().Set("path", "-").Set("decimal", 2)
 pipeline.AddOutlet("file", file.FileOutlet(pipeline.Context().WithConfig(conf)))
 ```
 
-**Run the pipeline**
+**Start the pipeline**
 
-```
+```go
 pipeline.Start()
 ```
 

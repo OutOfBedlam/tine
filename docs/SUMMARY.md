@@ -15,6 +15,11 @@
   * [Pipeline as Http Handler](getting-started/concept/pipeline-as-http-handler.md)
 * [Log config](getting-started/log-config.md)
 
+## Embedding TINE in Go
+
+* [Use Config](embedding/use_config.md)
+* [Use API](embedding/use_api.md)
+
 ## Plugins
 
 * [Inlets](plugins/inlets.md)
