@@ -48,7 +48,7 @@ func main() {
 	pipeline.AddFlow("custom", engine.FlowWithFunc(custom, engine.WithFlowFuncParallelism(1)))
 
 	// Start the pipeline
-	go pipeline.Start()
+	pipeline.Start()
 
 	// wait Ctrl+C
 	done := make(chan os.Signal, 1)

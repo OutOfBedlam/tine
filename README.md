@@ -53,8 +53,8 @@ Change output format to "json" from "csv", add `format = "json"` at the end of t
 ```toml
 [[outlets.file]]
     path  = "-"
-    format = "json"
     decimal = 2
+    format = "json"
 ```
 
 ```json
@@ -128,7 +128,7 @@ pipeline.AddOutlet("file", file.FileOutlet(pipeline.Context().WithConfig(conf)))
 **Run the pipeline**
 
 ```
-go pipeline.Start()
+pipeline.Start()
 ```
 
 Run this program, it shows the output like ...
