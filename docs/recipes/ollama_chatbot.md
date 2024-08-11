@@ -43,3 +43,7 @@ Create Telegram chat bot with OLLAMA
 [[outlets.telegram]]
     token = "_YOUR_TELEGRAM_BOT_TOKEN_"
 ```
+
+**Telegram**
+
+<figure><img src="../.gitbook/assets/ollama-telegram.jpeg" alt="" width="363"><figcaption><p>Telegram Chat Bot with OLLAMA</p></figcaption></figure>
