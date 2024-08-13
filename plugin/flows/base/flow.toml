@@ -1,6 +1,6 @@
 [[flows.damper]]
     ## damper makes the stream of records to be delayed by the given duration.
-    ## It collects records those _ts time is older thant now-"interval" time, and send thme to the next flow in a time.
+    ## It collects records those _ts time is older thant now-"interval" time, and send them to the next flow in a time.
     interval = "3s"
 
 [[flows.dump]]
@@ -34,7 +34,7 @@
     ## This flow flattens a record into multiple records,
     ## the individual field of the record converted to a "_ts, name, value" record except "_ts" and "_in" field.
     ## The new "name" field is formed by concatenating the original "_in" value and the field name.
-    ## For example, if the orginal record is {"_ts": timestamp, "_in": "my", "field1": 1, "field2": 2} and name_infix is "_" (which is the default),
+    ## For example, if the original record is {"_ts": timestamp, "_in": "my", "field1": 1, "field2": 2} and name_infix is "_" (which is the default),
     ## then the new records will be:
     ##    {"_ts": timestamp, "name": "my_field1", "value": 1}
     ##    {"_ts": timestamp, "name": "my_field2", "value": 2}

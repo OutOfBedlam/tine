@@ -3,7 +3,7 @@ package template
 import (
 	"io"
 	"os"
-	gotmpl "text/template"
+	"text/template"
 
 	"github.com/OutOfBedlam/tine/engine"
 )
@@ -22,7 +22,7 @@ func TemplateOutlet(ctx *engine.Context) engine.Outlet {
 
 type templateOutlet struct {
 	ctx    *engine.Context
-	tmpl   *gotmpl.Template
+	tmpl   *template.Template
 	writer io.WriteCloser
 }
 
@@ -31,7 +31,7 @@ func (to *templateOutlet) Open() error {
 	templates := conf.GetStringSlice("templates", []string{})
 	templateFiles := conf.GetStringSlice("template_files", []string{})
 
-	to.tmpl = gotmpl.New("template")
+	to.tmpl = template.New("template")
 	var err error
 	for _, t := range templates {
 		to.tmpl, err = to.tmpl.Parse(t)
@@ -40,7 +40,7 @@ func (to *templateOutlet) Open() error {
 		}
 	}
 	if len(templateFiles) > 0 {
-		to.tmpl, err = gotmpl.ParseFiles(templateFiles...)
+		to.tmpl, err = template.ParseFiles(templateFiles...)
 		if err != nil {
 			return err
 		}
