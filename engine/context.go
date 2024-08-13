@@ -9,11 +9,14 @@ import (
 )
 
 type Context struct {
-	base     context.Context
-	conf     Config
-	pipeline *Pipeline
-	logger   *slog.Logger
+	base            context.Context
+	conf            Config
+	pipeline        *Pipeline
+	injectionPoints map[string]InjectFunc
+	logger          *slog.Logger
 }
+
+type InjectFunc func([]Record) ([]Record, error)
 
 var _ = context.Context((*Context)(nil))
 
@@ -27,19 +30,21 @@ func newContext(pipeline *Pipeline) *Context {
 
 func (ctx *Context) WithConfig(conf Config) *Context {
 	return &Context{
-		base:     ctx.base,
-		pipeline: ctx.pipeline,
-		conf:     conf,
-		logger:   ctx.logger,
+		base:            ctx.base,
+		conf:            conf,
+		pipeline:        ctx.pipeline,
+		logger:          ctx.logger,
+		injectionPoints: ctx.injectionPoints,
 	}
 }
 
 func (ctx *Context) WithLogger(logger *slog.Logger) *Context {
 	return &Context{
-		base:     ctx.base,
-		pipeline: ctx.pipeline,
-		conf:     ctx.conf,
-		logger:   logger,
+		base:            ctx.base,
+		conf:            ctx.conf,
+		pipeline:        ctx.pipeline,
+		logger:          logger,
+		injectionPoints: ctx.injectionPoints,
 	}
 }
 
@@ -87,6 +92,21 @@ func (ctx *Context) Err() error {
 
 func (ctx *Context) Value(key interface{}) interface{} {
 	return ctx.base.Value(key)
+}
+
+func (ctx *Context) GetInject(id string) (InjectFunc, bool) {
+	if ctx.injectionPoints == nil {
+		return nil, false
+	}
+	ret, ok := ctx.injectionPoints[id]
+	return ret, ok
+}
+
+func (ctx *Context) Inject(id string, cb InjectFunc) {
+	if ctx.injectionPoints == nil {
+		ctx.injectionPoints = make(map[string]InjectFunc)
+	}
+	ctx.injectionPoints[id] = cb
 }
 
 func (ctx *Context) CircuitBreak() {

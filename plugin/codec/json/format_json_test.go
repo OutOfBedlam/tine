@@ -111,3 +111,34 @@ func ExampleJSONDecoder() {
 	// {"_in":"file","_ts":1721954797,"area":"a","bval":true,"fval":1.23,"ival":1.00,"time":"2020-01-01T00:00:00Z"}
 	// {"_in":"file","_ts":1721954797,"area":"b","bval":true,"fval":2.35,"ival":2.00,"time":"2020-01-02T00:00:00Z"}
 }
+
+func ExampleJSONDecoder_data() {
+	dsl := `
+	[[inlets.file]]
+		data = [
+			'{"area": "a","ival": 1,"fval": 1.234,"time": "2020-01-01T00:00:00Z","bval": true}',
+			'{"area": "b","ival": 2,"fval": 2.345,"time": "2020-01-02T00:00:00Z","bval": true}',
+		]
+		format = "json"
+	[[flows.select]]
+		includes = ["#*", "area", "bval", "ival", "fval", "time"]
+	[[outlets.file]]
+		path = "-"
+		format = "json"
+		decimal = 2
+	`
+	// Make the output timestamp deterministic, so we can compare it
+	// This line is required only for testing
+	engine.Now = func() time.Time { return time.Unix(1721954797, 0) }
+	// Create a new pipeline
+	pipeline, err := engine.New(engine.WithConfig(dsl))
+	if err != nil {
+		panic(err)
+	}
+	if err := pipeline.Run(); err != nil {
+		panic(err)
+	}
+	// Output:
+	// {"_in":"file","_ts":1721954797,"area":"a","bval":true,"fval":1.23,"ival":1.00,"time":"2020-01-01T00:00:00Z"}
+	// {"_in":"file","_ts":1721954797,"area":"b","bval":true,"fval":2.35,"ival":2.00,"time":"2020-01-02T00:00:00Z"}
+}

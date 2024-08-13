@@ -61,6 +61,51 @@
 ```json
 ```
 
+### EXEC
+
+*Source* [plugin/flows/exec](https://github.com/OutOfBedlam/tine/tree/main/plugin/flows/exec)
+
+**Config**
+
+```toml
+[[flows.exec]]
+    ## Commands array
+    ## Access the field values in the command by using the field name prefixed with "$FIELD_{name}".
+    commands = ["uname", "-m"]
+
+    ## Environment variables
+    ## Array of "key=value" pairs
+    ## e.g. ["key1=value1", "key2=value2"]
+    environments = []
+
+    ## Field name prefix
+    prefix = ""
+
+    ## Timeout
+    timeout = "3s"
+
+    ## Ignore non-zero exit code
+    ignore_error = false
+
+    ## Trim space of output
+    trim_space = false
+```
+
+**Example**
+
+```toml
+```
+
+*Run*
+
+```sh
+```
+
+*Output*
+
+```json
+```
+
 ### MERGE
 
 *Source* [plugin/flows/base](https://github.com/OutOfBedlam/tine/tree/main/plugin/flows/base)
@@ -157,6 +202,33 @@ tine run example.toml
     ## '**' means all tags and fields which is default and equivalent to ["#*", "*"]
     includes = ["#_ts", "#_in", "*"]
 ```
+
+**Example**
+
+```toml
+```
+
+*Run*
+
+```sh
+```
+
+*Output*
+
+```json
+```
+
+### INJECT
+
+*Source* [plugin/flows/base](https://github.com/OutOfBedlam/tine/tree/main/plugin/flows/base)
+
+```toml
+[[flows.inject]]
+    id = "my_flow"
+```
+
+This flow creates an injection point for the pipeline, 
+allowing applications to inject their own functions as flows with the specified ID.
 
 **Example**
 
