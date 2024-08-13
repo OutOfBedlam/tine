@@ -1,7 +1,7 @@
 # RRD
 
 {% hint style="info" %}
-rrd plugins requires Tine to be built with `-tags rrd` which need `librrd-dev` package to be installed in advance.
+rrd plugins requires TINE to be built with `-tags rrd` which need `librrd-dev` package to be installed in advance.
 {% endhint %}
 
 Let's create an example application that collects CPU usage and system load average, saves the data into RRD, and serves a web page that displays the collected data as graphs.
