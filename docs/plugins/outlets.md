@@ -101,7 +101,7 @@
     path = "./output.png"
     ## fields that contains the image data
     ## if not specified, it will find all binary fields that has Content-type "image/*"
-    # fields = ["image"]
+    # image_fields = ["image"]
     ## Quality of jpeg image (jpeg only)
     ## 1 ~ 100
     # jpeg_quality = 75

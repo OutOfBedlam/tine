@@ -27,8 +27,8 @@ func init() {
 
 func ImageOutlet(ctx *engine.Context) engine.Outlet {
 	path := ctx.Config().GetString("path", "")
-	fields := ctx.Config().GetStringSlice("fields", []string{})
-	dstContentType := ctx.Config().GetString("content_type", "image/png")
+	dstPathField := ctx.Config().GetString("path_field", "")
+	fields := ctx.Config().GetStringSlice("image_fields", []string{})
 	jpegQuality := ctx.Config().GetInt("jpeg_quality", 75)
 	overwrite := ctx.Config().GetBool("overwrite", false)
 
@@ -36,62 +36,33 @@ func ImageOutlet(ctx *engine.Context) engine.Outlet {
 	if w := ctx.Writer(); w != nil {
 		writer = w
 	}
-	dstPattern := path
-	if path != "" {
-		ext := filepath.Ext(path)
-		ext = strings.ToLower(ext)
-		switch ext {
-		case ".png":
-			dstContentType = "image/png"
-		case ".jpg", ".jpeg":
-			dstContentType = "image/jpeg"
-		case ".gif":
-			dstContentType = "image/gif"
-		case ".bmp":
-			dstContentType = "image/bmp"
-		}
-		ext = filepath.Ext(path)
-		base := filepath.Base(path)
-		baseWithoutExt := base[:len(base)-len(ext)]
-		if overwrite {
-			dstPattern = filepath.Join(filepath.Dir(path), baseWithoutExt+"_%s"+ext)
-		} else {
-			dstPattern = filepath.Join(filepath.Dir(path), baseWithoutExt+"_%s_%d"+ext)
-		}
-	}
-	ctx.SetContentType(dstContentType)
 
 	return &imageOutlet{
-		ctx:            ctx,
-		dstPath:        path,
-		dstContentType: dstContentType,
-		srcFields:      fields,
-		dstPattern:     dstPattern,
-		dstOverwrite:   overwrite,
-		dstWriter:      writer,
-		jpegQuality:    jpegQuality,
+		ctx:          ctx,
+		dstPath:      path,
+		dstPathField: dstPathField,
+		srcFields:    fields,
+		dstOverwrite: overwrite,
+		dstWriter:    writer,
+		jpegQuality:  jpegQuality,
 	}
 }
 
 type imageOutlet struct {
-	ctx            *engine.Context
-	dstPath        string
-	dstContentType string
-	srcFields      []string
-	dstSequence    int32
-	dstPattern     string
-	dstOverwrite   bool
-	dstWriter      io.Writer
+	ctx          *engine.Context
+	dstPathField string
+	dstPath      string
+	srcFields    []string
+	dstSequence  int32
+	dstOverwrite bool
+	dstWriter    io.Writer
 	// jpeg options
 	jpegQuality int
 }
 
 func (iout *imageOutlet) Open() error {
-	if iout.dstPath == "" {
-		return fmt.Errorf("path is not specified")
-	}
-	if iout.dstContentType == "" {
-		return fmt.Errorf("unsupported image format [%s]", filepath.Ext(iout.dstPath))
+	if iout.dstPath == "" && iout.dstPathField == "" {
+		return fmt.Errorf("path and path_field are not specified")
 	}
 	return nil
 }
@@ -118,14 +89,23 @@ func (iout *imageOutlet) encodeRec(rec engine.Record) error {
 		if !strings.HasPrefix(srcContentType, "image/") {
 			continue
 		}
-		if err := iout.writeImageField(field); err != nil {
+		dstPath := iout.dstPath
+		if iout.dstPathField != "" {
+			pathField := rec.Field(iout.dstPathField)
+			if pathField != nil {
+				if path, ok := pathField.Value.String(); ok {
+					dstPath = path
+				}
+			}
+		}
+		if err := iout.writeImageField(field, dstPath); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (iout *imageOutlet) writeImageField(field *engine.Field) error {
+func (iout *imageOutlet) writeImageField(field *engine.Field, dstPath string) error {
 	if field.Type() != engine.BINARY {
 		return fmt.Errorf("field %q is not binary", field.Name)
 	}
@@ -138,12 +118,38 @@ func (iout *imageOutlet) writeImageField(field *engine.Field) error {
 	srcContentType = strings.ToLower(srcContentType)
 	bv, _ := field.Value.Bytes()
 
+	dstPattern := dstPath
+	dstContentType := ""
+	if dstPath != "" {
+		ext := filepath.Ext(dstPath)
+		ext = strings.ToLower(ext)
+		switch ext {
+		case ".png":
+			dstContentType = "image/png"
+		case ".jpg", ".jpeg":
+			dstContentType = "image/jpeg"
+		case ".gif":
+			dstContentType = "image/gif"
+		case ".bmp":
+			dstContentType = "image/bmp"
+		}
+		ext = filepath.Ext(dstPath)
+		base := filepath.Base(dstPath)
+		baseWithoutExt := base[:len(base)-len(ext)]
+		if iout.dstOverwrite {
+			dstPattern = filepath.Join(filepath.Dir(dstPath), baseWithoutExt+ext)
+		} else {
+			dstPattern = filepath.Join(filepath.Dir(dstPath), baseWithoutExt+"_%d"+ext)
+		}
+	}
+	iout.ctx.SetContentType(dstContentType)
+
 	var srcImg image.Image
 	switch srcContentType {
 	default:
 		return fmt.Errorf("field %q has unsupported Content-Type %q", field.Name, srcContentType)
 	case "image/png":
-		if iout.dstContentType != "image/png" {
+		if dstContentType != "image/png" {
 			if img, err := png.Decode(bytes.NewReader(bv)); err != nil {
 				return err
 			} else {
@@ -151,7 +157,7 @@ func (iout *imageOutlet) writeImageField(field *engine.Field) error {
 			}
 		}
 	case "image/jpeg":
-		if iout.dstContentType != "image/jpeg" {
+		if dstContentType != "image/jpeg" {
 			if img, err := jpeg.Decode(bytes.NewReader(bv)); err != nil {
 				return err
 			} else {
@@ -159,7 +165,7 @@ func (iout *imageOutlet) writeImageField(field *engine.Field) error {
 			}
 		}
 	case "image/gif":
-		if iout.dstContentType != "image/gif" {
+		if dstContentType != "image/gif" {
 			if img, err := gif.Decode(bytes.NewReader(bv)); err != nil {
 				return err
 			} else {
@@ -167,7 +173,7 @@ func (iout *imageOutlet) writeImageField(field *engine.Field) error {
 			}
 		}
 	case "image/bmp":
-		if iout.dstContentType != "image/bmp" {
+		if dstContentType != "image/bmp" {
 			if img, err := bmp.Decode(bytes.NewReader(bv)); err != nil {
 				return err
 			} else {
@@ -194,7 +200,7 @@ func (iout *imageOutlet) writeImageField(field *engine.Field) error {
 		goto write_image
 	}
 	if iout.dstOverwrite {
-		dstPath := fmt.Sprintf(iout.dstPattern, field.Name)
+		dstPath := dstPattern
 		if w, err := os.OpenFile(dstPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644); err != nil {
 			return err
 		} else {
@@ -203,11 +209,10 @@ func (iout *imageOutlet) writeImageField(field *engine.Field) error {
 		}
 		iout.ctx.LogDebug("outlets.image", "write_to", dstPath)
 	} else {
-		dstPath := iout.dstPath
 		dstSequence := atomic.LoadInt32(&iout.dstSequence)
 	inc_seq:
 		if dstSequence > 0 {
-			dstPath = fmt.Sprintf(iout.dstPattern, field.Name, dstSequence)
+			dstPath = fmt.Sprintf(dstPattern, dstSequence)
 		}
 		// check if pe.dstPath file does exists on file system
 		if _, err := os.Stat(dstPath); err == nil {
@@ -236,7 +241,7 @@ write_image:
 		data = bv
 	} else {
 		buff := &bytes.Buffer{}
-		switch iout.dstContentType {
+		switch dstContentType {
 		case "image/png":
 			png.Encode(buff, srcImg)
 		case "image/jpeg":
@@ -246,7 +251,7 @@ write_image:
 		case "image/bmp":
 			bmp.Encode(buff, srcImg)
 		default:
-			iout.ctx.LogError(fmt.Sprintf("unsupported image format [%s]", iout.dstContentType))
+			iout.ctx.LogError(fmt.Sprintf("unsupported image format [%s]", dstContentType))
 		}
 		data = buff.Bytes()
 	}

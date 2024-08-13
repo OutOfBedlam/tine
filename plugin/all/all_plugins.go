@@ -36,6 +36,7 @@ import (
 
 	// flows
 	_ "github.com/OutOfBedlam/tine/plugin/flows/base"
+	_ "github.com/OutOfBedlam/tine/plugin/flows/exec"
 	_ "github.com/OutOfBedlam/tine/plugin/flows/ollama"
 )
 

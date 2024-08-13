@@ -3,13 +3,23 @@
     # overwrite = true
     #
     ## The path to the output file.
-    ## If the file exists and overwrite is false, it will be append "_"+field_name+"_"+sequence number before the extension.
-    ## If the file exists and overwrite is true, it will be append "_"+field_name before the extension.
+    ## If the file exists and overwrite is false, it will be append "_"+sequence number before the extension.
     ## supported formats: png, jpeg, gif, bmp
     path = "./output.png"
+
+    ## The field that contains the path to the output file.
+    ## This value overrides the `path` setting
+    ## If not set, it will use the `path` setting
+    path_field = "dst_path"
+
+    ## If true, it will overwrite the file if it exists
+    ## If false, it will append "_"+sequence number before the extension from the destination path
+    overwrite = true
+    
     ## fields that contains the image data
     ## if not specified, it will find all binary fields that has Content-type "image/*"
-    # fields = ["image"]
+    image_fields = ["image"]
+
     ## Quality of jpeg image (jpeg only)
     ## 1 ~ 100
-    # jpeg_quality = 75
+    jpeg_quality = 75

@@ -1,5 +1,9 @@
 # Install
 
+### Download from pre-built binary
+
+Find pre-built binary from [releases](https://github.com/Outofbedlam/tine/releases), and download.
+
 ### Install with `pkgx`
 
 ```

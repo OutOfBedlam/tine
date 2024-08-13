@@ -10,26 +10,55 @@ import (
 func TestBoolFeild(t *testing.T) {
 	f := NewField("boolean", true)
 	require.Equal(t, BOOL, f.Type())
+	require.Equal(t, "BOOL", f.Type().String())
 	require.Equal(t, true, f.Value.raw)
 	require.Equal(t, "boolean", f.Name)
 
 	str := f.StringField()
 	require.Equal(t, STRING, str.Type())
+	require.Equal(t, "STRING", str.Type().String())
+	require.Equal(t, "true", str.Value.raw)
+	require.Equal(t, "boolean", str.Name)
+
+	str = f.Convert(STRING)
+	require.Equal(t, STRING, str.Type())
+	require.Equal(t, "STRING", str.Type().String())
 	require.Equal(t, "true", str.Value.raw)
 	require.Equal(t, "boolean", str.Name)
 
 	ival := f.IntField()
 	require.Equal(t, INT, ival.Type())
+	require.Equal(t, "INT", ival.Type().String())
+	require.Equal(t, int64(1), ival.Value.raw)
+	require.Equal(t, "boolean", ival.Name)
+
+	ival = f.Convert(INT)
+	require.Equal(t, INT, ival.Type())
+	require.Equal(t, "INT", ival.Type().String())
 	require.Equal(t, int64(1), ival.Value.raw)
 	require.Equal(t, "boolean", ival.Name)
 
 	uval := f.UintField()
 	require.Equal(t, UINT, uval.Type())
+	require.Equal(t, "UINT", uval.Type().String())
+	require.Equal(t, uint64(1), uval.Value.raw)
+	require.Equal(t, "boolean", uval.Name)
+
+	uval = f.Convert(UINT)
+	require.Equal(t, UINT, uval.Type())
+	require.Equal(t, "UINT", uval.Type().String())
 	require.Equal(t, uint64(1), uval.Value.raw)
 	require.Equal(t, "boolean", uval.Name)
 
 	fval := f.FloatField()
 	require.Equal(t, FLOAT, fval.Type())
+	require.Equal(t, "FLOAT", fval.Type().String())
+	require.Equal(t, float64(1), fval.Value.raw)
+	require.Equal(t, "boolean", fval.Name)
+
+	fval = f.Convert(FLOAT)
+	require.Equal(t, FLOAT, fval.Type())
+	require.Equal(t, "FLOAT", fval.Type().String())
 	require.Equal(t, float64(1), fval.Value.raw)
 	require.Equal(t, "boolean", fval.Name)
 
@@ -216,4 +245,32 @@ func TestBinary(t *testing.T) {
 	str := f.StringField()
 	require.Equal(t, STRING, str.Type())
 	require.Equal(t, "binary", str.Value.raw)
+}
+
+func TestAppendOrReplace(t *testing.T) {
+	r := NewRecord()
+	r = r.Append(NewField("a", int64(1)))
+	r = r.AppendOrReplace(NewField("b", int64(2)))
+	names := r.Names()
+	require.Equal(t, []string{"a", "b"}, names)
+}
+
+func TestCopy(t *testing.T) {
+	r := NewRecord()
+	r = r.Append(NewField("a", int64(1)))
+	r = r.AppendOrReplace(NewField("b", int64(2)))
+	names := r.Names()
+	require.Equal(t, []string{"a", "b"}, names)
+
+	for _, f := range r.Fields() {
+		c := f.Copy("c")
+		require.Equal(t, "c", c.Name)
+		require.Equal(t, f.Value.raw, c.Value.raw)
+	}
+
+	for _, f := range r.Fields() {
+		c := f.Clone()
+		require.Equal(t, f.Name, c.Name)
+		require.Equal(t, f.Value.raw, c.Value.raw)
+	}
 }

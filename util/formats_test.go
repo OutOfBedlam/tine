@@ -7,9 +7,9 @@ import (
 )
 
 func ExampleFormatFileSize() {
-	fmt.Println(util.FormatFileSize(0))
+	fmt.Println(util.FormatFileSizeInt(0))
 	fmt.Println(util.FormatFileSize(1))
-	fmt.Println(util.FormatFileSize(1024))
+	fmt.Println(util.FormatFileSizeInt(1024))
 	fmt.Println(util.FormatFileSize(1024 * 1024))
 	fmt.Println(util.FormatFileSize(1024 * 1024 * 1024))
 	fmt.Println(util.FormatFileSize(1024 * 1024 * 1024 * 1024))

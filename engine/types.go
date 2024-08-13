@@ -121,7 +121,7 @@ func (r *tagRecord) Names() []string {
 	ret := make([]string, len(r.fields))
 	for i, f := range r.fields {
 		if f != nil {
-			ret[i] = strings.ToUpper(f.Name)
+			ret[i] = f.Name
 		} else {
 			ret[i] = ""
 		}
