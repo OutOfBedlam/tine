@@ -31,6 +31,6 @@
 
 * [OLLAMA](recipes/ollama.md)
 * [OLLAMA Telegram Bot](recipes/ollama\_chatbot.md)
-* [RRD](recipes/rrd.md)
 * [Web Page Snapshot](recipes/chrome\_snap.md)
+* [RRD](recipes/rrd.md)
 * [SQLite](recipes/sqlite.md)

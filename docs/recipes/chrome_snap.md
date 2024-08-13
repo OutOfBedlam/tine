@@ -46,6 +46,6 @@ $ go run -tags chrome . run ./example.toml
 
 ### Output
 
-<figure><img src="./images/chrome_snap_tine_docs.png" alt="" width="563"><figcaption><p>snapshot https://tine.thingsme.xyz</p></figcaption></figure>
+<figure><img src="./images/chrome_snap_tine_docs.png" alt="" width="563"><figcaption><p>chrome_snap_tine_docs.png</p></figcaption></figure>
 
-<figure><img src="./images/chrome_snap_tine_github.png" alt="" width="563"><figcaption><p>snapshot http://github.com/OutOfBedlam/tine</p></figcaption></figure>
+<figure><img src="./images/chrome_snap_tine_github.png" alt="" width="563"><figcaption><p>chrome_snap_tine_github.png</p></figcaption></figure>
