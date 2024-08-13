@@ -77,6 +77,6 @@ func ExampleExecFlow() {
 		panic(err)
 	}
 	// Output:
-	// {"_ts":1721954798,"stdout":"hello BAR a 1 file 2024-07-26T09:46:38+09:00"}
-	// {"_ts":1721954799,"stdout":"hello BAR b 2 file 2024-07-26T09:46:39+09:00"}
+	// {"_ts":1721954798,"stdout":"hello BAR a 1 file 2024-07-26T00:46:38Z"}
+	// {"_ts":1721954799,"stdout":"hello BAR b 2 file 2024-07-26T00:46:39Z"}
 }

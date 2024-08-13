@@ -91,8 +91,10 @@ func (ed *ExecDriver) Process(inputRecord engine.Record, next func([]engine.Reco
 			ln := fmt.Sprintf("FIELD_%s=%s", strings.ToUpper(field.Name), v)
 			vals = append(vals, ln)
 		}
+		valueFormat := engine.DefaultValueFormat()
+		valueFormat.Timeformat = engine.NewTimeformatterWithLocation(time.RFC3339, time.UTC)
 		for k, val := range inputRecord.Tags() {
-			v, _ := val.String()
+			v := val.Format(valueFormat)
 			ln := fmt.Sprintf("TAG_%s=%s", strings.ToUpper(k), v)
 			vals = append(vals, ln)
 		}
