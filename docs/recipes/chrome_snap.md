@@ -1,7 +1,8 @@
 # Web Page Screenshot with Headless Chrome
 
-{% hint style="info" %}
-The `chrome_snap` plugin relies on having Google Chrome browser installed beforehand.
+{% hint style="warning" %}
+The `chrome_snap` plugin is compatible only with Linux.
+It relies on having Google Chrome browser installed beforehand.
 {% endhint %}
 
 The following recipe demonstrates how to capture two web pages and save them as image files using the `chrome_snap` plugin.

@@ -2,6 +2,7 @@ package chrome
 
 import (
 	"context"
+	"runtime"
 	"time"
 
 	"github.com/OutOfBedlam/tine/engine"
@@ -10,6 +11,9 @@ import (
 )
 
 func init() {
+	if runtime.GOOS != "linux" {
+		return
+	}
 	engine.RegisterFlow(&engine.FlowReg{
 		Name:    "chrome_snap",
 		Factory: ChromeSnapFlow,
