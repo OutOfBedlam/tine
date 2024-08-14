@@ -2,7 +2,12 @@ package chrome
 
 import (
 	"context"
+	"errors"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"runtime"
+	"sync"
 	"time"
 
 	"github.com/OutOfBedlam/tine/engine"
@@ -11,9 +16,6 @@ import (
 )
 
 func init() {
-	if runtime.GOOS != "linux" {
-		return
-	}
 	engine.RegisterFlow(&engine.FlowReg{
 		Name:    "chrome_snap",
 		Factory: ChromeSnapFlow,
@@ -52,7 +54,16 @@ type chromeSnapFlow struct {
 	fullPageQuality int
 }
 
+var execPath string
+var execPathOnce sync.Once
+
 func (f *chromeSnapFlow) Open() error {
+	execPathOnce.Do(func() {
+		execPath = FindExecPath()
+	})
+	if execPath == "" {
+		return errors.New("chrome_snap, chrome executable not found")
+	}
 	return nil
 }
 
@@ -115,4 +126,50 @@ func (f *chromeSnapFlow) Process(recs []engine.Record, nextFunc engine.FlowNextF
 			nextFunc([]engine.Record{rec}, nil)
 		}
 	}
+}
+
+func FindExecPath() string {
+	var locations []string
+	switch runtime.GOOS {
+	case "darwin":
+		locations = []string{
+			// Mac
+			"/Applications/Chromium.app/Contents/MacOS/Chromium",
+			"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+		}
+	case "windows":
+		locations = []string{
+			// Windows
+			"chrome",
+			"chrome.exe", // in case PATHEXT is misconfigured
+			`C:\Program Files (x86)\Google\Chrome\Application\chrome.exe`,
+			`C:\Program Files\Google\Chrome\Application\chrome.exe`,
+			filepath.Join(os.Getenv("USERPROFILE"), `AppData\Local\Google\Chrome\Application\chrome.exe`),
+			filepath.Join(os.Getenv("USERPROFILE"), `AppData\Local\Chromium\Application\chrome.exe`),
+		}
+	default:
+		locations = []string{
+			// Unix-like
+			"headless_shell",
+			"headless-shell",
+			"chromium",
+			"chromium-browser",
+			"google-chrome",
+			"google-chrome-stable",
+			"google-chrome-beta",
+			"google-chrome-unstable",
+			"/usr/bin/google-chrome",
+			"/usr/local/bin/chrome",
+			"/snap/bin/chromium",
+			"chrome",
+		}
+	}
+
+	for _, path := range locations {
+		found, err := exec.LookPath(path)
+		if err == nil {
+			return found
+		}
+	}
+	return ""
 }

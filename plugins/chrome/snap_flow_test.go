@@ -1,24 +1,17 @@
 package chrome_test
 
 import (
-	"os/exec"
-	"runtime"
 	"testing"
 	"time"
 
 	"github.com/OutOfBedlam/tine/engine"
 	_ "github.com/OutOfBedlam/tine/plugins/base"
-	_ "github.com/OutOfBedlam/tine/plugins/chrome"
+	"github.com/OutOfBedlam/tine/plugins/chrome"
 	_ "github.com/OutOfBedlam/tine/plugins/image"
 )
 
 func TestChromeSnapFlow(t *testing.T) {
-	if runtime.GOOS != "linux" {
-		t.Skip("chrome_snap test is only running on linux")
-	}
-	cmd := exec.Command("sh", "-c", "which google-chrome")
-	cmd.Run()
-	if cmd.ProcessState.ExitCode() != 0 {
+	if chrome.FindExecPath() == "" {
 		t.Skip("chrome_snap test is only running when google-chrome is installed")
 	}
 	dsl := `
