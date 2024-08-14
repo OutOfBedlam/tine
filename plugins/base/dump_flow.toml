@@ -1,0 +1,10 @@
+[[flows.dump]]
+    ## dump writes the record to the log with the given log level.
+    ## DEBUG | INFO | WARN | ERROR  (default: DEBUG)
+	level = "DEBUG"
+    ## The decimal format for float fields. (default: -1 which means no rounding)
+    decimal = 2
+    ## The time format for time fields. (default: "2006-01-02 15:04:05")
+    timeformat = "2006-01-02 15:04:05"
+    ## The time zone. (default: Local)
+    tz = "Local"

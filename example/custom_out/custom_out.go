@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/OutOfBedlam/tine/engine"
-	_ "github.com/OutOfBedlam/tine/plugin/codec/csv"
-	"github.com/OutOfBedlam/tine/plugin/inlets/psutil"
+	_ "github.com/OutOfBedlam/tine/plugins/base"
+	"github.com/OutOfBedlam/tine/plugins/psutil"
 )
 
 func main() {

@@ -1,0 +1,16 @@
+[[flows.chrome_snap]]
+    url_field = "url"
+    
+    ## The field to save the screenshot
+    ## If not set, the default is "chrome_snap"
+    out_field = "snap"
+
+    timeout = "10s"
+    parallelism = 1
+
+    ## Emulation device
+    # device = "iPhone15"
+
+    ## If not 0, will take full page screenshot
+    ## The value is the quality of the screenshot
+    # full_page = 100

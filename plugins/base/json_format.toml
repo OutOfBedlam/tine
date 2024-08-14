@@ -1,0 +1,21 @@
+# JSON Decoder
+#
+# format = "json"
+#
+# example)
+[[inlets._name_]]
+    format     = "json"
+    compress   = ""
+    timeformat = "s"
+    tz         = "Asia/Seoul"
+
+# JSON Encoder
+#
+# format = "json"
+# example)
+[[outlets._name_]]
+    format     = "json"
+    compress   = ""
+    timeformat = "2006-01-02 15:04:05"
+    tz         = "Asia/Seoul"
+    decimal    = 3

@@ -9,9 +9,8 @@ import (
 	"time"
 
 	"github.com/OutOfBedlam/tine/engine"
-	_ "github.com/OutOfBedlam/tine/plugin/codec/csv"
-	"github.com/OutOfBedlam/tine/plugin/inlets/psutil"
-	"github.com/OutOfBedlam/tine/plugin/outlets/file"
+	"github.com/OutOfBedlam/tine/plugins/base"
+	"github.com/OutOfBedlam/tine/plugins/psutil"
 )
 
 func main() {
@@ -30,7 +29,7 @@ func main() {
 
 	// Add outlet printing to stdout '-'
 	conf = engine.NewConfig().Set("path", "-").Set("timeformat", "2006-01-02 15:04:05")
-	pipeline.AddOutlet("file", file.FileOutlet(pipeline.Context().WithConfig(conf)))
+	pipeline.AddOutlet("file", base.FileOutlet(pipeline.Context().WithConfig(conf)))
 
 	// Add your custom flow function.
 	custom := func(recs []engine.Record) ([]engine.Record, error) {

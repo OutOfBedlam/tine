@@ -8,9 +8,8 @@ import (
 	"time"
 
 	"github.com/OutOfBedlam/tine/engine"
-	_ "github.com/OutOfBedlam/tine/plugin/codec/csv"
-	"github.com/OutOfBedlam/tine/plugin/inlets/psutil"
-	"github.com/OutOfBedlam/tine/plugin/outlets/file"
+	"github.com/OutOfBedlam/tine/plugins/base"
+	"github.com/OutOfBedlam/tine/plugins/psutil"
 )
 
 func main() {
@@ -28,7 +27,7 @@ func main() {
 
 	// Add outlet printing to stdout '-'
 	conf = engine.NewConfig().Set("path", "-").Set("decimal", 2)
-	pipeline.AddOutlet("file", file.FileOutlet(pipeline.Context().WithConfig(conf)))
+	pipeline.AddOutlet("file", base.FileOutlet(pipeline.Context().WithConfig(conf)))
 
 	// Add your custom input function.
 	custom := func() ([]engine.Record, error) {

@@ -12,7 +12,7 @@ import (
 	"net/http"
 
 	"github.com/OutOfBedlam/tine/engine"
-	_ "github.com/OutOfBedlam/tine/plugin/all"
+	_ "github.com/OutOfBedlam/tine/plugins/all"
 )
 
 func main() {

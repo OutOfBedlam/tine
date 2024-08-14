@@ -10,7 +10,7 @@ If value has prefix `base64+` followed by `http://`, `https://`, or `file://`, t
 
 If value has prefix `binary+` followed by `http://`, `https://`, or `file://`, then a `BinaryField` will be added instead of `StringField` within content that are fetched from the URL or file.
 
-*Source* [plugin/inlets/args](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/args)
+*Source* [plugins/args](https://github.com/OutOfBedlam/tine/tree/main/plugins/args)
 
 **Config**
 
@@ -42,7 +42,7 @@ tine run example.toml -- hello=world test=values
 
 Execute external command and yields records for the output of stdout of the command.
 
-*Source* [plugin/inlets/exec](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/exec)
+*Source* [plugins/exec](https://github.com/OutOfBedlam/tine/tree/main/plugins/exec)
 
 **Config**
 
@@ -99,7 +99,7 @@ Execute external command and yields records for the output of stdout of the comm
 
 ### FILE
 
-*Source* [plugin/inlets/file](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/file)
+*Source* [plugins/base](https://github.com/OutOfBedlam/tine/tree/main/plugins/base)
 
 **Config**
 
@@ -162,7 +162,7 @@ tine run example.toml
 
 ### HTTP
 
-*Source* [plugin/inlets/http](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/http)
+*Source* [plugins/http](https://github.com/OutOfBedlam/tine/tree/main/plugins/http)
 
 **Config**
 
@@ -214,7 +214,7 @@ The pipeline result will be:
 
 ### NATS
 
-*Source* [plugin/inlets/nats](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/nats)
+*Source* [plugins/nats](https://github.com/OutOfBedlam/tine/tree/main/plugins/nats)
 
 **Config**
 
@@ -246,7 +246,7 @@ The pipeline result will be:
 
 ### CPU
 
-*Source* [plugin/inlets/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/psutil)
+*Source* [plugins/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugins/psutil)
 
 **Config**
 
@@ -287,7 +287,7 @@ tine run example.toml
 
 ### LOAD
 
-*Source* [plugin/inlets/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/psutil)
+*Source* [plugins/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugins/psutil)
 
 **Config**
 
@@ -326,7 +326,7 @@ tine run example.toml
 
 ### MEM
 
-*Source* [plugin/inlets/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/psutil)
+*Source* [plugins/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugins/psutil)
 
 **Config**
 
@@ -363,7 +363,7 @@ tine run example.toml
 
 ### DISK
 
-*Source* [plugin/inlets/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/psutil)
+*Source* [plugins/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugins/psutil)
 
 **Config**
 
@@ -405,7 +405,7 @@ tine run example.toml
 
 ### DISKIO
 
-*Source* [plugin/inlets/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/psutil)
+*Source* [plugins/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugins/psutil)
 
 **Config**
 
@@ -444,7 +444,7 @@ tine run example.toml
 
 ### NET
 
-*Source* [plugin/inlets/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/psutil)
+*Source* [plugins/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugins/psutil)
 
 **Config**
 
@@ -482,7 +482,7 @@ tine run example.toml
 
 ### NETSTAT
 
-*Source* [plugin/inlets/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/psutil)
+*Source* [plugins/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugins/psutil)
 
 **Config**
 
@@ -510,7 +510,7 @@ tine run example.toml
 
 ### SENSOR
 
-*Source* [plugin/inlets/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/psutil)
+*Source* [plugins/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugins/psutil)
 
 **Config**
 
@@ -536,7 +536,7 @@ tine run example.toml
 
 ### HOST
 
-*Source* [plugin/inlets/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/psutil)
+*Source* [plugins/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugins/psutil)
 
 **Config**
 
@@ -572,7 +572,7 @@ tine run example.toml
 
 ### SCREENSHOT
 
-*Source* [plugin/inlets/screenshot](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/screenshot)
+*Source* [plugins/screenshot](https://github.com/OutOfBedlam/tine/tree/main/plugins/screenshot)
 
 **Config**
 
@@ -611,7 +611,7 @@ tine run example.toml
 WIP
 {% endhint %}
 
-*Source* [plugin/inlets/sqlite](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/sqlite)
+*Source* [plugins/sqlite](https://github.com/OutOfBedlam/tine/tree/main/plugins/sqlite)
 
 **Config**
 
@@ -635,7 +635,7 @@ WIP
 
 ### TELEGRAM
 
-*Source* [plugin/inlets/telegram](https://github.com/OutOfBedlam/tine/tree/main/plugin/inlets/telegram)
+*Source* [plugins/telegram](https://github.com/OutOfBedlam/tine/tree/main/plugins/telegram)
 
 **Config**
 

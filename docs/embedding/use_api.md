@@ -13,7 +13,7 @@ pipeline, err := engine.New(engine.WithName("my_pipeline"))
 ```go
 // psutil.CpuInlet() should be imported:
 //
-// import github.com/OutOfBedlam/tine/plugin/inlets/psutil
+// import github.com/OutOfBedlam/tine/plugins/psutil
 //
 // Add inlet for cpu usage
 conf := engine.NewConfig().Set("percpu", false).Set("interval", 3 * time.Second)
@@ -25,11 +25,11 @@ pipeline.AddInlet("cpu", psutil.CpuInlet(pipeline.Context().WithConfig(conf)))
 ```go
 // file.FileOutlet() should be imported:
 //
-// import github.com/OutOfBedlam/tine/plugin/outlets/file
+// import github.com/OutOfBedlam/tine/plugins/base
 //
 // Add outlet printing to stdout '-'
 conf = engine.NewConfig().Set("path", "-").Set("decimal", 2)
-pipeline.AddOutlet("file", file.FileOutlet(pipeline.Context().WithConfig(conf)))
+pipeline.AddOutlet("file", base.FileOutlet(pipeline.Context().WithConfig(conf)))
 ```
 
 **Start the pipeline**

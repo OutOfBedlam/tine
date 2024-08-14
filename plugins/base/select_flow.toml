@@ -1,0 +1,6 @@
+[[flows.select]]
+    ## Selects fields in a record with the given field names.
+    ## "*" means all fields.
+    ## if item starts with "#", it specifies a tag name.
+    ## '**' means all tags and fields which is default and equivalent to ["#*", "*"]
+    includes = ["#_ts", "#_in", "*"]

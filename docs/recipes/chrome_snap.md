@@ -1,10 +1,10 @@
 # Web Page Screenshot with Headless Chrome
 
 {% hint style="info" %}
-The `chrome_snap` plugin requires TINE to be built with the `-tags chrome` flag and relies on having Google Chrome browser installed beforehand.
+The `chrome_snap` plugin relies on having Google Chrome browser installed beforehand.
 {% endhint %}
 
-The following recipe captures two web pages and saves them as image files.
+The following recipe demonstrates how to capture two web pages and save them as image files using the `chrome_snap` plugin.
 
 ### Code
 
@@ -30,18 +30,8 @@ The following recipe captures two web pages and saves them as image files.
 
 ### Run
 
-Build TINE with `-tags chrome` and run it with the recipe file.
-
 ```sh
-$ go build -tags chrome
-
 $ ./tine run ./example.toml
-```
-
-Or, run direct from source code.
-
-```sh
-$ go run -tags chrome . run ./example.toml
 ```
 
 ### Output

@@ -1,0 +1,5 @@
+[[flows.inject]]
+    ## This flow make an injection point for the pipeline.
+    ## Application can inject its own function as a flow
+    ## to the pipeline with the given id.
+    id = "flow_id"
