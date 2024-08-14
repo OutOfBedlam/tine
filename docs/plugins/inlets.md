@@ -73,6 +73,15 @@ Execute external command and yields records for the output of stdout of the comm
 
     ## Trim space of output
     trim_space = false
+
+    ## Separator for splitting output
+    separator = ""
+
+    ## Field name for stdout
+    stdout_field = "stdout"
+
+    ## Field name for stderr
+    stderr_field = "stderr"
 ```
 
 **Example**
@@ -280,8 +289,15 @@ tine run example.toml
 
 {% code overflow="wrap" %}
 ```json
-{"0_percent":1.0,"1_percent":0.0,"2_percent":0.3,"3_percent":0.0,"4_percent":2.6,"5_percent":0.3,"6_percent":1.0,"7_percent":0.0,"_in":"cpu","_ts":1722987660,"total_percent":0.7}
-{"0_percent":9.2,"1_percent":10.3,"2_percent":15.0,"3_percent":13.7,"4_percent":12.5,"5_percent":0.3,"6_percent":1.7,"7_percent":14.0,"_in":"cpu","_ts":1722987663,"total_percent":9.6}
+{
+    "0_percent":9.2,
+    "1_percent":10.3,
+    "2_percent":15.0,
+    "3_percent":13.7,
+    "_in":"cpu",
+    "_ts":1722987663,
+    "total_percent":9.6
+}
 ```
 {% endcode %}
 
@@ -319,8 +335,13 @@ tine run example.toml
 
 {% code overflow="wrap" %}
 ```json
-{"_in":"load","_ts":1722987721,"load1":0.22,"load15":0.30,"load5":0.28}
-{"_in":"load","_ts":1722987724,"load1":0.20,"load15":0.30,"load5":0.28}
+{
+    "_in":"load",
+    "_ts":1722987721,
+    "load1":0.22,
+    "load15":0.30,
+    "load5":0.28
+}
 ```
 {% endcode %}
 
@@ -356,8 +377,14 @@ tine run example.toml
 
 {% code overflow="wrap" %}
 ```json
-{"_in":"mem","_ts":1722987763,"free":4330717184,"total":8201994240,"used":2468110336,"used_percent":30.09}
-{"_in":"mem","_ts":1722987767,"free":4329897984,"total":8201994240,"used":2469056512,"used_percent":30.10}
+{
+    "_in":"mem",
+    "_ts":1722987763,
+    "free":4330717184,
+    "total":8201994240,
+    "used":2468110336,
+    "used_percent":30.09
+}
 ```
 {% endcode %}
 
@@ -398,8 +425,21 @@ tine run example.toml
 
 {% code overflow="wrap" %}
 ```json
-{"_in":"disk","_ts":1722755225,"device":"/dev/disk3s1s1","free":334269898752,"fstype":"apfs","inodes_free":3264354480,"inodes_total":3264758647,"inodes_used":404167,"inodes_used_percent":0,"mount_point":"/","total":994662584320,"used":660392685568,"used_percent":66}
-{"_in":"disk","_ts":1722755228,"device":"/dev/disk3s1s1","free":334269898752,"fstype":"apfs","inodes_free":3264354480,"inodes_total":3264758647,"inodes_used":404167,"inodes_used_percent":0,"mount_point":"/","total":994662584320,"used":660392685568,"used_percent":66}
+{
+    "_in":"disk",
+    "_ts":1722755225,
+    "device":"/dev/disk3s1s1",
+    "free":334269898752,
+    "fstype":"apfs",
+    "inodes_free":3264354480,
+    "inodes_total":3264758647,
+    "inodes_used":404167,
+    "inodes_used_percent":0,
+    "mount_point":"/",
+    "total":994662584320,
+    "used":660392685568,
+    "used_percent":66
+}
 ```
 {% endcode %}
 
@@ -437,8 +477,24 @@ tine run example.toml
 
 {% code overflow="wrap" %}
 ```json
-{"_in":"diskio","_ts":1722755372,"device":"disk0","io_time":11680599,"iops_in_progress":0,"label":"","merged_read_count":0,"merged_write_count":0,"read_bytes":752462053376,"read_count":70590345,"read_time":10718681,"serial_number":"","weighted_io":0,"write_bytes":178813861888,"write_count":9640875,"write_time":961918}
-{"_in":"diskio","_ts":1722755375,"device":"disk0","io_time":11680599,"iops_in_progress":0,"label":"","merged_read_count":0,"merged_write_count":0,"read_bytes":752462053376,"read_count":70590345,"read_time":10718681,"serial_number":"","weighted_io":0,"write_bytes":178813861888,"write_count":9640875,"write_time":961918}
+{
+    "_in":"diskio",
+    "_ts":1722755372,
+    "device":"disk0",
+    "io_time":11680599,
+    "iops_in_progress":0,
+    "label":"",
+    "merged_read_count":0,
+    "merged_write_count":0,
+    "read_bytes":752462053376,
+    "read_count":70590345,
+    "read_time":10718681,
+    "serial_number":"",
+    "weighted_io":0,
+    "write_bytes":178813861888,
+    "write_count":9640875,
+    "write_time":961918
+}
 ```
 {% endcode %}
 
@@ -475,8 +531,21 @@ tine run example.toml
 
 {% code overflow="wrap" %}
 ```json
-{"_in":"net","_ts":1722755428,"bytes_recv":6124558288,"bytes_sent":947180141,"device":"en0","drop_in":0,"drop_out":11,"err_in":0,"err_out":0,"fifos_in":0,"fifos_out":0,"packets_recv":7065267,"packets_sent":0}
-{"_in":"net","_ts":1722755431,"bytes_recv":6124558853,"bytes_sent":947180654,"device":"en0","drop_in":0,"drop_out":11,"err_in":0,"err_out":0,"fifos_in":0,"fifos_out":0,"packets_recv":7065273,"packets_sent":0}
+{
+    "_in":"net",
+    "_ts":1722755428,
+    "bytes_recv":6124558288,
+    "bytes_sent":947180141,
+    "device":"en0",
+    "drop_in":0,
+    "drop_out":11,
+    "err_in":0,
+    "err_out":0,
+    "fifos_in":0,
+    "fifos_out":0,
+    "packets_recv":7065267,
+    "packets_sent":0
+}
 ```
 {% endcode %}
 
@@ -508,30 +577,52 @@ tine run example.toml
 ```json
 ```
 
-### SENSOR
+### SENSORS
 
 *Source* [plugins/psutil](https://github.com/OutOfBedlam/tine/tree/main/plugins/psutil)
 
 **Config**
 
 ```toml
-[[inlets.sensor]]
-    # macOS does not support sensor
+[[inlets.sensors]]
+    interval = "10s"
+    count    = 0
+[[flows.select]]
+    includes = ["**"]
+[[outlets.file]]
+    format = "json"
+    decimal = 2    
 ```
 
 **Example**
 
 ```toml
+[[inlets.sensors]]
+    interval = "5s"
+[[flows.select]]
+    includes = ["**"]
+[[outlets.file]]
+    format = "json"
+    decimal = 2
 ```
 
 *Run*
 
 ```sh
+tine run example.toml
 ```
 
 *Output*
 
 ```json
+{
+    "_in":"sensors",
+    "_ts":1723670753,
+    "critical":0.00,
+    "high":0.00,
+    "sensor_key":"PMU",
+    "temperature":35.98
+}
 ```
 
 ### HOST
@@ -565,8 +656,22 @@ tine run example.toml
 
 {% code overflow="wrap" %}
 ```json
-{"_in":"host","_ts":1722755502,"host_id":"b493ab81-9581-5523-807f-d28b04a3ca4f","hostname":"localhost.local","kernel_arch":"arm64","kernel_version":"23.5.0","os":"darwin","platform":"darwin","platform_family":"Standalone Workstation","platform_version":"14.5","procs":746,"uptime":756732,"virtualization_role":"","virtualization_system":""}
-{"_in":"host","_ts":1722755505,"host_id":"b493ab81-9581-5523-807f-d28b04a3ca4f","hostname":"localhost.local","kernel_arch":"arm64","kernel_version":"23.5.0","os":"darwin","platform":"darwin","platform_family":"Standalone Workstation","platform_version":"14.5","procs":746,"uptime":756735,"virtualization_role":"","virtualization_system":""}
+{
+    "_in":"host",
+    "_ts":1722755502,
+    "host_id":"b4995381-ab81-5073-852f-d28b04a3ca4f",
+    "hostname":"localhost.local",
+    "kernel_arch":"arm64",
+    "kernel_version":"23.5.0",
+    "os":"darwin",
+    "platform":"darwin",
+    "platform_family":"Standalone Workstation",
+    "platform_version":"14.5",
+    "procs":746,
+    "uptime":756732,
+    "virtualization_role":"",
+    "virtualization_system":""
+}
 ```
 {% endcode %}
 

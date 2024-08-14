@@ -24,7 +24,7 @@
     # supproted protocols: ip, icmp, icmpmsg, tcp, udp, udplite
     protocols = ["tcp", "udp"]
 
-[[inlets.sensor]]
+[[inlets.sensors]]
 
 [[inlets.host]]
 

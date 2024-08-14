@@ -24,3 +24,12 @@
 
     ## Trim space of output
     trim_space = false
+
+    ## Separator for splitting output
+    separator = ""
+
+    ## Field name for stdout
+    stdout_field = "stdout"
+
+    ## Field name for stderr
+    stderr_field = "stderr"

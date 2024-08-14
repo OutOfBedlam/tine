@@ -26,7 +26,8 @@ type ExecDriver struct {
 	parallelism int
 
 	// output options
-	namePrefix string
+	nameStdout string
+	nameStderr string
 	separator  []byte
 	trimSpace  bool
 
@@ -42,7 +43,8 @@ func (ed *ExecDriver) Open() error {
 	conf := ed.ctx.Config()
 	ed.commands = conf.GetStringSlice("commands", []string{})
 	ed.environments = conf.GetStringSlice("environments", []string{})
-	ed.namePrefix = conf.GetString("prefix", "")
+	ed.nameStdout = conf.GetString("stdout_field", "stdout")
+	ed.nameStderr = conf.GetString("stderr_field", "stderr")
 	ed.ignoreError = conf.GetBool("ignore_error", false)
 	ed.timeout = conf.GetDuration("timeout", 0)
 	ed.separator = []byte(conf.GetString("separator", ""))
@@ -104,8 +106,8 @@ func (ed *ExecDriver) Process(inputRecord engine.Record, next func([]engine.Reco
 	ed.cmd.Env = append(os.Environ(), ed.environments...)
 	ed.cmd.Env = append(ed.cmd.Env, vals...)
 
-	stdoutWriter := &execWriter{name: ed.namePrefix + "stdout", tags: tags, next: next, separator: ed.separator, trimSpace: ed.trimSpace}
-	stderrWriter := &execWriter{name: ed.namePrefix + "stderr", tags: tags, next: next, separator: ed.separator, trimSpace: ed.trimSpace}
+	stdoutWriter := &execWriter{name: ed.nameStdout, tags: tags, next: next, separator: ed.separator, trimSpace: ed.trimSpace}
+	stderrWriter := &execWriter{name: ed.nameStderr, tags: tags, next: next, separator: ed.separator, trimSpace: ed.trimSpace}
 	ed.cmd.Stdout = stdoutWriter
 	ed.cmd.Stderr = stderrWriter
 

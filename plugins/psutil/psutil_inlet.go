@@ -9,6 +9,7 @@ import (
 	"slices"
 
 	"github.com/OutOfBedlam/tine/engine"
+	"github.com/OutOfBedlam/tine/util"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/disk"
 	"github.com/shirou/gopsutil/v4/host"
@@ -309,27 +310,12 @@ func NetstatInlet(ctx *engine.Context) engine.Inlet {
 				engine.NewField("protocol", st.Protocol),
 			)
 			for key, val := range st.Stats {
-				rec = rec.Append(engine.NewField(camelToSnake(key), val))
+				rec = rec.Append(engine.NewField(util.CamelToSnake(key), val))
 			}
 			ret = append(ret, rec)
 		}
 		return ret, nil
 	}, engine.WithInterval(interval), engine.WithRunCountLimit(count))
-}
-
-func camelToSnake(s string) string {
-	ret := ""
-	for i, c := range s {
-		if 'A' <= c && c <= 'Z' {
-			if i > 0 {
-				ret += "_"
-			}
-			ret += string(c + 32)
-		} else {
-			ret += string(c)
-		}
-	}
-	return ret
 }
 
 func SensorsInlet(ctx *engine.Context) engine.Inlet {
