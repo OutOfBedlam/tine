@@ -132,9 +132,7 @@ func Test() error {
 		"-coverprofile", "./tmp/coverage.out",
 		"./cmd/...",
 		"./engine/...",
-		"./drivers/...",
-		"./engine/...",
-		"./plugin/...",
+		"./plugins/...",
 		"./util/...",
 	}
 

@@ -4,30 +4,29 @@ import (
 	"testing"
 
 	"github.com/OutOfBedlam/tine/engine"
-	"github.com/OutOfBedlam/tine/plugin/codec/csv"
-	"github.com/OutOfBedlam/tine/plugin/codec/json"
+	"github.com/OutOfBedlam/tine/plugins/base"
 	"github.com/stretchr/testify/require"
 )
 
 func TestCodecs(t *testing.T) {
 	engine.RegisterEncoder(&engine.EncoderReg{
 		Name:        "test-json",
-		Factory:     json.NewJSONEncoder,
+		Factory:     base.NewJSONEncoder,
 		ContentType: "application/x-ndjson",
 	})
 	engine.RegisterEncoder(&engine.EncoderReg{
 		Name:        "test-csv",
-		Factory:     csv.NewCSVEncoder,
+		Factory:     base.NewCSVEncoder,
 		ContentType: "text/csv",
 	})
 
 	engine.RegisterDecoder(&engine.DecoderReg{
 		Name:    "test-json",
-		Factory: json.NewJSONDecoder,
+		Factory: base.NewJSONDecoder,
 	})
 	engine.RegisterDecoder(&engine.DecoderReg{
 		Name:    "test-csv",
-		Factory: csv.NewCSVDecoder,
+		Factory: base.NewCSVDecoder,
 	})
 
 	enc := engine.GetEncoder("test-json")

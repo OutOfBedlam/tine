@@ -133,10 +133,18 @@ func (ctx *Context) LogError(msg string, keyvals ...interface{}) {
 	ctx.log(msg, slog.LevelError, keyvals...)
 }
 
+func (ctx *Context) LogEnabled(level slog.Level) bool {
+	return ctx.logger.Handler().Enabled(ctx, level)
+}
+
 func (ctx *Context) log(msg string, level slog.Level, keyvals ...interface{}) {
+	handler := ctx.logger.Handler()
+	if !handler.Enabled(ctx, level) {
+		return
+	}
 	var pcs [1]uintptr
 	runtime.Callers(3, pcs[:])
 	r := slog.NewRecord(time.Now(), level, ctx.pipeline.logMsg(msg), pcs[0])
 	r.Add(keyvals...)
-	ctx.logger.Handler().Handle(ctx, r)
+	handler.Handle(ctx, r)
 }

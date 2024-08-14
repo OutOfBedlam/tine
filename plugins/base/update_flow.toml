@@ -1,0 +1,14 @@
+[[flows.update]]
+    ## Update name and value of fields and tags in a record with the new value and name.
+    ## The toml syntax does not allow newlines within inline tables, 
+    ## so all fields are specified in a single line
+    set = [
+        ## "field" is the field name to be updated.
+        ## "name" is the new name of the field. If not specified, the original name is used.
+        ## "value" is the new value of the field. If not specified, the original value is used.
+        { field = "my_name", name = "new_name" },
+        { field = "my_int", value = 10 },
+        { field = "my_float", value = 9.87, name = "new_float" },
+        { field = "flag", value = true, name = "new_flag" },
+        { tag = "_in", value = "my" },
+    ]

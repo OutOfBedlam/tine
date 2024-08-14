@@ -1,0 +1,2 @@
+[[flows.merge]]
+    wait_limit = "2s"

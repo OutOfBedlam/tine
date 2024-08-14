@@ -30,6 +30,7 @@ type Pipeline struct {
 	flows     []*FlowHandler
 	ctx       *Context
 	logger    *slog.Logger
+	logWriter io.Writer
 	buildOnce sync.Once
 	startOnce sync.Once
 	stopOnce  sync.Once
@@ -140,6 +141,13 @@ func WithLogger(logger *slog.Logger) Option {
 	}
 }
 
+func WithLogWriter(w io.Writer) Option {
+	return func(p *Pipeline) error {
+		p.logWriter = w
+		return nil
+	}
+}
+
 // WithSetContentTypeFunc sets the callback function to set the content type
 func WithSetContentTypeFunc(fn SetContentTypeCallback) Option {
 	return func(p *Pipeline) error {
@@ -179,7 +187,11 @@ func New(opts ...Option) (*Pipeline, error) {
 
 	// init logging
 	if p.logger == nil {
-		p.logger = util.NewLogger(p.Log)
+		if p.logWriter != nil {
+			p.logger = util.NewLoggerWithWriter(p.Log, p.logWriter)
+		} else {
+			p.logger = util.NewLogger(p.Log)
+		}
 	}
 
 	// context

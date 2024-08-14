@@ -8,10 +8,8 @@ import (
 	"time"
 
 	"github.com/OutOfBedlam/tine/engine"
-	_ "github.com/OutOfBedlam/tine/plugin/codec/csv"
-	_ "github.com/OutOfBedlam/tine/plugin/codec/json"
-	_ "github.com/OutOfBedlam/tine/plugin/inlets/psutil"
-	_ "github.com/OutOfBedlam/tine/plugin/outlets/file"
+	_ "github.com/OutOfBedlam/tine/plugins/base"
+	_ "github.com/OutOfBedlam/tine/plugins/psutil"
 )
 
 const config = `

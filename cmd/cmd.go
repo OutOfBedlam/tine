@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"sync"
 	"syscall"
@@ -16,7 +17,7 @@ import (
 	"github.com/containerd/console"
 	"github.com/spf13/cobra"
 
-	_ "github.com/OutOfBedlam/tine/plugin/all"
+	_ "github.com/OutOfBedlam/tine/plugins/all"
 	_ "github.com/OutOfBedlam/tine/x"
 )
 
@@ -85,17 +86,38 @@ func NewCmd() *cobra.Command {
 }
 
 func ListHandler(cmd *cobra.Command, args []string) error {
+	_split := func(names []string) string {
+		slices.Sort(names)
+		lines := []string{}
+		sb := strings.Builder{}
+		for i, name := range names {
+			if i > 0 {
+				sb.WriteString(", ")
+			}
+			if sb.Len()+len(name) > 60 {
+				lines = append(lines, sb.String())
+				sb.Reset()
+			}
+			sb.WriteString(name)
+		}
+		if sb.Len() > 0 {
+			lines = append(lines, sb.String())
+		}
+		return strings.Join(lines, "\n              ")
+	}
 	fmt.Println("Input: data -> [inlet] -> [decompress] -> [decoder] -> records")
-	fmt.Println("  Decoders   ", strings.Join(engine.DecoderNames(), ","))
-	fmt.Println("  Decompress ", strings.Join(engine.DecompressorNames(), ","))
-	fmt.Println("  Inlets     ", strings.Join(engine.InletNames(), ","))
+	fmt.Println("  Decoders   ", _split(engine.DecoderNames()))
+	fmt.Println("  Decompress ", _split(engine.DecompressorNames()))
+	fmt.Println("  Inlets     ", _split(engine.InletNames()))
+	fmt.Println("")
+	fmt.Println("Flows: records -> [flow ...] -> records")
+	fmt.Println("  Flows      ", _split(engine.FlowNames()))
 	fmt.Println("")
 	fmt.Println("Output: records -> [encoder] -> [compress] -> [outlet] -> data")
-	fmt.Println("  Encoders   ", strings.Join(engine.EncoderNames(), ","))
-	fmt.Println("  Compress   ", strings.Join(engine.CompressorNames(), ","))
-	fmt.Println("  Outlets    ", strings.Join(engine.OutletNames(), ","))
+	fmt.Println("  Encoders   ", _split(engine.EncoderNames()))
+	fmt.Println("  Compress   ", _split(engine.CompressorNames()))
+	fmt.Println("  Outlets    ", _split(engine.OutletNames()))
 	fmt.Println("")
-	fmt.Println("Flows        ", strings.Join(engine.FlowNames(), ","))
 	return nil
 }
 
@@ -126,7 +148,6 @@ func GraphHandler(cmd *cobra.Command, args []string) error {
 
 func RunHandler(cmd *cobra.Command, args []string) error {
 	if pos := cmd.ArgsLenAtDash(); pos >= 0 {
-		// passthroughArgs := args[pos+1:]
 		args = args[0:pos]
 	}
 	if err := cmd.ParseFlags(args); err != nil {

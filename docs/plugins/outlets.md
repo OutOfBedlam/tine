@@ -2,7 +2,7 @@
 
 ### EXCEL
 
-*Source* [plugin/outlets/excel](https://github.com/OutOfBedlam/tine/tree/main/plugin/outlets/excel)
+*Source* [plugins/excel](https://github.com/OutOfBedlam/tine/tree/main/plugins/excel)
 
 **Config**
 
@@ -37,7 +37,7 @@
 
 ### FILE
 
-*Source* [plugin/outlets/file](https://github.com/OutOfBedlam/tine/tree/main/plugin/outlets/file)
+*Source* [plugins/base](https://github.com/OutOfBedlam/tine/tree/main/plugins/base)
 
 **Config**
 
@@ -61,7 +61,7 @@
 
 ### HTTP
 
-*Source* [plugin/outlets/http](https://github.com/OutOfBedlam/tine/tree/main/plugin/outlets/http)
+*Source* [plugins/http](https://github.com/OutOfBedlam/tine/tree/main/plugins/http)
 
 **Config**
 
@@ -85,7 +85,7 @@
 
 ### IMAGE
 
-*Source* [plugin/outlets/image](https://github.com/OutOfBedlam/tine/tree/main/plugin/outlets/image)
+*Source* [plugins/image](https://github.com/OutOfBedlam/tine/tree/main/plugins/image)
 
 **Config**
 
@@ -124,7 +124,7 @@
 
 ### MQTT
 
-*Source* [plugin/outlets/mqtt](https://github.com/OutOfBedlam/tine/tree/main/plugin/outlets/mqtt)
+*Source* [plugins/mqtt](https://github.com/OutOfBedlam/tine/tree/main/plugins/mqtt)
 
 **Config**
 
@@ -172,7 +172,7 @@
 
 ### TELEGRAM
 
-*Source* [plugin/outlets/telegram](https://github.com/OutOfBedlam/tine/tree/main/plugin/outlets/telegram)
+*Source* [plugins/telegram](https://github.com/OutOfBedlam/tine/tree/main/plugins/telegram)
 
 **Config**
 
@@ -204,7 +204,7 @@
 
 ### TEMPLATE
 
-*Source* [plugin/outlets/template](https://github.com/OutOfBedlam/tine/tree/main/plugin/outlets/template)
+*Source* [plugins/template](https://github.com/OutOfBedlam/tine/tree/main/plugins/template)
 
 **Config**
 

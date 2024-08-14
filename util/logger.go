@@ -35,6 +35,25 @@ type LogConfig struct {
 
 func NewLogger(conf LogConfig) *slog.Logger {
 	var lw io.Writer
+	if conf.Path == "" {
+		// disable logging
+		lw = io.Discard
+	} else if conf.Path == "-" {
+		lw = os.Stdout
+	} else {
+		lw = &lumberjack.Logger{
+			Filename:   conf.Path,
+			MaxSize:    conf.MaxSize,
+			MaxAge:     conf.MaxAge,
+			MaxBackups: conf.MaxBackups,
+			LocalTime:  true,
+			Compress:   conf.Compress,
+		}
+	}
+	return NewLoggerWithWriter(conf, lw)
+}
+
+func NewLoggerWithWriter(conf LogConfig, lw io.Writer) *slog.Logger {
 	if conf.Timeformat == "" {
 		conf.Timeformat = "2006-01-02 15:04:05 -0700"
 	}
@@ -55,24 +74,9 @@ func NewLogger(conf LogConfig) *slog.Logger {
 		opt.Level = slog.LevelError
 	}
 
-	if conf.Path == "" {
-		// disable logging
-		lw = io.Discard
-	} else if conf.Path == "-" {
-		lw = os.Stdout
-	} else {
-		lw = &lumberjack.Logger{
-			Filename:   conf.Path,
-			MaxSize:    conf.MaxSize,
-			MaxAge:     conf.MaxAge,
-			MaxBackups: conf.MaxBackups,
-			LocalTime:  true,
-			Compress:   conf.Compress,
-		}
-	}
 	ll := tint.NewHandler(lw, opt)
 	ret := slog.New(ll)
-	if conf.Chown == "" || runtime.GOOS == "windows" {
+	if conf.Chown == "" || runtime.GOOS == "windows" || conf.Path == "-" || conf.Path == "" {
 		return ret
 	}
 	usr, err := user.Lookup(conf.Chown)

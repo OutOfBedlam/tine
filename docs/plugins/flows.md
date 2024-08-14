@@ -2,7 +2,7 @@
 
 ### DAMPER
 
-*Source* [plugin/flows/base](https://github.com/OutOfBedlam/tine/tree/main/plugin/flows/base)
+*Source* [plugins/base](https://github.com/OutOfBedlam/tine/tree/main/plugins/base)
 
 **Config**
 
@@ -31,7 +31,7 @@
 
 ### DUMP
 
-*Source* [plugin/flows/base](https://github.com/OutOfBedlam/tine/tree/main/plugin/flows/base)
+*Source* [plugins/base](https://github.com/OutOfBedlam/tine/tree/main/plugins/base)
 
 **Config**
 
@@ -41,7 +41,7 @@
     ## DEBUG | INFO | WARN | ERROR  (default: DEBUG)
 	level = "DEBUG"
     ## The decimal format for float fields. (default: -1 which means no rounding)
-    precision = 2
+    decimal = 2
     ## The time format for time fields. (default: "2006-01-02 15:04:05")
     timeformat = "2006-01-02 15:04:05"
 ```
@@ -63,7 +63,7 @@
 
 ### EXEC
 
-*Source* [plugin/flows/exec](https://github.com/OutOfBedlam/tine/tree/main/plugin/flows/exec)
+*Source* [plugins/exec](https://github.com/OutOfBedlam/tine/tree/main/plugins/exec)
 
 **Config**
 
@@ -108,7 +108,7 @@
 
 ### MERGE
 
-*Source* [plugin/flows/base](https://github.com/OutOfBedlam/tine/tree/main/plugin/flows/base)
+*Source* [plugins/base](https://github.com/OutOfBedlam/tine/tree/main/plugins/base)
 
 **Config**
 
@@ -152,7 +152,7 @@ tine run example.toml
 
 ### UPDATE
 
-*Source* [plugin/flows/base](https://github.com/OutOfBedlam/tine/tree/main/plugin/flows/base)
+*Source* [plugins/base](https://github.com/OutOfBedlam/tine/tree/main/plugins/base)
 
 **Config**
 
@@ -190,7 +190,7 @@ tine run example.toml
 
 ### SELECT
 
-*Source* [plugin/flows/base](https://github.com/OutOfBedlam/tine/tree/main/plugin/flows/base)
+*Source* [plugins/base](https://github.com/OutOfBedlam/tine/tree/main/plugins/base)
 
 **Config**
 
@@ -220,7 +220,7 @@ tine run example.toml
 
 ### INJECT
 
-*Source* [plugin/flows/base](https://github.com/OutOfBedlam/tine/tree/main/plugin/flows/base)
+*Source* [plugins/base](https://github.com/OutOfBedlam/tine/tree/main/plugins/base)
 
 ```toml
 [[flows.inject]]
@@ -247,7 +247,7 @@ allowing applications to inject their own functions as flows with the specified 
 
 ### OLLAMA
 
-*Source* [plugin/flows/ollama](https://github.com/OutOfBedlam/tine/tree/main/plugin/flows/ollama)
+*Source* [plugins/ollama](https://github.com/OutOfBedlam/tine/tree/main/plugins/ollama)
 
 **Config**
 

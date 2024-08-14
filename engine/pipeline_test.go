@@ -13,15 +13,10 @@ import (
 	"compress/gzip"
 
 	"github.com/OutOfBedlam/tine/engine"
-	_ "github.com/OutOfBedlam/tine/plugin/codec/compress"
-	_ "github.com/OutOfBedlam/tine/plugin/codec/csv"
-	_ "github.com/OutOfBedlam/tine/plugin/codec/json"
-	_ "github.com/OutOfBedlam/tine/plugin/flows/base"
-	_ "github.com/OutOfBedlam/tine/plugin/inlets/args"
-	_ "github.com/OutOfBedlam/tine/plugin/inlets/exec"
-	_ "github.com/OutOfBedlam/tine/plugin/inlets/file"
-	_ "github.com/OutOfBedlam/tine/plugin/inlets/psutil"
-	_ "github.com/OutOfBedlam/tine/plugin/outlets/file"
+	_ "github.com/OutOfBedlam/tine/plugins/args"
+	_ "github.com/OutOfBedlam/tine/plugins/base"
+	_ "github.com/OutOfBedlam/tine/plugins/exec"
+	_ "github.com/OutOfBedlam/tine/plugins/psutil"
 	"github.com/stretchr/testify/require"
 )
 
