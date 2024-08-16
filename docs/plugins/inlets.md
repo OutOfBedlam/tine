@@ -54,10 +54,7 @@ Execute external command and yields records for the output of stdout of the comm
     ## Environment variables
     ## Array of "key=value" pairs
     ## e.g. ["key1=value1", "key2=value2"]
-    environments = []
-
-    ## Field name prefix
-    prefix = ""
+    environments = ["FOO=BAR"]
 
     ## Timeout
     timeout = "3s"
