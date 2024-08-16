@@ -22,8 +22,9 @@ func ExampleExecFlow_sample() {
 		environments = ["FOO=BAR"]
 		trim_space = true
 		ignore_error = true
+		stdout_field = "output"
 	[[flows.select]]
-		includes= ["#_ts", "stdout"]
+		includes= ["#_ts", "*"]
 	[[outlets.file]]
 		path = "-"
 		format = "json"
@@ -41,6 +42,6 @@ func ExampleExecFlow_sample() {
 		panic(err)
 	}
 	// Output:
-	// {"_ts":1721954798,"stdout":"hello BAR a 1"}
-	// {"_ts":1721954799,"stdout":"hello BAR b 2"}
+	// {"_ts":1721954798,"output":"hello BAR a 1"}
+	// {"_ts":1721954799,"output":"hello BAR b 2"}
 }

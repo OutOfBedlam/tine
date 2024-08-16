@@ -70,16 +70,15 @@
 ```toml
 [[flows.exec]]
     ## Commands array
-    ## Access the field values in the command by using the field name prefixed with "$FIELD_{name}".
-    commands = ["uname", "-m"]
+    ## Access the field and tag values in the command by using 
+    ## the uppercase field name prefixed with "$FIELD_{name}"
+    ## and uppercase tag name prefixed with "$TAG_{name}"
+    commands = ["echo", "$FOO", "$FIELD_SOME", "$TAG__IN"]
 
     ## Environment variables
     ## Array of "key=value" pairs
     ## e.g. ["key1=value1", "key2=value2"]
-    environments = []
-
-    ## Field name prefix
-    prefix = ""
+    environments = ["FOO=BAR"]
 
     ## Timeout
     timeout = "3s"
@@ -89,21 +88,50 @@
 
     ## Trim space of output
     trim_space = false
+
+    ## Separator for splitting output
+    separator = ""
+
+    ## Field name for stdout
+    stdout_field = "stdout"
+
+    ## Field name for stderr
+    stderr_field = "stderr"
 ```
 
 **Example**
 
 ```toml
+[[inlets.file]]
+    data = [
+        "a,1",
+        "b,2",
+    ]
+    format = "csv"
+[[flows.exec]]
+    commands = ["sh", "-c", "echo hello $FOO $FIELD_0 $FIELD_1"]
+    environments = ["FOO=BAR"]
+    trim_space = true
+    ignore_error = true
+    stdout_field = "output
+[[flows.select]]
+    includes= ["#_ts", "*"]
+[[outlets.file]]
+    path = "-"
+    format = "json"
 ```
 
 *Run*
 
 ```sh
+tine run example.toml
 ```
 
 *Output*
 
 ```json
+{"_ts":1721954798,"output":"hello BAR a 1"}
+{"_ts":1721954799,"output":"hello BAR b 2"}
 ```
 
 ### MERGE

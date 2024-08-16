@@ -1,15 +1,14 @@
 [[flows.exec]]
     ## Commands array
-    ## Access the field values in the command by using the field name prefixed with "$FIELD_{name}".
-    commands = ["uname", "-m"]
+    ## Access the field and tag values in the command by using 
+    ## the uppercase field name prefixed with "$FIELD_{name}"
+    ## and uppercase tag name prefixed with "$TAG_{name}"
+    commands = ["echo", "$FOO", "$FIELD_name", "$TAG__IN"]
 
     ## Environment variables
     ## Array of "key=value" pairs
     ## e.g. ["key1=value1", "key2=value2"]
-    environments = []
-
-    ## Field name prefix
-    prefix = ""
+    environments = ["FOO=BAR"]
 
     ## Timeout
     timeout = "3s"
@@ -19,3 +18,12 @@
 
     ## Trim space of output
     trim_space = false
+
+    ## Separator for splitting output
+    separator = ""
+
+    ## Field name for stdout
+    stdout_field = "stdout"
+
+    ## Field name for stderr
+    stderr_field = "stderr"
