@@ -14,6 +14,9 @@ type damperFlow struct {
 	lastFlush      time.Time
 }
 
+var _ = engine.Flow((*damperFlow)(nil))
+var _ = engine.BufferedFlow((*damperFlow)(nil))
+
 func DamperFlow(ctx *engine.Context) engine.Flow {
 	bufferSize := ctx.Config().GetInt("buffer_size", 20)
 	bufferLimit := ctx.Config().GetInt("buffer_limit", 1000)
@@ -43,4 +46,10 @@ func (df *damperFlow) Process(r []engine.Record, nextFunc engine.FlowNextFunc) {
 	} else {
 		nextFunc(nil, nil)
 	}
+}
+
+func (df *damperFlow) Flush(nextFunc engine.FlowNextFunc) {
+	ret := df.buffer
+	df.buffer = make([]engine.Record, 0, df.bufferSize)
+	nextFunc(ret, nil)
 }
