@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/OutOfBedlam/tine/engine"
-	goexpr "github.com/expr-lang/expr"
+	"github.com/expr-lang/expr"
 	"github.com/expr-lang/expr/vm"
 )
 
@@ -13,7 +13,7 @@ func ExprPredicate(code string) (engine.Predicate, error) {
 	translated := []rune{}
 	identBuff := []rune{}
 	inIdent := false
-	referedFiedls := []string{}
+	referredFields := []string{}
 
 	for i := 0; i < len(code); i++ {
 		c := rune(code[i])
@@ -28,7 +28,7 @@ func ExprPredicate(code string) (engine.Predicate, error) {
 				inIdent = false
 				ident := strings.TrimSpace(string(identBuff))
 				identBuff = identBuff[:0]
-				referedFiedls = append(referedFiedls, ident)
+				referredFields = append(referredFields, ident)
 				translated = append(translated, []rune(`_`+ident+".Value")...)
 			} else {
 				translated = append(translated, c)
@@ -45,16 +45,16 @@ func ExprPredicate(code string) (engine.Predicate, error) {
 	ret := &exprPredicate{
 		originalCode:   code,
 		translatedCode: string(translated),
-		referedFiedls:  referedFiedls,
+		referredFields: referredFields,
 	}
 
 	// compile translated code
 	env := map[string]any{}
-	for _, rf := range referedFiedls {
+	for _, rf := range referredFields {
 		env["_"+rf] = (*exprField)(nil)
 	}
 
-	prog, err := goexpr.Compile(ret.translatedCode, goexpr.Env(env), goexpr.AsBool())
+	prog, err := expr.Compile(ret.translatedCode, expr.Env(env), expr.AsBool())
 	if err != nil {
 		return ret, err
 	} else {
@@ -66,7 +66,7 @@ func ExprPredicate(code string) (engine.Predicate, error) {
 type exprPredicate struct {
 	originalCode   string
 	translatedCode string
-	referedFiedls  []string
+	referredFields []string
 	program        *vm.Program
 	lastErr        error
 }
@@ -80,11 +80,11 @@ type exprField struct {
 
 func (ep *exprPredicate) Apply(record engine.Record) bool {
 	env := map[string]any{}
-	nonexists := []string{}
-	for _, rf := range ep.referedFiedls {
+	nonExists := []string{}
+	for _, rf := range ep.referredFields {
 		f := record.Field(rf)
 		if f == nil {
-			nonexists = append(nonexists, rf)
+			nonExists = append(nonExists, rf)
 			continue
 		}
 		ef := &exprField{
@@ -95,15 +95,15 @@ func (ep *exprPredicate) Apply(record engine.Record) bool {
 		}
 		env["_"+rf] = ef
 	}
-	if len(nonexists) > 0 {
+	if len(nonExists) > 0 {
 		// TODO: If the record does not have the field, should we return false or error?
 		//
 		// For now, we return false. If we return error, the flow will be stopped.
-		ep.lastErr = fmt.Errorf("fields not found: %v", nonexists)
+		ep.lastErr = fmt.Errorf("fields not found: %v", nonExists)
 		return false
 	}
 
-	result, err := goexpr.Run(ep.program, env)
+	result, err := expr.Run(ep.program, env)
 	if err != nil {
 		ep.lastErr = err
 		return false

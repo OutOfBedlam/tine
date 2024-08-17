@@ -27,7 +27,7 @@ func TestNewPredicate(t *testing.T) {
 }
 
 func TestPredict(t *testing.T) {
-	teststs := []struct {
+	tests := []struct {
 		expect bool
 		code   string
 		record engine.Record
@@ -79,7 +79,7 @@ func TestPredict(t *testing.T) {
 		// OR test
 	}
 
-	for _, tt := range teststs {
+	for _, tt := range tests {
 		p, err := ExprPredicate(tt.code)
 		require.NoError(t, err)
 		predicate := p.(*exprPredicate)
