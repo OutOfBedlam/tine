@@ -692,16 +692,12 @@ tine run ./example.toml
 **Example**
 
 ```toml
-```
-
-*Run*
-
-```sh
-```
-
-*Output*
-
-```json
+[[inlets.screenshot]]
+    count = 1
+    displays = [0]
+    format = "png"
+[[outlets.image]]
+    path = "./tmp/screen.png"
 ```
 
 ### SENSORS
