@@ -25,16 +25,17 @@ type OpenCloser interface {
 
 type Pipeline struct {
 	PipelineConfig
-	inputs    []*InletHandler
-	outputs   []*OutletHandler
-	flows     []*FlowHandler
-	ctx       *Context
-	logger    *slog.Logger
-	logWriter io.Writer
-	buildOnce sync.Once
-	startOnce sync.Once
-	stopOnce  sync.Once
-	rawWriter io.Writer
+	inputs     []*InletHandler
+	outputs    []*OutletHandler
+	flows      []*FlowHandler
+	ctx        *Context
+	logger     *slog.Logger
+	logWriter  io.Writer
+	logVerbose bool
+	buildOnce  sync.Once
+	startOnce  sync.Once
+	stopOnce   sync.Once
+	rawWriter  io.Writer
 
 	setContentTypeFunc     SetContentTypeCallback
 	setContentEncodingFunc SetContentEncodingCallback
@@ -148,6 +149,13 @@ func WithLogWriter(w io.Writer) Option {
 	}
 }
 
+func WithVerbose(flag bool) Option {
+	return func(p *Pipeline) error {
+		p.logVerbose = flag
+		return nil
+	}
+}
+
 // WithSetContentTypeFunc sets the callback function to set the content type
 func WithSetContentTypeFunc(fn SetContentTypeCallback) Option {
 	return func(p *Pipeline) error {
@@ -182,6 +190,12 @@ func New(opts ...Option) (*Pipeline, error) {
 	for _, opt := range opts {
 		if err := opt(p); err != nil {
 			return nil, err
+		}
+	}
+	if p.logVerbose {
+		p.Log.Level = "DEBUG"
+		if p.Log.Path == "" {
+			p.Log.Path = "-"
 		}
 	}
 

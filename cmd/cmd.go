@@ -75,6 +75,8 @@ func NewCmd() *cobra.Command {
 		RunE:  RunHandler,
 	}
 	runCmd.Flags().String("pid", "", "write PID to the `<path>` file")
+	runCmd.Flags().BoolP("verbose", "v", false, "override log level to debug")
+	runCmd.Flags().SortFlags = false
 
 	rootCmd.AddCommand(
 		runCmd,
@@ -159,6 +161,8 @@ func RunHandler(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	optVerbose, _ := cmd.Flags().GetBool("verbose")
+
 	pipelineConfigs := []string{}
 	for _, arg := range args {
 		if _, err := os.Stat(arg); err != nil {
@@ -175,7 +179,7 @@ func RunHandler(cmd *cobra.Command, args []string) error {
 
 	pipelines := make([]*engine.Pipeline, 0, len(pipelineConfigs))
 	for _, pc := range pipelineConfigs {
-		p, err := engine.New(engine.WithConfigFile(pc))
+		p, err := engine.New(engine.WithConfigFile(pc), engine.WithVerbose(optVerbose))
 		if err != nil {
 			fmt.Println("failed to parse pipeline file:", err)
 			os.Exit(1)
