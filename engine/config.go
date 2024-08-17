@@ -32,6 +32,7 @@ func LoadConfig(content string, cfg *PipelineConfig) error {
 		cfg.Log.Path = lc.GetString("path", cfg.Log.Path)
 		cfg.Log.Level = lc.GetString("level", cfg.Log.Level)
 		cfg.Log.AddSource = lc.GetBool("add_source", cfg.Log.AddSource)
+		cfg.Log.Timeformat = lc.GetString("timeformat", cfg.Log.Timeformat)
 		cfg.Log.NoColor = lc.GetBool("no_color", cfg.Log.NoColor)
 		cfg.Log.MaxSize = lc.GetInt("max_size", cfg.Log.MaxSize)
 		cfg.Log.MaxAge = lc.GetInt("max_age", cfg.Log.MaxAge)
