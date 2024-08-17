@@ -749,21 +749,83 @@ tine run example.toml
 **Config**
 
 ```toml
+[[inlets.sqlite]]
+    path = ":memory:?mode=memory&cache=shared"
+    inits = [
+        "CREATE TABLE IF NOT EXISTS load ( ts INTEGER PRIMARY KEY, load REAL)",
+    ]
+    actions = [
+        [ "SELECT ts, load FROM load ORDER BY ts"],
+    ]
 ```
 
 **Example**
 
+*example_in.toml*
+
 ```toml
+[[inlets.sqlite]]
+    interval = "3s"
+    path = "./tmp/metrics.db"
+    actions = [
+        [
+            """ SELECT
+                    time, name, value
+                FROM
+                    metrics
+                ORDER BY
+                    time
+            """,
+        ],
+    ]
+[[outlets.file]]
+    path = "-"
+    format = "json"
+    decimal = 2
+```
+
+*example_out.toml*
+
+```toml
+[[inlets.cpu]]
+    interval = "3s"
+    percore = false
+    cputotal = true
+[[flows.flatten]]
+[[outlets.sqlite]]
+    path = "./tmp/metrics.db"
+    inits = [
+        """
+            CREATE TABLE IF NOT EXISTS metrics (
+                time  INTEGER,
+                name  TEXT,
+                value REAL,
+                UNIQUE(time, name)
+            )
+        """,
+    ]
+    actions = [
+        [
+            """ INSERT OR REPLACE INTO metrics (time, name, value)
+                VALUES (?, ?, ?)
+            """, 
+            "_ts", "name", "value"
+        ],
+    ]
 ```
 
 *Run*
 
 ```sh
+tine run ./example_out.toml ./example_in.toml
 ```
 
 *Output*
 
 ```json
+{"name":"cpu_total_percent","time":1723874971,"value":11.32}
+{"name":"cpu_total_percent","time":1723874981,"value":9.19}
+{"name":"cpu_total_percent","time":1723874991,"value":9.37}
 ```
 
 ### TELEGRAM

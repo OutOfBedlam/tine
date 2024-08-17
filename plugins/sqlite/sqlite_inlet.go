@@ -107,6 +107,7 @@ func doAction(db *sql.DB, ctx context.Context, act Action, cb func([]engine.Reco
 			}
 		}
 		if err := rows.Scan(destValues...); err != nil {
+			fmt.Println("==>", err.Error())
 			cb(nil, err)
 			return
 		}

@@ -5,14 +5,13 @@
 ```go
 // import github.com/OutOfBedlam/tine/engine
 //
+// Create a pipeline
 pipeline, err := engine.New(engine.WithName("my_pipeline"))
 ```
 
 **Set inputs of the pipeline**
 
 ```go
-// psutil.CpuInlet() should be imported:
-//
 // import github.com/OutOfBedlam/tine/plugins/psutil
 //
 // Add inlet for cpu usage
@@ -23,8 +22,6 @@ pipeline.AddInlet("cpu", psutil.CpuInlet(pipeline.Context().WithConfig(conf)))
 **Set outputs of the pipeline**
 
 ```go
-// file.FileOutlet() should be imported:
-//
 // import github.com/OutOfBedlam/tine/plugins/base
 //
 // Add outlet printing to stdout '-'
@@ -32,8 +29,8 @@ conf = engine.NewConfig().Set("path", "-").Set("decimal", 2)
 pipeline.AddOutlet("file", base.FileOutlet(pipeline.Context().WithConfig(conf)))
 ```
 
-**Start the pipeline**
+**Run the pipeline**
 
 ```go
-pipeline.Start()
+pipeline.Run()
 ```
