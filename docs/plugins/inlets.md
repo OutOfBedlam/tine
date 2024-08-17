@@ -218,36 +218,68 @@ The pipeline result will be:
 {"_in":"http","_ts":1721954797,"a":1,"b.c":true,"b.d":3.14}
 ```
 
-### NATS
+### NATS_VARZ
 
 *Source* [plugins/nats](https://github.com/OutOfBedlam/tine/tree/main/plugins/nats)
 
 **Config**
 
 ```toml
-[[inlets.nats]]
+[[inlets.nats_varz]]
     ### nats server statz endpoint
-    server = ""
+    server = "http://localhost:8222/varz"
 
     ### timeout (default: 3s)
     timeout = "3s"
 
-    interval = "10s"
+    interval = "5s"
 ```
 
 **Example**
 
 ```toml
+[[inlets.nats_varz]]
+    server = "http://localhost:8222/varz"
+    timeout = "3s"
+    interval = "5s"
+[[flows.select]]
+    includes = ["**"]
+[[outlets.file]]
+    format = "json"
+    decimal = 2
 ```
 
 *Run*
 
 ```sh
+tine run ./example.toml
 ```
 
 *Output*
 
 ```json
+{
+  "_in": "nats_varz",
+  "_ts": 1723854808,
+  "connections": 0,
+  "cores": 10,
+  "cpu": 0.00,
+  "gomaxprocs": 10,
+  "host": "0.0.0.0",
+  "in_bytes": 0,
+  "in_msgs": 0,
+  "mem": 19378176,
+  "out_bytes": 0,
+  "out_msgs": 0,
+  "port": 4222,
+  "server_id": "NB5CLZPP2KHAOV6",
+  "server_name": "NB5CLZPP2KHAOV6",
+  "slow_consumers": 0,
+  "subscriptions": 57,
+  "total_connections": 0,
+  "uptime": 1812,
+  "version": "2.10.18"
+}
 ```
 
 ### CPU
@@ -562,16 +594,43 @@ tine run example.toml
 **Example**
 
 ```toml
+[[inlets.netstat]]
+    protocols = ["tcp"]
+[[flows.select]]
+    includes = ["**"]
+[[outlets.file]]
+    format = "json"
 ```
 
 *Run*
 
 ```sh
+tine run ./example.toml
 ```
 
 *Output*
 
 ```json
+{
+    "_in":"netstat",
+    "_ts":1723855057,
+    "active_opens":1447,
+    "attempt_fails":0,
+    "curr_estab":6,
+    "estab_resets":0,
+    "in_csum_errors":0,
+    "in_errs":0,
+    "in_segs":467153,
+    "max_conn":-1,
+    "out_rsts":11,
+    "out_segs":469206,
+    "passive_opens":5,
+    "protocol":"tcp",
+    "retrans_segs":666,
+    "rto_algorithm":1,
+    "rto_max":120000,
+    "rto_min":200
+}
 ```
 
 ### SENSORS
@@ -583,12 +642,6 @@ tine run example.toml
 ```toml
 [[inlets.sensors]]
     interval = "10s"
-    count    = 0
-[[flows.select]]
-    includes = ["**"]
-[[outlets.file]]
-    format = "json"
-    decimal = 2    
 ```
 
 **Example**
@@ -651,7 +704,6 @@ tine run example.toml
 
 *Output*
 
-{% code overflow="wrap" %}
 ```json
 {
     "_in":"host",
@@ -670,7 +722,6 @@ tine run example.toml
     "virtualization_system":""
 }
 ```
-{% endcode %}
 
 ### SCREENSHOT
 
@@ -708,10 +759,6 @@ tine run example.toml
 ```
 
 ### SQLITE
-
-{% hint style="danger" %}
-WIP
-{% endhint %}
 
 *Source* [plugins/sqlite](https://github.com/OutOfBedlam/tine/tree/main/plugins/sqlite)
 

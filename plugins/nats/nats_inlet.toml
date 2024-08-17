@@ -1,6 +1,6 @@
-[[inlets.nats]]
-    ### nats server statz endpoint
-    server = ""
+[[inlets.nats_varz]]
+    ### nats server varz endpoint
+    server = "http://127.0.0.1:8222/varz"
 
     ### timeout (default: 3s)
     timeout = "3s"

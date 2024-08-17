@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"path"
 	"time"
 
 	"github.com/OutOfBedlam/tine/engine"
@@ -14,23 +13,23 @@ import (
 
 func init() {
 	engine.RegisterInlet(&engine.InletReg{
-		Name:    "nats",
-		Factory: NatsInlet,
+		Name:    "nats_varz",
+		Factory: NatsVarzInlet,
 	})
 }
 
-func NatsInlet(ctx *engine.Context) engine.Inlet {
+func NatsVarzInlet(ctx *engine.Context) engine.Inlet {
 	server := ctx.Config().GetString("server", "")
 	timeout := ctx.Config().GetDuration("timeout", 3*time.Second)
 
-	return &natsInlet{
+	return &natsVarzInlet{
 		ctx:     ctx,
 		Server:  server,
 		Timeout: timeout,
 	}
 }
 
-type natsInlet struct {
+type natsVarzInlet struct {
 	ctx     *engine.Context
 	Server  string
 	Timeout time.Duration
@@ -39,27 +38,26 @@ type natsInlet struct {
 	client  *http.Client
 }
 
-var _ = engine.Inlet((*natsInlet)(nil))
+var _ = engine.Inlet((*natsVarzInlet)(nil))
 
-func (ni *natsInlet) Open() error {
+func (ni *natsVarzInlet) Open() error {
 	address, err := url.Parse(ni.Server)
 	if err != nil {
 		return err
 	}
-	address.Path = path.Join(address.Path, "varz")
 	ni.address = address
 	return nil
 }
 
-func (ni *natsInlet) Close() error {
+func (ni *natsVarzInlet) Close() error {
 	return nil
 }
 
-func (ni *natsInlet) Interval() time.Duration {
+func (ni *natsVarzInlet) Interval() time.Duration {
 	return ni.ctx.Config().GetDuration("interval", ni.Timeout)
 }
 
-func (ni *natsInlet) Process(next engine.InletNextFunc) {
+func (ni *natsVarzInlet) Process(next engine.InletNextFunc) {
 	if ni.client == nil {
 		timeout := ni.Timeout
 		if timeout == time.Duration(0) {

@@ -17,7 +17,7 @@
 
 ## Embedding TINE in Go
 
-* [Use Config](embedding/use_config.md)
+* [Use Recipe](embedding/use_recipe.md)
 * [Use API](embedding/use_api.md)
 
 ## Plugins

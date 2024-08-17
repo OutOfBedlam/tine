@@ -1,4 +1,4 @@
-# Embedding TINE using Config
+# Embedding TINE using Recipe
 
 **Imports**
 
@@ -23,7 +23,7 @@ import (
 **Define pipeline**
 
 ```go
-const pipelineConfig = `
+const pipelineRecipe = `
 [[inlets.cpu]]
 	interval = "3s"
 [[flows.select]]
@@ -37,7 +37,7 @@ const pipelineConfig = `
 **Create a pipeline**
 
 ```go
-pipeline, err := engine.New(engine.WithConfig(pipelineConfig))
+pipeline, err := engine.New(engine.WithConfig(pipelineRecipe))
 ```
 
 **Start the pipeline**
