@@ -113,7 +113,7 @@
     environments = ["FOO=BAR"]
     trim_space = true
     ignore_error = true
-    stdout_field = "output
+    stdout_field = "output"
 [[flows.select]]
     includes= ["#_ts", "*"]
 [[outlets.file]]
@@ -174,8 +174,8 @@ tine run example.toml
 *Output*
 
 ```json
-{"_ts":1723248243,"cpu_total_percent":8.16,"load.load1":1.90,"load.load5":1.94}
-{"_ts":1723248244,"cpu_total_percent":11.67,"load.load1":1.90,"load.load5":1.94}
+{"_ts":1723248243,"cpu_total_percent":8.16,"load_load1":1.90,"load_load5":1.94}
+{"_ts":1723248244,"cpu_total_percent":11.67,"load_load1":1.90,"load_load5":1.94}
 {"_ts":1723248245,"cpu_total_percent":15.56}
 ```
 

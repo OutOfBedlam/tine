@@ -29,8 +29,10 @@ conf = engine.NewConfig().Set("path", "-").Set("decimal", 2)
 pipeline.AddOutlet("file", base.FileOutlet(pipeline.Context().WithConfig(conf)))
 ```
 
-**Run the pipeline**
+**Start the pipeline**
 
 ```go
-pipeline.Run()
+pipeline.Start()
 ```
+
+The `Start()` function in the code snippet above initiates the pipeline execution but does not wait for it to complete. Instead, it spawns a goroutine by calling `go pipeline.Run()` and returns immediately. On the other hand, `pipeline.Run()` is a blocking function that waits until the pipeline finishes its execution before returning control.

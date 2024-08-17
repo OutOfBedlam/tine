@@ -20,8 +20,8 @@
     devices = ["eth*"]
 
 [[inlets.netstat]]
-    # macOS does not support netstat
-    # supproted protocols: ip, icmp, icmpmsg, tcp, udp, udplite
+    # macOS is not supported
+    # available protocols: ip, icmp, icmpmsg, tcp, udp, udplite
     protocols = ["tcp", "udp"]
 
 [[inlets.sensors]]

@@ -622,8 +622,8 @@ tine run example.toml
 
 ```toml
 [[inlets.netstat]]
-    # macOS does not support netstat
-    # supported protocols: ip, icmp, icmpmsg, tcp, udp, udplite
+    # macOS is not supported
+    # available protocols: ip, icmp, icmpmsg, tcp, udp, udplite
     protocols = ["tcp", "udp"]
 ```
 
@@ -631,9 +631,9 @@ tine run example.toml
 
 ```toml
 [[inlets.netstat]]
-    protocols = ["tcp"]
+    protocols = [ "tcp" ]
 [[flows.select]]
-    includes = ["**"]
+    includes = [ "**" ]
 [[outlets.file]]
     format = "json"
 ```
@@ -662,7 +662,7 @@ tine run ./example.toml
     "out_segs":469206,
     "passive_opens":5,
     "protocol":"tcp",
-    "retrans_segs":666,
+    "retrans_segs":660,
     "rto_algorithm":1,
     "rto_max":120000,
     "rto_min":200
@@ -685,7 +685,7 @@ tine run ./example.toml
     ## if it is empty, it will capture all displays
     displays = [0, 1]
     ## capture image format
-    ## rgba | png | jpeg | gif
+    ## available: rgba, png, jpeg, gif
     format = "png"
 ```
 

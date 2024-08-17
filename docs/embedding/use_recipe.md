@@ -46,5 +46,5 @@ pipeline, err := engine.New(engine.WithConfig(pipelineRecipe))
 pipeline.Start()
 ```
 
-The `Start()` function does not wait for the pipeline to complete. Instead, it simply calls `go pipeline.Run()` and returns immediately.
+The `Start()` function in the code snippet above initiates the pipeline execution but does not wait for it to complete. Instead, it spawns a goroutine by calling `go pipeline.Run()` and returns immediately. On the other hand, `pipeline.Run()` is a blocking function that waits until the pipeline finishes its execution before returning control.
 
