@@ -9,12 +9,14 @@ import (
 
 func MergeFlow(ctx *engine.Context) engine.Flow {
 	waitLimit := ctx.Config().GetDuration("wait_limit", 10*time.Second)
+	nameInfix := ctx.Config().GetString("name_infix", "_")
 	return &mergeFlow{
 		ctx:           ctx,
 		table:         engine.NewTable[int64](),
 		waitLimit:     waitLimit,
 		joinTag:       engine.TAG_TIMESTAMP,
 		namePrefixTag: engine.TAG_INLET,
+		nameInfix:     nameInfix,
 	}
 }
 
@@ -24,6 +26,7 @@ type mergeFlow struct {
 	waitLimit     time.Duration
 	joinTag       string // joinTag should be time.Time type, for now.
 	namePrefixTag string
+	nameInfix     string
 }
 
 var _ = engine.Flow((*mergeFlow)(nil))
@@ -64,7 +67,7 @@ func (mf *mergeFlow) Process(records []engine.Record, nextFunc engine.FlowNextFu
 		if namePrefix != "" {
 			fields := []*engine.Field{engine.NewFieldWithValue(mf.joinTag, tsValue)}
 			for _, f := range rec.Fields() {
-				f.Name = fmt.Sprintf("%v.%s", namePrefix, f.Name)
+				f.Name = fmt.Sprintf("%v%s%s", namePrefix, mf.nameInfix, f.Name)
 				fields = append(fields, f)
 			}
 			mf.table.Set(ts.Unix(), fields...)

@@ -84,7 +84,7 @@ func ExampleNew_multi_inlets() {
 		panic(err)
 	}
 	// Output:
-	// {"_ts":1721954797,"exec.stdout":"hello world","file.0":"a","file.1":"1"}
+	// {"_ts":1721954797,"exec_stdout":"hello world","file_0":"a","file_1":"1"}
 }
 
 func ExampleNewReader_withTypes() {
@@ -183,8 +183,8 @@ func TestMultiInlets(t *testing.T) {
 	obj := map[string]interface{}{}
 
 	expectKeys := [][]string{
-		{"_ts", "cpu.total_percent", "load.load1", "load.load5"},
-		{"_ts", "cpu.total_percent"},
+		{"_ts", "cpu_total_percent", "load_load1", "load_load5"},
+		{"_ts", "cpu_total_percent"},
 	}
 	for i := 0; dec.Decode(&obj) == nil; i++ {
 		t.Log(obj)

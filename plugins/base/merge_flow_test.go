@@ -40,5 +40,5 @@ func ExampleMergeFlow() {
 		panic(err)
 	}
 	// Output:
-	// {"_ts":1721954797,"exec.stdout":"hello world","file.0":"a","file.1":"1"}
+	// {"_ts":1721954797,"exec_stdout":"hello world","file_0":"a","file_1":"1"}
 }

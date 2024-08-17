@@ -84,6 +84,7 @@ name = "rrd-collector"
 	totalcpu = true
 [[flows.merge]]
 	wait_limit = "2s"
+    name_infix = "."
 [[outlets.rrd]]
 	path = "./tmp/rrdweb.rrd"
 	step = "1s"

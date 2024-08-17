@@ -143,6 +143,7 @@ tine run example.toml
 ```toml
 [[flows.merge]]
     wait_limit = "2s"
+    name_infix = "_"
 ```
 
 **Example**
@@ -173,9 +174,9 @@ tine run example.toml
 *Output*
 
 ```json
-{"_ts":1723248243,"cpu.total_percent":8.16,"load.load1":1.90,"load.load5":1.94}
-{"_ts":1723248244,"cpu.total_percent":11.67,"load.load1":1.90,"load.load5":1.94}
-{"_ts":1723248245,"cpu.total_percent":15.56}
+{"_ts":1723248243,"cpu_total_percent":8.16,"load.load1":1.90,"load.load5":1.94}
+{"_ts":1723248244,"cpu_total_percent":11.67,"load.load1":1.90,"load.load5":1.94}
+{"_ts":1723248245,"cpu_total_percent":15.56}
 ```
 
 ### UPDATE

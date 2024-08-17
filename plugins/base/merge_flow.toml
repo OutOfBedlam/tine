@@ -1,2 +1,3 @@
 [[flows.merge]]
     wait_limit = "2s"
+    name_infix = "_"
