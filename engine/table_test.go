@@ -19,7 +19,7 @@ func TestTable(t *testing.T) {
 
 	tb = NewTable[int64]()
 
-	tb.AddColumns([]string{"ts", "name", "age"}, []Type{TIME, STRING, INT})
+	tb.AddColumns([]string{"TS", "NAME", "AGE"}, []Type{TIME, STRING, INT})
 	require.Equal(t, []string{"TS", "NAME", "AGE"}, tb.Columns())
 	require.Equal(t, []Type{TIME, STRING, INT}, tb.Types())
 

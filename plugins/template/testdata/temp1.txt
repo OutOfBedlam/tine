@@ -1,0 +1,3 @@
+area: a, ival: 1
+area: b, ival: 2
+area: c, ival: 3

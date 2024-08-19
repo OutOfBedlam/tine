@@ -50,11 +50,12 @@ func ExampleSelectFlow_tag() {
 			"c,3",
 		]
 		format = "csv"
+		fields = ["area", "ival"]
+		types = ["string", "int"]
 	[[flows.select]]
-		includes = ["#_in", "*"]
+		includes = ["#_in", "#non_exist", "*"]
 	[[outlets.file]]
-		path = "-"
-		format = "csv"
+		format = "json"
 	`
 	// Make the output timestamp deterministic, so we can compare it
 	// This line is required only for testing
@@ -70,7 +71,7 @@ func ExampleSelectFlow_tag() {
 		panic(err)
 	}
 	// Output:
-	// file,a,1
-	// file,b,2
-	// file,c,3
+	// {"_in":"file","area":"a","ival":1,"non_exist":null}
+	// {"_in":"file","area":"b","ival":2,"non_exist":null}
+	// {"_in":"file","area":"c","ival":3,"non_exist":null}
 }

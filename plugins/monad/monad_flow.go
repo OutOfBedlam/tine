@@ -20,8 +20,9 @@ func FilterFlow(ctx *engine.Context) engine.Flow {
 }
 
 type filterFlow struct {
-	ctx       *engine.Context
-	predicate engine.Predicate
+	ctx         *engine.Context
+	predicate   engine.Predicate
+	parallelism int
 }
 
 var _ = engine.Flow((*filterFlow)(nil))
@@ -36,6 +37,7 @@ func (ff *filterFlow) Open() error {
 	} else {
 		ff.predicate = pred
 	}
+	ff.parallelism = ff.ctx.Config().GetInt("parallelism", 1)
 	return nil
 }
 

@@ -1,0 +1,28 @@
+[log]
+    path = "-"
+    level = "warn"
+    no_color = true
+[[inlets.file]]
+    data = [
+        "a,1",
+        "b,2",
+        "c,3",
+    ]
+    format = "csv"
+    fields = ["area", "ival"]
+    types  = ["string", "int"]
+[[flows.select]]
+    includes = ["#_ts", "#_in", "area", "ival"]
+[[outlets.template]]
+    path = "-"
+    column_mode = true
+    lazy = true
+    timeformat = "s"
+    templates = [
+'''
+    ts = [ {{ range ._ts }}{{ json . }}, {{ end }}];
+    in = [ {{ range ._in }}{{ . }}, {{ end }}];
+    area = [ {{ range .area }}{{ . }}, {{ end }}];
+    ival = [ {{ range .ival }}{{ . }}, {{ end }}];
+''',
+    ]
