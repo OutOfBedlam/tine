@@ -97,6 +97,9 @@ func (to *templateOutlet) Open() error {
 		}
 	}
 
+	contentType := conf.GetString("content_type", "text/plain")
+	to.ctx.SetContentType(contentType)
+
 	if w := to.ctx.Writer(); w != nil {
 		to.writer = engine.NopCloser(w)
 	} else {
