@@ -12,11 +12,15 @@
     fields = ["area", "ival"]
     types  = ["string", "int"]
 [[flows.select]]
-    includes = ["#_ts", "#_in", "area", "ival"]
+    includes = ["#_ts", "#_ts", "#_ts", "#_ts", "#_in", "area", "ival"]
 [[outlets.template]]
     path = "-"
     templates = [
-        """{{ range . }}{{template "area_template" .area }}, {{template "ival_template" .ival}}\n{{ end }}""",
+        """{{ range . }}{{ template "time_template_s" ._ts }}, {{ template "time_template_ms" ._ts }}, {{ template "time_template_us" ._ts }}, {{ template "time_template_ns" ._ts }}, {{template "area_template" .area }}, {{template "ival_template" .ival}}\n{{ end }}""",
+        """{{ define "time_template_s" }}ts: {{ timeformat . "s" }}{{ end }}""",
+        """{{ define "time_template_ms" }}ts: {{ timeformat . "ms" }}{{ end }}""",
+        """{{ define "time_template_us" }}ts: {{ timeformat . "us" }}{{ end }}""",
+        """{{ define "time_template_ns" }}ts: {{ timeformat . "ns" }}{{ end }}""",
         """{{ define "area_template" }}area: {{ . }}{{ end }}""",
         """{{ define "ival_template" }}ival: {{ . }}{{ end }}""",
     ]

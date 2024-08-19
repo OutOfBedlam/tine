@@ -14,7 +14,8 @@
 [[flows.select]]
     includes = ["#_ts", "#_in", "area", "ival"]
 [[outlets.template]]
-    path = "-"
+    path = "./testdata/_out.txt"
+    overwrite = true
     column_mode = true
     lazy = true
     timeformat = "ms"

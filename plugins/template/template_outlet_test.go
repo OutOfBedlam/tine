@@ -51,3 +51,34 @@ func TestTemplate(t *testing.T) {
 		require.Equal(t, string(expect), result, "input=%s", tt.input)
 	}
 }
+
+func TestTemplate_file(t *testing.T) {
+	tests := []struct {
+		input  string
+		expect string
+	}{
+		{
+			input:  "./testdata/temp4.toml",
+			expect: "./testdata/temp4.txt",
+		},
+	}
+
+	for _, tt := range tests {
+		input, _ := os.ReadFile(tt.input)
+		seq := int64(0)
+		engine.Now = func() time.Time { seq++; return time.Unix(1724045000+seq, 0) }
+		p, err := engine.New(engine.WithConfig(string(input)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.Remove("./testdata/_out.txt")
+		err = p.Run()
+		if err != nil {
+			t.Log("Fail:", tt.input)
+			t.Fatal(err)
+		}
+		result, _ := os.ReadFile("./testdata/_out.txt")
+		expect, _ := os.ReadFile(tt.expect)
+		require.EqualValues(t, expect, result, "input=%s", tt.input)
+	}
+}
