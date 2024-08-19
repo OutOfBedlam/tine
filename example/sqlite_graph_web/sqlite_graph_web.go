@@ -9,14 +9,16 @@ import (
 )
 
 func main() {
+	addr := "127.0.0.1:8080"
 	// start data collector that save metrics to sqlite
-	collect, _ := engine.New(engine.WithConfig(collectorPipleine))
+	collect, _ := engine.New(engine.WithConfig(collectorPipeline))
 	collect.Start()
 
 	router := http.NewServeMux()
 	router.HandleFunc("GET /", getView)
 	router.HandleFunc("GET /query", HttpHandler(queryPipeline))
-	http.ListenAndServe("127.0.0.1:8080", router)
+	fmt.Printf("\nlistener start at http://%s\n", addr)
+	http.ListenAndServe(addr, router)
 
 	// stop data collector
 	collect.Stop()
@@ -24,26 +26,11 @@ func main() {
 
 func HttpHandler(config string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		p, err := engine.New(
-			engine.WithConfigTemplate(config, r.URL.Query()),
+		p, _ := engine.New(
+			engine.WithConfig(config),
 			engine.WithWriter(w),
-			engine.WithSetContentTypeFunc(func(contentType string) {
-				w.Header().Set("Content-Type", contentType)
-			}),
-			engine.WithSetContentEncodingFunc(func(contentEncoding string) {
-				w.Header().Set("Content-Encoding", contentEncoding)
-			}),
-			engine.WithSetContentLengthFunc(func(contentLength int) {
-				w.Header().Set("Content-Length", fmt.Sprintf("%d", contentLength))
-			}),
 		)
-		w.Header().Set("Connection", "Close")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		err = p.Run()
-		if err != nil {
+		if err := p.Run(); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -54,74 +41,97 @@ func HttpHandler(config string) http.HandlerFunc {
 func getView(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	w.Write([]byte(`<html>
+		<head>
+			<title>SQLite Graph Web</title>
+			<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+		</head>
 		<body>
-			<li><a href="/query?format=json&names=load_load1&names=load_load5&names=load_load15&pname=load-json">Load - json</a></li>
-			<li><a href="/query?format=csv&names=load_load1&names=load_load5&names=load_load15&pname=load-csv">Load - csv</a></li>
-			<li><a href="/query?format=json&names=load_load1&names=cpu_total_percent&pname=cpu-json">CPU - json</a></li>
-			<li><a href="/query?format=csv&names=load_load1&names=cpu_total_percent&pname=cpu-csv">CPU - csv</a></li>
+			<div id="main" style="width:600px;height:400px;"></div>
+			<script type="text/javascript">
+				var myChart = echarts.init(document.getElementById('main'));
+				var option = {};
+				option && myChart.setOption(option);
+				
+				function refresh_graph() {
+					fetch('/query', {method: 'GET'})
+					.then( rsp => rsp.json() )
+					.then(function(data){
+						console.log(data);
+						myChart.setOption(data);
+					}).catch(function(err){
+						console.error(err);
+					});
+				}
+				setInterval(refresh_graph, 5000);
+			</script>
 		</body>
-		<!--
-		<body>
-		<img id="rrd_load" src='/graph/load' />
-		<img id="rrd_cpu" src='/graph/cpu' />
-		</body>
-		<script type="text/javascript">
-			function refresh_load_graph() {
-				document.getElementById('rrd_load').src = '/graph/load?t=' + new Date().getTime();
-			}
-			setInterval(refresh_load_graph, 2000);
-
-			function refresh_cpu_graph() {
-				document.getElementById('rrd_cpu').src = '/graph/cpu?t=' + new Date().getTime();
-			}
-			setInterval(refresh_cpu_graph, 2000);
-		</script>
-		-->
 	</html>`))
 }
 
 // pipeline config with Go Template using URL Query parameters
 const queryPipeline = `
-name = "sqlite-{{ .pname }}"
+name = "query"
 [log]
+	path = "-"
 	level = "debug"
 [[inlets.sqlite]]
 	count = 1
-    path = "file::memory:?mode=memory&cache=shared"
+	path = "file::memdb?mode=memory&cache=shared"
     actions = [
-        [
-            """SELECT time, name, value FROM metrics
-				WHERE name in ( {{ range $i, $v := .names }} {{if $i}},{{end}}'{{ $v }}'{{ end }} )
-				ORDER BY time LIMIT 600
-            """,
-        ],
+        ['''SELECT time, name, value 
+			FROM test
+			WHERE
+				datetime(time, 'unixepoch') > datetime('now', '-5 minutes')
+			AND name = 'cpu_total_percent'
+			ORDER BY time
+		'''],
     ]
-[[outlets.file]]
-	format="{{ .format }}"
+[[outlets.template]]
+	path = "-"
+	content_type = "application/json"
+	column_mode = true
+	timeformat = "15:04:05"
+	lazy = true
+	decimal = 2
+	templates = ['''
+		{
+			"title": {
+				"left": "center",
+				"text": "SQLite Graph Web"
+			},
+			"xAxis": {
+				"type": "category",
+				"data": {{ json .time }}
+			},
+			"yAxis": {
+				"type": "value"
+			},
+			"series": [
+				{
+					"data": {{ json .value }},
+					"type": "line"
+				}
+			]
+		}
+	''']
 `
 
-const collectorPipleine = `
+const collectorPipeline = `
 name = "collector"
-[defaults]
-	interval = "1s"
 [[inlets.load]]
+	loads = ["load1", "load5", "load15"]
+	interval = "5s"
 [[inlets.cpu]]
 	percpu = false
 	totalcpu = true
+	interval = "5s"
 [[flows.flatten]]
 [[outlets.sqlite]]
-    path = "file::memory:?mode=memory&cache=shared"
-    inits = [
-        """
-            CREATE TABLE IF NOT EXISTS metrics (
-                time INTEGER, name TEXT, value REAL, UNIQUE(time, name)
-            )
-        """,
-    ]
-    actions = [
-        [
-            "INSERT INTO metrics (time, name, value) VALUES (?, ?, ?)",
-            "_ts", "name", "value"
-        ],
-    ]
+	path = "file::memdb?mode=memory&cache=shared"
+	inits = [
+		"CREATE TABLE test (time INTEGER, name TEXT, value REAL, UNIQUE(time, name))",
+	]
+	actions = [
+		["INSERT INTO test (time, name, value) VALUES (?, ?, ?)", "_ts", "name", "value"],
+	]
 `
