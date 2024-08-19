@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/OutOfBedlam/tine/engine"
+	"github.com/OutOfBedlam/tine/util"
 )
 
 func init() {
@@ -57,7 +58,7 @@ func (jw *JSONEncoder) Encode(recs []engine.Record) error {
 				if jw.FormatOption.Decimal == 0 {
 					r[f.Name] = int(f.Value.Raw().(float64))
 				} else if jw.FormatOption.Decimal > 0 {
-					r[f.Name] = JsonFloat{Value: f.Value.Raw().(float64), Decimal: jw.FormatOption.Decimal}
+					r[f.Name] = util.JsonFloat{Value: f.Value.Raw().(float64), Decimal: jw.FormatOption.Decimal}
 				} else {
 					r[f.Name] = f.Value.Raw()
 				}
@@ -71,16 +72,6 @@ func (jw *JSONEncoder) Encode(recs []engine.Record) error {
 		}
 	}
 	return nil
-}
-
-type JsonFloat struct {
-	Value   float64
-	Decimal int
-}
-
-func (l JsonFloat) MarshalJSON() ([]byte, error) {
-	s := fmt.Sprintf("%.*f", l.Decimal, l.Value)
-	return []byte(s), nil
 }
 
 func NewJSONDecoder(c engine.DecoderConfig) engine.Decoder {

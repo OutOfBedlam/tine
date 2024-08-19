@@ -1,5 +1,6 @@
 [[inlets.sqlite]]
     path = ":memory:?mode=memory&cache=shared"
+    yield_rows = 1
     inits = [
         """
             CREATE TABLE IF NOT EXISTS load (

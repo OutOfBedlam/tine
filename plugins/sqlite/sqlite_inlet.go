@@ -27,6 +27,7 @@ func SqliteInlet(ctx *engine.Context) engine.Inlet {
 	}
 
 	ret := &sqliteInlet{SqliteBase: NewBase(ctx)}
+	ret.yieldRows = ctx.Config().GetInt("yield_rows", 0)
 	ret.countLimit = ctx.Config().GetInt64("count", 0)
 	ret.interval = interval
 	return ret
@@ -34,6 +35,7 @@ func SqliteInlet(ctx *engine.Context) engine.Inlet {
 
 type sqliteInlet struct {
 	*SqliteBase
+	yieldRows  int
 	interval   time.Duration
 	countLimit int64
 	runCount   int64
@@ -52,14 +54,14 @@ func (si *sqliteInlet) Process(next engine.InletNextFunc) {
 		return
 	}
 	for _, act := range si.Actions {
-		doAction(si.DB, si.Ctx, act, next)
+		doAction(si.DB, si.Ctx, act, next, si.yieldRows)
 	}
 	if si.countLimit > 0 && runCount >= si.countLimit {
 		next(nil, io.EOF)
 	}
 }
 
-func doAction(db *sql.DB, ctx context.Context, act Action, cb func([]engine.Record, error)) {
+func doAction(db *sql.DB, ctx context.Context, act Action, cb func([]engine.Record, error), yieldRows int) {
 	args := make([]any, len(act.Fields))
 	for i, field := range act.Fields {
 		args[i] = field
@@ -87,6 +89,7 @@ func doAction(db *sql.DB, ctx context.Context, act Action, cb func([]engine.Reco
 		cb(nil, fmt.Errorf("column names and types mismatch"))
 		return
 	}
+	rset := []engine.Record{}
 	for rows.Next() {
 		rec := engine.NewRecord()
 		destValues := make([]any, 0, len(colNames))
@@ -101,13 +104,18 @@ func doAction(db *sql.DB, ctx context.Context, act Action, cb func([]engine.Reco
 			case "BLOB":
 				destValues = append(destValues, new([]byte))
 			default:
-				cb(nil, fmt.Errorf("unsupported type %s for %s",
-					colTypes[i].DatabaseTypeName(), colNames[i]))
+				cb(nil, fmt.Errorf("unsupported type %s %s for %s",
+					colTypes[i].DatabaseTypeName(),
+					colTypes[i].ScanType(),
+					colNames[i],
+				))
 				return
 			}
 		}
 		if err := rows.Scan(destValues...); err != nil {
-			fmt.Println("==>", err.Error())
+			if c, ok := ctx.(*engine.Context); ok {
+				c.LogWarn("sqlite exec", "sql", act.SqlText, "error", err)
+			}
 			cb(nil, err)
 			return
 		}
@@ -137,6 +145,13 @@ func doAction(db *sql.DB, ctx context.Context, act Action, cb func([]engine.Reco
 				rec = rec.Append(bf)
 			}
 		}
-		cb([]engine.Record{rec}, nil)
+		rset = append(rset, rec)
+		if yieldRows > 0 && len(rset) >= yieldRows {
+			cb(rset, nil)
+			rset = []engine.Record{}
+		}
+	}
+	if len(rset) > 0 {
+		cb(rset, nil)
 	}
 }

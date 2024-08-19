@@ -1,0 +1,30 @@
+[log]
+    path = "-"
+    level = "warn"
+    no_color = true
+[[inlets.file]]
+    data = [
+        "a,1.234",
+        "b,2.345",
+        "c,3.456",
+    ]
+    format = "csv"
+    fields = ["area", "fval"]
+    types  = ["string", "float"]
+[[flows.select]]
+    includes = ["#_ts", "#_in", "area", "fval"]
+[[outlets.template]]
+    path = "-"
+    column_mode = true
+    timeformat = "s"
+    lazy = true
+    tz = "Local"
+    decimal = 2
+    templates = [
+'''
+ts = {{ json ._ts }};
+in = {{ json ._in }};
+area = {{ json .area }};
+ival = {{ json .fval }};
+''',
+    ]

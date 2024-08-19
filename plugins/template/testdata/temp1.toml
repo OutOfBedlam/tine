@@ -1,0 +1,22 @@
+[log]
+    path = "-"
+    level = "warn"
+    no_color = true
+[[inlets.file]]
+    data = [
+        "a,1",
+        "b,2",
+        "c,3",
+    ]
+    format = "csv"
+    fields = ["area", "ival"]
+    types  = ["string", "int"]
+[[flows.select]]
+    includes = ["#_ts", "#_in", "area", "ival"]
+[[outlets.template]]
+    path = "-"
+    templates = [
+        """{{ range . }}{{template "area_template" .area }}, {{template "ival_template" .ival}}\n{{ end }}""",
+        """{{ define "area_template" }}area: {{ . }}{{ end }}""",
+        """{{ define "ival_template" }}ival: {{ . }}{{ end }}""",
+    ]

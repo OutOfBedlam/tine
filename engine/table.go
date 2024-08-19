@@ -126,7 +126,7 @@ func (tb *Table[T]) AddColumns(names []string, types []Type) {
 
 // AddColumn adds a column to the table
 func (tb *Table[T]) AddColumn(name string, t Type) {
-	tb.columns = append(tb.columns, strings.ToUpper(name))
+	tb.columns = append(tb.columns, name)
 	tb.types = append(tb.types, t)
 }
 
@@ -162,7 +162,7 @@ func (tb *Table[T]) Len() int {
 func (tb *Table[T]) columnIdx(colName string) int {
 	colIdx := -1
 	for i, name := range tb.columns {
-		if name == strings.ToUpper(colName) {
+		if strings.EqualFold(name, colName) {
 			colIdx = i
 			break
 		}

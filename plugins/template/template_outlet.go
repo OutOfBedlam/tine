@@ -1,11 +1,15 @@
 package template
 
 import (
+	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"text/template"
+	"time"
 
 	"github.com/OutOfBedlam/tine/engine"
+	"github.com/OutOfBedlam/tine/util"
 )
 
 func init() {
@@ -21,17 +25,64 @@ func TemplateOutlet(ctx *engine.Context) engine.Outlet {
 }
 
 type templateOutlet struct {
-	ctx    *engine.Context
-	tmpl   *template.Template
-	writer io.WriteCloser
+	ctx         *engine.Context
+	tmpl        *template.Template
+	writer      io.WriteCloser
+	valueFormat engine.ValueFormat
+	columnMode  bool
+	lazy        bool
+	rowNum      int64
+	table       *engine.Table[int64]
 }
 
 func (to *templateOutlet) Open() error {
 	conf := to.ctx.Config()
+	to.columnMode = conf.GetBool("column_mode", false)
+	to.lazy = conf.GetBool("lazy", false)
+	to.valueFormat = engine.DefaultValueFormat()
+	if tf := conf.GetString("timeformat", ""); tf != "" {
+		tz, err := time.LoadLocation(conf.GetString("tz", "Local"))
+		if err != nil {
+			return err
+		}
+		to.valueFormat.Timeformat = engine.NewTimeformatterWithLocation(tf, tz)
+	} else {
+		tz, err := time.LoadLocation(conf.GetString("tz", "Local"))
+		if err != nil {
+			return err
+		}
+		to.valueFormat.Timeformat = engine.NewTimeformatterWithLocation(time.RFC3339, tz)
+	}
+	to.valueFormat.Decimal = conf.GetInt("decimal", -1)
+
 	templates := conf.GetStringSlice("templates", []string{})
 	templateFiles := conf.GetStringSlice("template_files", []string{})
 
-	to.tmpl = template.New("template")
+	if len(templates) == 0 && len(templateFiles) == 0 {
+		return fmt.Errorf("no template provided")
+	}
+	to.tmpl = template.New("template").Funcs(template.FuncMap{
+		"timeformat": func(t time.Time, layout string) string {
+			switch layout {
+			case "ns":
+				return fmt.Sprintf("%d", t.UnixNano())
+			case "us":
+				return fmt.Sprintf("%d", t.UnixNano()/1000)
+			case "ms":
+				return fmt.Sprintf("%d", t.UnixNano()/1000000)
+			case "s":
+				return fmt.Sprintf("%d", t.Unix())
+			default:
+				return t.Format(layout)
+			}
+		},
+		"json": func(val any) string {
+			obj := to.columnFuncJson(val)
+			out, _ := json.Marshal(obj)
+			return string(out)
+		},
+	})
+
 	var err error
 	for _, t := range templates {
 		to.tmpl, err = to.tmpl.Parse(t)
@@ -40,7 +91,7 @@ func (to *templateOutlet) Open() error {
 		}
 	}
 	if len(templateFiles) > 0 {
-		to.tmpl, err = template.ParseFiles(templateFiles...)
+		to.tmpl, err = to.tmpl.ParseFiles(templateFiles...)
 		if err != nil {
 			return err
 		}
@@ -71,13 +122,51 @@ func (to *templateOutlet) Open() error {
 }
 
 func (to *templateOutlet) Close() error {
+	if to.columnMode && to.table != nil {
+		to.closeTable()
+	}
 	if to.writer != nil {
 		to.writer.Close()
 	}
 	return nil
 }
 
+func (to *templateOutlet) columnFuncJson(val any) any {
+	switch v := val.(type) {
+	case []any:
+		arr := []any{}
+		for _, elem := range v {
+			arr = append(arr, to.columnFuncJson(elem))
+		}
+		return arr
+	case time.Time:
+		if to.valueFormat.Timeformat.IsEpoch() {
+			return to.valueFormat.Timeformat.Epoch(v)
+		} else {
+			return to.valueFormat.Timeformat.Format(v)
+		}
+	case float64:
+		if to.valueFormat.Decimal == 0 {
+			return int(v)
+		} else if to.valueFormat.Decimal > 0 {
+			return &util.JsonFloat{Value: v, Decimal: to.valueFormat.Decimal}
+		} else {
+			return v
+		}
+	default:
+		return val
+	}
+}
+
 func (to *templateOutlet) Handle(recs []engine.Record) error {
+	if to.columnMode {
+		return to.handleTable(recs)
+	} else {
+		return to.handleRecords(recs)
+	}
+}
+
+func (to *templateOutlet) handleRecords(recs []engine.Record) error {
 	arr := []map[string]any{}
 	for _, rec := range recs {
 		fields := rec.Fields()
@@ -91,6 +180,41 @@ func (to *templateOutlet) Handle(recs []engine.Record) error {
 		arr = append(arr, obj)
 	}
 	err := to.tmpl.Execute(to.writer, arr)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (to *templateOutlet) handleTable(recs []engine.Record) error {
+	if to.table == nil {
+		to.table = engine.NewTable[int64]()
+	}
+	for _, rec := range recs {
+		to.rowNum++
+		to.table.Set(to.rowNum, rec.Fields()...)
+	}
+	if !to.lazy {
+		to.closeTable()
+		to.table = nil
+	}
+	return nil
+}
+
+func (to *templateOutlet) closeTable() error {
+	if to.table == nil {
+		return nil
+	}
+	cols := to.table.Columns()
+	obj := map[string]any{}
+	for _, col := range cols {
+		arr := []any{}
+		for _, v := range to.table.Series(col) {
+			arr = append(arr, v.Value.Raw())
+		}
+		obj[col] = arr
+	}
+	err := to.tmpl.Execute(to.writer, obj)
 	if err != nil {
 		return err
 	}

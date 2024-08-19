@@ -20,10 +20,10 @@ func ExampleFilterFlow() {
 			"c,300",
 		]
 		format = "csv"
-		fields = ["name", "value"]
+		fields = ["name", "rec.value"]
 		types  = ["string", "int"]
 	[[flows.filter]]
-		predicate = "${ value } > 100"
+		predicate = "${ rec.value } > 100"
 	[[outlets.file]]
 		path = "-"
 		format = "json"
@@ -38,6 +38,6 @@ func ExampleFilterFlow() {
 	}
 
 	// Output:
-	// {"name":"b","value":200}
-	// {"name":"c","value":300}
+	// {"name":"b","rec.value":200}
+	// {"name":"c","rec.value":300}
 }
