@@ -1,6 +1,7 @@
 package template_test
 
 import (
+	"bytes"
 	"os"
 	"strings"
 	"testing"
@@ -45,6 +46,7 @@ func TestTemplate(t *testing.T) {
 			t.Fatal(err)
 		}
 		expect, _ := os.ReadFile(tt.expect)
+		expect = bytes.ReplaceAll(expect, []byte{'\r'}, nil)
 		require.Equal(t, string(expect), out.String(), "input=%s", tt.input)
 	}
 }
