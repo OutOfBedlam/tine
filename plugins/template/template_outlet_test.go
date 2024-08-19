@@ -47,6 +47,7 @@ func TestTemplate(t *testing.T) {
 		}
 		expect, _ := os.ReadFile(tt.expect)
 		expect = bytes.ReplaceAll(expect, []byte{'\r'}, nil)
-		require.Equal(t, string(expect), out.String(), "input=%s", tt.input)
+		result := strings.ReplaceAll(out.String(), "\r", "")
+		require.Equal(t, string(expect), result, "input=%s", tt.input)
 	}
 }
