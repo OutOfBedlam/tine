@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"text/template"
 	"time"
 
@@ -25,19 +26,19 @@ func TemplateOutlet(ctx *engine.Context) engine.Outlet {
 }
 
 type templateOutlet struct {
-	ctx         *engine.Context
-	tmpl        *template.Template
-	writer      io.WriteCloser
-	valueFormat engine.ValueFormat
-	columnMode  bool
-	lazy        bool
-	rowNum      int64
-	table       *engine.Table[int64]
+	ctx          *engine.Context
+	tmpl         *template.Template
+	writer       io.WriteCloser
+	valueFormat  engine.ValueFormat
+	columnSeries string
+	lazy         bool
+	rowNum       int64
+	table        *engine.Table[int64]
 }
 
 func (to *templateOutlet) Open() error {
 	conf := to.ctx.Config()
-	to.columnMode = conf.GetBool("column_mode", false)
+	to.columnSeries = strings.ToLower(conf.GetString("column_series", ""))
 	to.lazy = conf.GetBool("lazy", false)
 	to.valueFormat = engine.DefaultValueFormat()
 	if tf := conf.GetString("timeformat", ""); tf != "" {
@@ -75,11 +76,6 @@ func (to *templateOutlet) Open() error {
 			default:
 				return t.Format(layout)
 			}
-		},
-		"json": func(val any) string {
-			obj := to.columnFuncJson(val)
-			out, _ := json.Marshal(obj)
-			return string(out)
 		},
 	})
 
@@ -125,7 +121,7 @@ func (to *templateOutlet) Open() error {
 }
 
 func (to *templateOutlet) Close() error {
-	if to.columnMode && to.table != nil {
+	if to.columnSeries != "" && to.table != nil {
 		to.closeTable()
 	}
 	if to.writer != nil {
@@ -134,35 +130,8 @@ func (to *templateOutlet) Close() error {
 	return nil
 }
 
-func (to *templateOutlet) columnFuncJson(val any) any {
-	switch v := val.(type) {
-	case []any:
-		arr := []any{}
-		for _, elem := range v {
-			arr = append(arr, to.columnFuncJson(elem))
-		}
-		return arr
-	case time.Time:
-		if to.valueFormat.Timeformat.IsEpoch() {
-			return to.valueFormat.Timeformat.Epoch(v)
-		} else {
-			return to.valueFormat.Timeformat.Format(v)
-		}
-	case float64:
-		if to.valueFormat.Decimal == 0 {
-			return int(v)
-		} else if to.valueFormat.Decimal > 0 {
-			return &util.JsonFloat{Value: v, Decimal: to.valueFormat.Decimal}
-		} else {
-			return v
-		}
-	default:
-		return val
-	}
-}
-
 func (to *templateOutlet) Handle(recs []engine.Record) error {
-	if to.columnMode {
+	if to.columnSeries != "" {
 		return to.handleTable(recs)
 	} else {
 		return to.handleRecords(recs)
@@ -215,11 +184,43 @@ func (to *templateOutlet) closeTable() error {
 		for _, v := range to.table.Series(col) {
 			arr = append(arr, v.Value.Raw())
 		}
-		obj[col] = arr
+		if to.columnSeries == "json" {
+			js, _ := json.Marshal(to.seriesJson(arr))
+			obj[col] = string(js)
+		} else {
+			obj[col] = arr
+		}
 	}
 	err := to.tmpl.Execute(to.writer, obj)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (to *templateOutlet) seriesJson(val any) any {
+	switch v := val.(type) {
+	case []any:
+		arr := []any{}
+		for _, elem := range v {
+			arr = append(arr, to.seriesJson(elem))
+		}
+		return arr
+	case time.Time:
+		if to.valueFormat.Timeformat.IsEpoch() {
+			return to.valueFormat.Timeformat.Epoch(v)
+		} else {
+			return to.valueFormat.Timeformat.Format(v)
+		}
+	case float64:
+		if to.valueFormat.Decimal == 0 {
+			return int(v)
+		} else if to.valueFormat.Decimal > 0 {
+			return &util.JsonFloat{Value: v, Decimal: to.valueFormat.Decimal}
+		} else {
+			return v
+		}
+	default:
+		return val
+	}
 }

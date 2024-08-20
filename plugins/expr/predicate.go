@@ -1,8 +1,7 @@
-package monad
+package expr
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/OutOfBedlam/tine/engine"
 	"github.com/expr-lang/expr"
@@ -10,55 +9,16 @@ import (
 )
 
 func ExprPredicate(code string) (engine.Predicate, error) {
-	translated := []rune{}
-	identBuff := []rune{}
-	inIdent := false
-	referredFields := []string{}
-	referredVars := []string{}
-
-	for i := 0; i < len(code); i++ {
-		c := rune(code[i])
-		switch c {
-		case '$':
-			if code[i+1] == '{' {
-				inIdent = true
-				i++
-			}
-		case '}':
-			if inIdent {
-				inIdent = false
-				ident := strings.TrimSpace(string(identBuff))
-				identBuff = identBuff[:0]
-				referredFields = append(referredFields, ident)
-				varName := "_" + strings.ReplaceAll(ident, ".", "_")
-				referredVars = append(referredVars, varName)
-				translated = append(translated, []rune(varName+".Value")...)
-			} else {
-				translated = append(translated, c)
-			}
-		default:
-			if inIdent {
-				identBuff = append(identBuff, c)
-			} else {
-				translated = append(translated, c)
-			}
-		}
-	}
-
+	trans := Translate(code)
 	ret := &exprPredicate{
-		originalCode:   code,
-		translatedCode: string(translated),
-		referredFields: referredFields,
-		referredVars:   referredVars,
+		originalCode:   trans.OriginalCode,
+		translatedCode: trans.Code,
+		referredFields: trans.ReferredFields,
+		referredVars:   trans.ReferredVars,
 	}
 
 	// compile translated code
-	env := map[string]any{}
-	for _, rv := range referredVars {
-		env[rv] = (*exprField)(nil)
-	}
-
-	prog, err := expr.Compile(ret.translatedCode, expr.Env(env), expr.AsBool())
+	prog, err := expr.Compile(ret.translatedCode, expr.Env(trans.EmptyEnv()), expr.AsBool())
 	if err != nil {
 		return ret, err
 	} else {
@@ -111,6 +71,7 @@ func (ep *exprPredicate) Apply(record engine.Record) bool {
 
 	result, err := expr.Run(ep.program, env)
 	if err != nil {
+		fmt.Println("--->", err)
 		ep.lastErr = err
 		return false
 	}

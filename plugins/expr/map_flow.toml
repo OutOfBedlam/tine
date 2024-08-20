@@ -1,0 +1,9 @@
+[[flows.map]]
+    ## The predicate is a boolean expression that is evaluated for each record.
+    ## The only true records are evaluated the code block.
+    ## If not provided, all records are selected.
+    predicate = "${ name } == 'a' || ${name} == 'c'"
+
+    ## If `=` exists, Left-hand side of the assignment.
+    ## If `=` does not exist, just execute the expression for side effect.
+    code = "name = 'hello ' + ${ name }"

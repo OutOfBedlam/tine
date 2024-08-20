@@ -79,6 +79,6 @@ func TestTemplate_file(t *testing.T) {
 		}
 		result, _ := os.ReadFile("./testdata/_out.txt")
 		expect, _ := os.ReadFile(tt.expect)
-		require.EqualValues(t, expect, result, "input=%s", tt.input)
+		require.EqualValues(t, string(expect), string(result), "input=%s", tt.input)
 	}
 }

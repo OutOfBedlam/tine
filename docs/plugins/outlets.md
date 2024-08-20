@@ -212,14 +212,28 @@
 [[outlets.template]]
     ## File path to write the output, "-" means stdout, "" means discard
     path = "-"
+    
     ## Overwrite the file if "path" is a file and it already exists
     overwrite = false
+
+    ## Output the data in column mode
+    column_series = "json"
+
     ## Templates in string
     templates = [
         """{{ range . }}TS: {{ (index ._ts).Format "2006 Jan 02 15:04:05" }} INLET:{{ index ._in }} load1: {{ index .load1 }} {{ end }}\n"""
     ]
     ## Template files to load
     templateFiles = []
+
+    ## Timezone to use for time formatting
+    timeformat = "s"
+
+    ## Timezone to use for time formatting
+    tz = "Local"
+
+    ## Decimal places for float values
+    decimal = -1
 ```
 
 **Example**

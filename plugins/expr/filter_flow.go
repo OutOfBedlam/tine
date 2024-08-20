@@ -1,17 +1,10 @@
-package monad
+package expr
 
 import (
 	"fmt"
 
 	"github.com/OutOfBedlam/tine/engine"
 )
-
-func init() {
-	engine.RegisterFlow(&engine.FlowReg{
-		Name:    "filter",
-		Factory: FilterFlow,
-	})
-}
 
 func FilterFlow(ctx *engine.Context) engine.Flow {
 	return &filterFlow{
@@ -61,5 +54,5 @@ func (ff *filterFlow) Process(records []engine.Record, nextFunc engine.FlowNextF
 }
 
 func (ff *filterFlow) Parallelism() int {
-	return 1
+	return ff.parallelism
 }

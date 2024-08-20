@@ -1,18 +1,13 @@
-package monad_test
+package expr_test
 
 import (
 	"github.com/OutOfBedlam/tine/engine"
 	_ "github.com/OutOfBedlam/tine/plugins/base"
-	_ "github.com/OutOfBedlam/tine/plugins/monad"
+	_ "github.com/OutOfBedlam/tine/plugins/expr"
 )
 
 func ExampleFilterFlow() {
 	recipe := `
-	[log]
-		path = "-"
-		level = "warn"
-		no_color = true
-		timeformat = "no-time-for-test"
 	[[inlets.file]]
 		data = [
 			"a,100",

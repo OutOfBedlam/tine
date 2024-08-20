@@ -1,0 +1,86 @@
+<html>
+
+<head>
+    <title>SQLite Graph Web</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+</head>
+
+<body>
+    <div id="main" style="width:600px;height:400px;"></div>
+    <script type="text/javascript">
+        var myChart = echarts.init(document.getElementById('main'));
+        var option = {
+            title: {
+                left: "center",
+                text: "SQLite Graph Web"
+            },
+            legend: {
+                show: true,
+                bottom: 20,
+                data: ["cpu", "load1", "load5", "load15"]
+            },
+            xAxis: {
+                type: "time",
+            },
+            yAxis: [
+                {
+                    name: "load",
+                    type: "value"
+                },
+                {
+                    name: "cpu usage",
+                    type: "value"
+                }
+            ],
+            series: [
+                {
+                    name: "cpu",
+                    type: "bar",
+                    yAxisIndex: 1
+                },
+                {
+                    name: "load1",
+                    type: "line"
+                },
+                {
+                    name: "load5",
+                    type: "line"
+                },
+                {
+                    name: "load15",
+                    type: "line"
+                },
+            ]
+        };
+        option && myChart.setOption(option);
+
+        function refresh_graph() {
+            fetch('/query', { method: 'GET' })
+                .then(rsp => rsp.json())
+                .then(function (data) {
+                    var ser_cpu = [];
+                    var ser_load1 = [];
+                    var ser_load5 = [];
+                    var ser_load15 = [];
+                    for (i = 0; i < data.time.length; i++) {
+                        var id = data.time[i]; 
+                        var ts = new Date(data.time[i]*1000);
+                        ser_cpu.push({name: id, value: [ts, data.cpu[i]]});
+                        ser_load1.push({name: id, value: [ts, data.load1[i]]});
+                        ser_load5.push({name: id, value: [ts, data.load5[i]]});
+                        ser_load15.push({name: id, value: [ts, data.load15[i]]});
+                    }
+                    option.series[0].data = ser_cpu;
+                    option.series[1].data = ser_load1;
+                    option.series[2].data = ser_load5;
+                    option.series[3].data = ser_load15;
+                    myChart.setOption(option);
+                }).catch(function (err) {
+                    console.error(err);
+                });
+        }
+        setInterval(refresh_graph, 5000);
+    </script>
+</body>
+
+</html>

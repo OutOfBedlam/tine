@@ -134,6 +134,8 @@ as variables of Go Templates to build pipeline configuration.
 
 - [sqlite_graph_web](./example/sqlite_graph_web/sqlite_graph_web.go)
 
+<img src="./example/sqlite_graph_web/sqlite_graph_web.png" alt="image" width="300" height="auto">
+
 ## Documents
 
 Please visit [https://tine.thingsme.xyz](https://tine.thingsme.xyz) for the documents.

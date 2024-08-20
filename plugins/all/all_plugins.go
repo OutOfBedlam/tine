@@ -10,6 +10,7 @@ import (
 	_ "github.com/OutOfBedlam/tine/plugins/chrome"
 	_ "github.com/OutOfBedlam/tine/plugins/excel"
 	_ "github.com/OutOfBedlam/tine/plugins/exec"
+	_ "github.com/OutOfBedlam/tine/plugins/expr"
 	_ "github.com/OutOfBedlam/tine/plugins/http"
 	_ "github.com/OutOfBedlam/tine/plugins/image"
 	_ "github.com/OutOfBedlam/tine/plugins/mqtt"

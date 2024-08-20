@@ -1,4 +1,4 @@
-package monad
+package expr
 
 import (
 	"testing"
@@ -77,6 +77,21 @@ func TestPredict(t *testing.T) {
 			),
 		},
 		// OR test
+		{
+			false,
+			`${a} == 1 || ${b} != 2`, // non-exists field 'b'
+			engine.NewRecord(
+				engine.NewField("A", int64(1)),
+			),
+		},
+		{
+			true,
+			`${a} == 2 || ${b} == 2`,
+			engine.NewRecord(
+				engine.NewField("A", int64(1)),
+				engine.NewField("B", int64(2)),
+			),
+		},
 	}
 
 	for _, tt := range tests {
