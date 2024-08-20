@@ -15,14 +15,14 @@
     includes = ["#_ts", "#_in", "area", "ival"]
 [[outlets.template]]
     path = "-"
-    column_mode = true
+    column_series = "json"
     lazy = true
     timeformat = "ms"
     templates = [
 '''
-    ts = [ {{ range ._ts }}{{ json . }}, {{ end }}];
-    in = [ {{ range ._in }}{{ . }}, {{ end }}];
-    area = [ {{ range .area }}{{ . }}, {{ end }}];
-    ival = [ {{ range .ival }}{{ . }}, {{ end }}];
+    ts = {{ ._ts }};
+    in = {{ ._in }};
+    area = {{ .area }};
+    ival = {{ .ival }};
 ''',
     ]

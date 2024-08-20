@@ -52,8 +52,8 @@ type syslogInlet struct {
 var _ = engine.Inlet((*syslogInlet)(nil))
 
 type Data struct {
-	reccords []engine.Record
-	err      error
+	records []engine.Record
+	err     error
 }
 
 func (si *syslogInlet) Apply() int {
@@ -117,7 +117,7 @@ func (si *syslogInlet) Close() error {
 
 func (si *syslogInlet) Process(next engine.InletNextFunc) {
 	for d := range si.pushCh {
-		next(d.reccords, d.err)
+		next(d.records, d.err)
 	}
 }
 
@@ -166,7 +166,7 @@ func (si *syslogInlet) handleDiagram() {
 			}
 			if r := records(message, si.separator); r != nil {
 				r = r.Append(engine.NewField("remote_host", addr.(*net.UDPAddr).IP.String()))
-				si.pushCh <- Data{reccords: []engine.Record{r}}
+				si.pushCh <- Data{records: []engine.Record{r}}
 			}
 		}()
 	}
@@ -196,7 +196,7 @@ func (si *syslogInlet) handleStream() {
 			return
 		}
 		if r := records(r.Message, si.separator); r != nil {
-			si.pushCh <- Data{reccords: []engine.Record{r}}
+			si.pushCh <- Data{records: []engine.Record{r}}
 		}
 	})
 	si.pushCh <- Data{err: io.EOF}

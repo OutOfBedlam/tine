@@ -25,16 +25,18 @@ func (so *sqliteOutlet) Handle(recs []engine.Record) error {
 	for _, rec := range recs {
 		for _, act := range so.Actions {
 			args := make([]any, len(act.Fields))
-			for i, field := range rec.Fields(act.Fields...) {
-				if field == nil {
-					continue
-				}
-				switch field.Type() {
-				case engine.TIME:
-					// convert to unix epoch
-					args[i], _ = field.Value.Int64()
-				default:
-					args[i] = field.Value.Raw()
+			if len(act.Fields) > 0 {
+				for i, field := range rec.Fields(act.Fields...) {
+					if field == nil {
+						continue
+					}
+					switch field.Type() {
+					case engine.TIME:
+						// convert to unix epoch
+						args[i], _ = field.Value.Int64()
+					default:
+						args[i] = field.Value.Raw()
+					}
 				}
 			}
 			result, err := so.DB.ExecContext(so.Ctx, act.SqlText, args...)

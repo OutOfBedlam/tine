@@ -6,7 +6,7 @@
     overwrite = false
 
     ## Output the data in column mode
-    column_mode = false
+    column_series = "json"
 
     ## Templates in string
     templates = [

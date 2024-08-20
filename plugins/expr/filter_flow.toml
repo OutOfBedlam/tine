@@ -1,0 +1,2 @@
+[[flows.filter]]
+    predicate = "${ rec.value } > 100"

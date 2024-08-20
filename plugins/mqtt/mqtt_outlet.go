@@ -51,6 +51,8 @@ func (mo *mqttOutlet) Open() error {
 	opts.SetClientID(fmt.Sprintf("mqtt-%d", serial))
 	opts.AddBroker(mo.host)
 	opts.SetKeepAlive(60 * time.Second)
+	opts.SetUsername(conf.GetString("username", "user"))
+	opts.SetPassword(conf.GetString("password", "pass"))
 
 	mo.client = paho.NewClient(opts)
 	token := mo.client.Connect()

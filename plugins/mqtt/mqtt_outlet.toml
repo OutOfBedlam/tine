@@ -1,6 +1,10 @@
 [[outlets.mqtt]]
     ## mqtt server address
     server = "127.0.0.1:1883"
+    ## mqtt username
+    username = ""
+    ## mqtt password
+    password = ""
     ## mqtt topic to publish
     topic  = "topic_to_publish"
     ## publish QoS, supports 0, 1

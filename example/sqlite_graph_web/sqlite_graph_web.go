@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
 	"net/http"
 
@@ -38,100 +39,63 @@ func HttpHandler(config string) http.HandlerFunc {
 	}
 }
 
+//go:embed sqlite_graph_web.html
+var viewContent []byte
+
 func getView(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(`<html>
-		<head>
-			<title>SQLite Graph Web</title>
-			<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
-		</head>
-		<body>
-			<div id="main" style="width:600px;height:400px;"></div>
-			<script type="text/javascript">
-				var myChart = echarts.init(document.getElementById('main'));
-				var option = {};
-				option && myChart.setOption(option);
-				
-				function refresh_graph() {
-					fetch('/query', {method: 'GET'})
-					.then( rsp => rsp.json() )
-					.then(function(data){
-						console.log(data);
-						myChart.setOption(data);
-					}).catch(function(err){
-						console.error(err);
-					});
-				}
-				setInterval(refresh_graph, 5000);
-			</script>
-		</body>
-	</html>`))
+	w.Write(viewContent)
 }
 
 // pipeline config with Go Template using URL Query parameters
 const queryPipeline = `
 name = "query"
-[log]
-	path = "-"
-	level = "debug"
 [[inlets.sqlite]]
 	count = 1
 	path = "file::memdb?mode=memory&cache=shared"
     actions = [
-        ['''SELECT time, name, value 
+        ['''SELECT time, cpu, load1, load5, load15 
 			FROM test
 			WHERE
 				datetime(time, 'unixepoch') > datetime('now', '-5 minutes')
-			AND name = 'cpu_total_percent'
 			ORDER BY time
 		'''],
     ]
 [[outlets.template]]
-	path = "-"
 	content_type = "application/json"
-	column_mode = true
-	timeformat = "15:04:05"
+	column_series = "json"
 	lazy = true
 	decimal = 2
-	templates = ['''
-		{
-			"title": {
-				"left": "center",
-				"text": "SQLite Graph Web"
-			},
-			"xAxis": {
-				"type": "category",
-				"data": {{ json .time }}
-			},
-			"yAxis": {
-				"type": "value"
-			},
-			"series": [
-				{
-					"data": {{ json .value }},
-					"type": "line"
-				}
-			]
-		}
-	''']
+	templates = ['{ "time":{{ .time }}, "cpu":{{ .cpu }}, "load1":{{ .load1 }}, "load5":{{ .load5 }}, "load15":{{ .load15 }} }']
 `
 
 const collectorPipeline = `
 name = "collector"
 [[inlets.load]]
-	loads = ["load1", "load5", "load15"]
+	loads = [1, 5, 15]
 	interval = "5s"
 [[inlets.cpu]]
 	percpu = false
 	totalcpu = true
 	interval = "5s"
-[[flows.flatten]]
+[[flows.merge]]
+	wait_limit = "2.5s"
 [[outlets.sqlite]]
 	path = "file::memdb?mode=memory&cache=shared"
 	inits = [
-		"CREATE TABLE test (time INTEGER, name TEXT, value REAL, UNIQUE(time, name))",
+		"""CREATE TABLE test (
+			time INTEGER,
+			cpu REAL,
+			load1 REAL,
+			load5 REAL,
+			load15 REAL,
+			UNIQUE(time)
+		)""",
 	]
 	actions = [
-		["INSERT INTO test (time, name, value) VALUES (?, ?, ?)", "_ts", "name", "value"],
+		["""INSERT INTO test (time, cpu, load1, load5, load15) 
+			VALUES (?, ?, ?, ?, ?)""", 
+			"_ts", "cpu_total_percent", "load_load1", "load_load5", "load_load15"],
+		["""DELETE FROM test WHERE datetime(time, 'unixepoch') < datetime('now', '-60 minutes')"""],
 	]
 `
