@@ -1,3 +1,6 @@
+//go:build !macOS13
+// +build !macOS13
+
 package screenshot
 
 import (

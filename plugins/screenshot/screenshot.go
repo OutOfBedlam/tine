@@ -1,0 +1,3 @@
+package screenshot
+
+var A = ""
