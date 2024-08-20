@@ -1,5 +1,5 @@
-//go:build !macOS13
-// +build !macOS13
+//go:build !macos13
+// +build !macos13
 
 package screenshot
 

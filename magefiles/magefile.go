@@ -14,26 +14,12 @@ import (
 	_ "github.com/magefile/mage/mage"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
-	"golang.org/x/sys/unix"
 )
 
 var Default = Build
 
 var vLastCommit string
 var vBuildVersion string
-
-func IsMacOS13() bool {
-	if runtime.GOOS != "darwin" {
-		return false
-	}
-	var utsname unix.Utsname
-	if err := unix.Uname(&utsname); err != nil {
-		return false
-	}
-	release := string(utsname.Release[:])
-	// macOS 13 : see https://en.wikipedia.org/wiki/MacOS_version_history
-	return strings.HasPrefix(release, "22.")
-}
 
 func Build() error {
 	mg.Deps(CheckTmp)
@@ -87,7 +73,7 @@ func BuildX(tag string, commit string) error {
 
 	// macOS 13 does not support screenshot
 	if IsMacOS13() {
-		args = append(args, "-tags", "macOS13")
+		args = append(args, "-tags", "macos13")
 	}
 	// executable file
 	ext := ""
@@ -148,12 +134,17 @@ func Test() error {
 		"test",
 		"-cover",
 		"-coverprofile", "./tmp/coverage.out",
+	}
+
+	if IsMacOS13() {
+		testArgs = append(testArgs, "-tags", "macos13")
+	}
+	testArgs = append(testArgs,
 		"./cmd/...",
 		"./engine/...",
 		"./plugins/...",
 		"./util/...",
-	}
-
+	)
 	if err := sh.RunWithV(env, "go", testArgs...); err != nil {
 		return err
 	}
