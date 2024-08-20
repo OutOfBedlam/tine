@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"database/sql"
+	"log/slog"
 	"sync"
 
 	"github.com/OutOfBedlam/tine/engine"
@@ -45,12 +46,14 @@ func (sb *SqliteBase) Open() error {
 	sqliteRegisterOnce.Do(func() {
 		sql.Register("sqlite3_with_tine", &sqlite3.SQLiteDriver{
 			ConnectHook: func(conn *sqlite3.SQLiteConn) error {
-				sqliteLimitDebug(sb.Ctx, conn)
+				if sb.Ctx.LogEnabled(slog.LevelDebug) {
+					sqliteLimitDebug(sb.Ctx, conn)
+				}
 				return nil
 			},
 		})
 	})
-	if db, err := sql.Open("sqlite3", path); err != nil {
+	if db, err := sql.Open("sqlite3_with_tine", path); err != nil {
 		return err
 	} else {
 		sb.DB = db

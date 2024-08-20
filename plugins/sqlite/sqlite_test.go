@@ -41,7 +41,7 @@ const input = `
   count = 2
   path = "file::memdb?mode=memory&cache=shared"
   actions = [
-	["SELECT time, name, value FROM test ORDER BY time"],
+	["SELECT time, name, value, ival FROM test ORDER BY time"],
   ]
 [[outlets.file]]
   path = "-"
@@ -51,7 +51,7 @@ const input = `
 const output = `
 [log]
   path = "-"
-  level = "warn"
+  level = "debug"
   no_color = true
 [[inlets.cpu]]
   percpu = false
@@ -61,7 +61,8 @@ const output = `
 [[outlets.sqlite]]
 	path = "file::memdb?mode=memory&cache=shared"
 	inits = [
-		"CREATE TABLE test (time INTEGER, name TEXT, value REAL, UNIQUE(time, name))",
+		"CREATE TABLE test (time INTEGER, name TEXT, value REAL, ival INTEGER, UNIQUE(time, name))",
+		"INSERT INTO test (time, name, value, ival) VALUES (1, NULL, NULL, NULL)",
 	]
 	actions = [
 		["INSERT INTO test (time, name, value) VALUES (?, ?, ?)", "_ts", "name", "value"],

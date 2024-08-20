@@ -96,11 +96,11 @@ func doAction(db *sql.DB, ctx context.Context, act Action, cb func([]engine.Reco
 		for i := 0; i < len(colNames); i++ {
 			switch colTypes[i].DatabaseTypeName() {
 			case "INTEGER":
-				destValues = append(destValues, new(int64))
+				destValues = append(destValues, new(sql.NullInt64))
 			case "TEXT":
-				destValues = append(destValues, new(string))
+				destValues = append(destValues, new(sql.NullString))
 			case "REAL":
-				destValues = append(destValues, new(float64))
+				destValues = append(destValues, new(sql.NullFloat64))
 			case "BLOB":
 				destValues = append(destValues, new([]byte))
 			default:
@@ -120,29 +120,30 @@ func doAction(db *sql.DB, ctx context.Context, act Action, cb func([]engine.Reco
 			return
 		}
 		for i, value := range destValues {
-			if value == nil {
-				switch colTypes[i].DatabaseTypeName() {
-				case "INTEGER":
+			if nv, ok := value.(*sql.NullInt64); ok {
+				if nv.Valid {
+					rec = rec.Append(engine.NewField(colNames[i], nv.Int64))
+				} else {
 					rec = rec.Append(engine.NewFieldWithValue(colNames[i], engine.NewNullValue(engine.INT)))
-				case "TEXT":
-					rec = rec.Append(engine.NewFieldWithValue(colNames[i], engine.NewNullValue(engine.STRING)))
-				case "REAL":
-					rec = rec.Append(engine.NewFieldWithValue(colNames[i], engine.NewNullValue(engine.FLOAT)))
-				case "BLOB":
-					rec = rec.Append(engine.NewFieldWithValue(colNames[i], engine.NewNullValue(engine.BINARY)))
 				}
 				continue
-			}
-			switch val := value.(type) {
-			case *int64:
-				rec = rec.Append(engine.NewField(colNames[i], *val))
-			case *string:
-				rec = rec.Append(engine.NewField(colNames[i], *val))
-			case *float64:
-				rec = rec.Append(engine.NewField(colNames[i], *val))
-			case *[]byte:
-				bf := engine.NewField(colNames[i], *val)
-				rec = rec.Append(bf)
+			} else if nv, ok := value.(*sql.NullString); ok {
+				if nv.Valid {
+					rec = rec.Append(engine.NewField(colNames[i], nv.String))
+				} else {
+					rec = rec.Append(engine.NewFieldWithValue(colNames[i], engine.NewNullValue(engine.STRING)))
+				}
+				continue
+			} else if nv, ok := value.(*sql.NullFloat64); ok {
+				if nv.Valid {
+					rec = rec.Append(engine.NewField(colNames[i], nv.Float64))
+				} else {
+					rec = rec.Append(engine.NewFieldWithValue(colNames[i], engine.NewNullValue(engine.FLOAT)))
+				}
+				continue
+			} else if nv, ok := value.(*[]byte); ok {
+				rec = rec.Append(engine.NewField(colNames[i], *nv))
+				continue
 			}
 		}
 		rset = append(rset, rec)
