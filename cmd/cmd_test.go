@@ -23,6 +23,7 @@ func TestExecuteCommand(t *testing.T) {
 		t.Fatal(err)
 	}
 	bin, _ := os.ReadFile("./testdata/help.txt")
-
-	require.Equal(t, string(bin), strings.ReplaceAll(string(out), "\r", ""))
+	bin = bytes.ReplaceAll(bin, []byte{'\r'}, nil)
+	result := strings.ReplaceAll(string(out), "\r", "")
+	require.Equal(t, string(bin), result)
 }
