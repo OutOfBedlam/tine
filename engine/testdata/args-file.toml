@@ -1,0 +1,8 @@
+[[inlets.args]]
+[[inlets.args.flows.dump]]
+[[flows.select]]
+    includes = ["**"]
+[[flows.inject]]
+    id = "here"
+[[outlets.file]]
+    path = ""

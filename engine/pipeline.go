@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"bytes"
 	_ "embed"
 	"errors"
 	"fmt"
@@ -12,7 +11,6 @@ import (
 	"path/filepath"
 	"sync"
 	"sync/atomic"
-	"text/template"
 
 	"github.com/BurntSushi/toml"
 	"github.com/OutOfBedlam/tine/util"
@@ -79,38 +77,6 @@ func WithConfigFile(path string) Option {
 			}
 			return nil
 		}
-	}
-}
-
-// WithConfigTemplate loads a TOML configuration template into a PipelineConfig struct
-func WithConfigTemplate(configTemplate string, data map[string][]string) Option {
-	return func(p *Pipeline) error {
-		params := map[string]any{}
-		for k, v := range data {
-			if len(v) == 0 {
-				params[k] = ""
-			} else if len(v) == 1 {
-				params[k] = v[0]
-			} else {
-				params[k] = v
-			}
-		}
-		tmpl, err := template.New("pipeline").Parse(configTemplate)
-		if err != nil {
-			return err
-		}
-		buff := &bytes.Buffer{}
-		if err := tmpl.Execute(buff, params); err != nil {
-			return err
-		}
-		if err := LoadConfig(buff.String(), &p.PipelineConfig); err != nil {
-			return err
-		}
-		if p.Name == "" {
-			serial := atomic.AddInt64(&pipelineSerial, 1)
-			p.Name = fmt.Sprintf("pipeline-%d", serial)
-		}
-		return nil
 	}
 }
 
@@ -365,6 +331,11 @@ func (p *Pipeline) Build() (returnErr error) {
 func (p *Pipeline) Walk(walker func(pipelineName string, kind string, step string, handler any)) {
 	for _, input := range p.inputs {
 		walker(p.Name, "inlets", input.name, input)
+		if input.flows != nil {
+			for _, flow := range input.flows {
+				walker(p.Name, fmt.Sprintf("inlets.%s.flows", input.name), flow.name, flow)
+			}
+		}
 	}
 	for _, flow := range p.flows {
 		walker(p.Name, "flows", flow.name, flow)

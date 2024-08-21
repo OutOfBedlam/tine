@@ -3,6 +3,7 @@ package engine_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"slices"
@@ -234,4 +235,35 @@ func ExampleContext_Inject() {
 	}
 	// Output:
 	// {"_in":"args","_ts":1721954797,"msg":"hello world - here updated"}
+}
+
+func ExamplePipeline_Walk() {
+	// Make the output timestamp deterministic, so we can compare it
+	// This line is required only for testing
+	engine.Now = func() time.Time { return time.Unix(1721954797, 0) }
+
+	pipeline, err := engine.New(
+		engine.WithConfigFile("testdata/args-file.toml"),
+		engine.WithName("my-pipeline"),
+	)
+	if err != nil {
+		panic(err)
+	}
+	err = pipeline.Build()
+	if err != nil {
+		panic(err)
+	}
+	pipeline.Walk(func(pipelineName, kind, name string, step any) {
+		// This will print the name of the step
+		fmt.Println(pipelineName, kind, name)
+	})
+
+	// Output:
+	// my-pipeline inlets args
+	// my-pipeline inlets.args.flows dump
+	// my-pipeline flows fan-in
+	// my-pipeline flows select
+	// my-pipeline flows inject
+	// my-pipeline flows fan-out
+	// my-pipeline outlets file
 }
