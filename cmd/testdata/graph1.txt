@@ -1,0 +1,17 @@
+digraph  {
+        subgraph s1 {
+                fontname="sans-serif,Arial,Helvetica";label="graph1.toml";
+                n2[label="inlets.exec",shape="box",weight="0"];
+                n3[label="flows.fan-in",shape="box",weight="0"];
+                n4[label="flows.select",shape="box",weight="0"];
+                n5[label="flows.fan-out",shape="box",weight="0"];
+                n6[label="outlets.file",shape="box",weight="0"];
+                n2->n3;
+                n3->n4;
+                n4->n5;
+                n5->n6;
+
+        }
+
+
+}
