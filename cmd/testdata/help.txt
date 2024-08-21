@@ -1,0 +1,17 @@
+TINE is not ETL
+
+Usage:
+  tine [command] [flags] [args]
+  tine [command]
+
+Available Commands:
+  run         Run tine pipelines from the specified one or more files
+  graph       Generate a graph of the pipeline
+  list        List all plugins
+  version     Print the version number of TINE
+  help        Help about any command
+
+Flags:
+  -h, --help   help for tine
+
+Use "tine [command] --help" for more information about a command.
