@@ -28,7 +28,16 @@ func TestExecuteCommand(t *testing.T) {
 		{
 			args:       []string{"list"},
 			expectFile: "./testdata/list.txt",
-			skip:       func() bool { return runtime.GOOS == "windows" },
+			skip: func() bool {
+				return engine.GetOutletRegistry("rrd") != nil || runtime.GOOS == "windows"
+			},
+		},
+		{
+			args:       []string{"list"},
+			expectFile: "./testdata/list-with-rrd.txt",
+			skip: func() bool {
+				return engine.GetOutletRegistry("rrd") == nil || runtime.GOOS == "windows"
+			},
 		},
 		{
 			args:       []string{"graph", "--output", "-", "./testdata/graph1.toml"},

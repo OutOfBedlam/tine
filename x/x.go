@@ -1,6 +1,6 @@
 package x
 
-// avaliable experimental modules
+// available experimental modules
 // Use -tags <module> to enable the module
 
 var A = ""

@@ -2,8 +2,8 @@ Input: data -> [inlet] -> [decompress] -> [decoder] -> records
   Decoders    csv, json
   Decompress  flate, gzip, inflate, lzw, snappy, zlib
   Inlets      args, cpu, disk, diskio, exec, file, host, http, load, mem,
-              nats_varz, net, screenshot, sensors, sqlite, syslog,
-              telegram
+              nats_varz, net, rrd_graph, screenshot, sensors, sqlite,
+              syslog, telegram
 
 Flows: records -> [flow ...] -> records
   Flows       chrome_snap, damper, dump, exec, fan-in, fan-out, filter,
@@ -12,5 +12,6 @@ Flows: records -> [flow ...] -> records
 Output: records -> [encoder] -> [compress] -> [outlet] -> data
   Encoders    csv, json
   Compress    deflate, flate, gzip, lzw, snappy, zlib
-  Outlets     excel, file, http, image, mqtt, sqlite, telegram, template
+  Outlets     excel, file, http, image, mqtt, rrd, sqlite, telegram,
+              template
 
