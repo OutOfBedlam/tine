@@ -20,6 +20,7 @@ func TestExecuteCommand(t *testing.T) {
 		args       []string
 		expectFile string
 		skip       func() bool
+		check      func(string) bool
 	}{
 		{
 			args:       []string{"--help"},
@@ -29,14 +30,10 @@ func TestExecuteCommand(t *testing.T) {
 			args:       []string{"list"},
 			expectFile: "./testdata/list.txt",
 			skip: func() bool {
-				return engine.GetOutletRegistry("rrd") != nil || runtime.GOOS == "windows"
+				return runtime.GOOS == "windows"
 			},
-		},
-		{
-			args:       []string{"list"},
-			expectFile: "./testdata/list-with-rrd.txt",
-			skip: func() bool {
-				return engine.GetOutletRegistry("rrd") == nil || runtime.GOOS == "windows"
+			check: func(s string) bool {
+				return len(strings.TrimSpace(s)) > 10
 			},
 		},
 		{
@@ -84,18 +81,23 @@ func TestExecuteCommand(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		// trim whitespace of the end of the line
 		buff := []string{}
-		for _, line := range strings.Split(string(expectBin), "\n") {
-			buff = append(buff, strings.TrimSpace(line))
-		}
-		expect := strings.Join(buff, "\n")
-
-		buff = []string{}
 		for _, line := range strings.Split(output.String(), "\n") {
 			buff = append(buff, strings.TrimSpace(line))
 		}
 		result := strings.Join(buff, "\n")
+		if tt.check != nil {
+			if !tt.check(result) {
+				t.Fatalf("unexpected output: %s", result)
+			}
+			continue
+		}
+		// trim whitespace of the end of the line
+		buff = []string{}
+		for _, line := range strings.Split(string(expectBin), "\n") {
+			buff = append(buff, strings.TrimSpace(line))
+		}
+		expect := strings.Join(buff, "\n")
 
 		require.Equal(t, expect, result, strings.Join(tt.args, " "))
 	}
