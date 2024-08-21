@@ -186,6 +186,10 @@ func (c Config) GetBool(key string, defaultVal bool) bool {
 			if result, err := strconv.ParseBool(val); err == nil {
 				return result
 			}
+		case float32:
+			return val != float32(0.0)
+		case float64:
+			return val != float64(0.0)
 		case int:
 			return val != 0
 		}
@@ -214,6 +218,18 @@ func (c Config) GetString(key string, defaultVal string) string {
 			return val
 		case int:
 			return strconv.Itoa(val)
+		case uint:
+			return strconv.FormatUint(uint64(val), 10)
+		case int64:
+			return strconv.FormatInt(val, 10)
+		case uint64:
+			return strconv.FormatUint(val, 10)
+		case int32:
+			return strconv.FormatInt(int64(val), 10)
+		case uint32:
+			return strconv.FormatUint(uint64(val), 10)
+		case float32:
+			return strconv.FormatFloat(float64(val), 'f', -1, 32)
 		case float64:
 			return strconv.FormatFloat(val, 'f', -1, 64)
 		case bool:
@@ -249,6 +265,10 @@ func (c Config) GetInt(key string, defaultVal int) int {
 		case int:
 			return val
 		case uint:
+			return int(val)
+		case int32:
+			return int(val)
+		case uint32:
 			return int(val)
 		case int64:
 			return int(val)
@@ -293,6 +313,10 @@ func (c Config) GetFloat(key string, defaultVal float64) float64 {
 		case int:
 			return float64(val)
 		case uint:
+			return float64(val)
+		case int32:
+			return float64(val)
+		case uint32:
 			return float64(val)
 		case int64:
 			return float64(val)
@@ -339,9 +363,17 @@ func (c Config) GetIntSlice(key string, defaultVal []int) []int {
 func (c Config) GetUint32(key string, defaultVal uint32) uint32 {
 	if v, ok := c[key]; ok {
 		switch val := v.(type) {
+		case uint:
+			return uint32(val)
 		case uint32:
 			return val
 		case int:
+			return uint32(val)
+		case int32:
+			return uint32(val)
+		case int64:
+			return uint32(val)
+		case uint64:
 			return uint32(val)
 		case string:
 			if result, err := strconv.ParseUint(val, 10, 64); err == nil {
