@@ -1,6 +1,6 @@
 [log]
     level = "info"
-    path = "-"
+    path = ""
     no_color = true
 [[inlets.syslog]]
     ## Listen address
@@ -24,8 +24,8 @@
     ## octetcounting, non-transport
     framing = "octetcounting"
 
-[[flows.dump]]
-    level = "info"
+# [[flows.dump]]
+#     level = "info"
 [[outlets.file]]
     path = "-"
     format = "json"

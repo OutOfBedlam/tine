@@ -80,7 +80,7 @@ func runTest(t *testing.T, pipeFile, inputFile, expectFile string, check func(st
 	wgSender := sync.WaitGroup{}
 	wgSender.Add(1)
 	go func() {
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(500 * time.Millisecond)
 		fmt.Println("SEND...")
 		syslog_sender(inputFile)
 		time.Sleep(100 * time.Millisecond)
