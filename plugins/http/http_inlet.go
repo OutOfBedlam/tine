@@ -3,7 +3,6 @@ package http
 import (
 	"encoding/json"
 	"io"
-	"log/slog"
 	"net/http"
 	"strings"
 	"sync/atomic"
@@ -43,7 +42,7 @@ func (hi *httpInlet) Open() error {
 	timeout := hi.ctx.Config().GetDuration("timeout", 3*time.Second)
 	hi.runCountLimit = int64(hi.ctx.Config().GetInt("count", 1))
 
-	slog.Debug("inlet.http", "address", hi.addr, "success", hi.successCode, "timeout", timeout)
+	hi.ctx.LogDebug("inlet.http", "address", hi.addr, "success", hi.successCode, "timeout", timeout)
 
 	transport := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
@@ -84,7 +83,7 @@ func (hi *httpInlet) Process(next engine.InletNextFunc) {
 	}
 
 	if rsp.StatusCode != hi.successCode {
-		slog.Warn("inlet.http", "status", rsp.StatusCode, "body", string(body))
+		hi.ctx.LogWarn("inlet.http", "status", rsp.StatusCode, "body", string(body))
 		next(nil, nil)
 		return
 	}
@@ -101,7 +100,7 @@ func (hi *httpInlet) Process(next engine.InletNextFunc) {
 	if contentType := rsp.Header.Get("Content-Type"); strings.Contains(contentType, "application/json") {
 		obj := map[string]any{}
 		if err := json.Unmarshal(body, &obj); err != nil {
-			slog.Warn("inlet.http", "status", rsp.StatusCode, "unmarshal error", err.Error())
+			hi.ctx.LogWarn("inlet.http", "status", rsp.StatusCode, "unmarshal error", err.Error())
 			next(nil, err)
 			return
 		}
@@ -109,7 +108,7 @@ func (hi *httpInlet) Process(next engine.InletNextFunc) {
 		next([]engine.Record{ret}, resultErr)
 		return
 	} else {
-		slog.Warn("inlet.http", "status", rsp.StatusCode, "unsupported content-type", contentType)
+		hi.ctx.LogWarn("inlet.http", "status", rsp.StatusCode, "unsupported content-type", contentType)
 		next(nil, resultErr)
 		return
 	}

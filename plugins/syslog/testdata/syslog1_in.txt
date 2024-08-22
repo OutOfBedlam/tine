@@ -1,0 +1,3 @@
+<30>Aug 22 20:51:55 local.local wsl-pro-service[369]: INFO Reconnecting to Windows host in 60 seconds
+<30>Aug 22 20:51:55 local.local wsl-pro-service[369]: DEBUG Updated systemd status to "Not connected: waiting to retry"
+<38>Aug 22 20:53:55 local.local systemd-logind[364]: Removed session c8.

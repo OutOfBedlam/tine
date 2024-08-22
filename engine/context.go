@@ -118,26 +118,26 @@ func (ctx *Context) CircuitBreak() {
 }
 
 func (ctx *Context) LogDebug(msg string, keyvals ...interface{}) {
-	ctx.log(msg, slog.LevelDebug, keyvals...)
+	ctx.Log(slog.LevelDebug, msg, keyvals...)
 }
 
 func (ctx *Context) LogInfo(msg string, keyvals ...interface{}) {
-	ctx.log(msg, slog.LevelInfo, keyvals...)
+	ctx.Log(slog.LevelInfo, msg, keyvals...)
 }
 
 func (ctx *Context) LogWarn(msg string, keyvals ...interface{}) {
-	ctx.log(msg, slog.LevelWarn, keyvals...)
+	ctx.Log(slog.LevelWarn, msg, keyvals...)
 }
 
 func (ctx *Context) LogError(msg string, keyvals ...interface{}) {
-	ctx.log(msg, slog.LevelError, keyvals...)
+	ctx.Log(slog.LevelError, msg, keyvals...)
 }
 
 func (ctx *Context) LogEnabled(level slog.Level) bool {
 	return ctx.logger.Handler().Enabled(ctx, level)
 }
 
-func (ctx *Context) log(msg string, level slog.Level, keyvals ...interface{}) {
+func (ctx *Context) Log(level slog.Level, msg string, keyvals ...interface{}) {
 	handler := ctx.logger.Handler()
 	if !handler.Enabled(ctx, level) {
 		return

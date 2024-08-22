@@ -1,8 +1,7 @@
-## Syslog input plugins
-## receive and parse RFC3164 and RFC5424 syslog messages
-##
-## <PRI>VERSION TIMESTAMP HOSTNAME APP-NAME PROCID MSGID [SD-ID STRUCTURED-DATA] MESSAGE
-##
+[log]
+    level = "info"
+    path = "-"
+    no_color = true
 [[inlets.syslog]]
     ## Listen address
     ## e.g. tcp://:5514, udp://:5514, unix:///var/run/syslog.sock
@@ -13,7 +12,7 @@
 
     ## Standard
     ## RFC3164, RFC5424
-    syslog_standard = "rfc3164"
+    syslog_standard = "RFC3164"
 
     ## parallelim
     parallelism = 1
@@ -24,3 +23,9 @@
     ## TCP framing
     ## octetcounting, non-transport
     framing = "octetcounting"
+
+[[flows.dump]]
+    level = "info"
+[[outlets.file]]
+    path = "-"
+    format = "json"

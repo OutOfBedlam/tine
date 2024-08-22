@@ -1,0 +1,5 @@
+SEND...
+{"appname":"wsl-pro-service","facility_code":3,"hostname":"local.local","message":"INFO Reconnecting to Windows host in 60 seconds","procid":"369","remote_host":"127.0.0.1","severity_code":6,"timestamp":1724359915}
+{"appname":"wsl-pro-service","facility_code":3,"hostname":"local.local","message":"DEBUG Updated systemd status to \"Not connected: waiting to retry\"","procid":"369","remote_host":"127.0.0.1","severity_code":6,"timestamp":1724359915}
+{"appname":"systemd-logind","facility_code":4,"hostname":"local.local","message":"Removed session c8.","procid":"364","remote_host":"127.0.0.1","severity_code":6,"timestamp":1724360035}
+SEND...DONE

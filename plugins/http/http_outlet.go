@@ -3,7 +3,6 @@ package http
 import (
 	"bytes"
 	"io"
-	"log/slog"
 	"net/http"
 	"time"
 
@@ -82,10 +81,10 @@ func (ho *httpOutlet) Handle(recs []engine.Record) error {
 		return err
 	}
 	if rsp.StatusCode != ho.successCode {
-		slog.Warn("outlet.http", "status", rsp.Status, "response", string(body))
+		ho.ctx.LogWarn("outlet.http", "status", rsp.Status, "response", string(body))
 		return nil
 	} else {
-		slog.Debug("outlet.http", "status", rsp.Status, "response", string(body))
+		ho.ctx.LogDebug("outlet.http", "status", rsp.Status, "response", string(body))
 	}
 	return nil
 }

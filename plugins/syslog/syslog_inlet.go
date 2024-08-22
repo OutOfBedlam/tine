@@ -35,7 +35,7 @@ func SyslogInlet(ctx *engine.Context) engine.Inlet {
 type syslogInlet struct {
 	ctx *engine.Context
 
-	separator string
+	nameInfix string
 
 	pushCh    chan Data
 	closeOnce sync.Once
@@ -56,16 +56,12 @@ type Data struct {
 	err     error
 }
 
-func (si *syslogInlet) Apply() int {
-	return 2024
-}
-
 func (si *syslogInlet) Open() error {
 	address := si.ctx.Config().GetString("address", "tcp://127.0.0.1:6514")
 	protoAddr := strings.SplitN(address, "://", 2)
-	si.separator = si.ctx.Config().GetString("separator", "_")
+	si.nameInfix = si.ctx.Config().GetString("name_infix", "_")
 
-	slog.Debug("inlet-syslog", "address", address)
+	si.ctx.LogDebug("inlet-syslog", "address", address)
 
 	switch protoAddr[0] {
 	case "tcp", "tcp4", "tcp6", "unix", "unixpacket":
@@ -88,7 +84,7 @@ func (si *syslogInlet) Open() error {
 			si.pktConn = ln
 		}
 		si.closeWg.Add(1)
-		go si.handleDiagram()
+		go si.handleDatagram()
 
 	default:
 		return fmt.Errorf("unsupported protocol: %s in %s", protoAddr[0], address)
@@ -121,7 +117,7 @@ func (si *syslogInlet) Process(next engine.InletNextFunc) {
 	}
 }
 
-func (si *syslogInlet) handleDiagram() {
+func (si *syslogInlet) handleDatagram() {
 	defer si.closeWg.Done()
 	parallelism := si.ctx.Config().GetInt("parallelism", 1)
 	syslogStandard := si.ctx.Config().GetString("syslog_standard", "rfc3164")
@@ -130,8 +126,11 @@ func (si *syslogInlet) handleDiagram() {
 	switch strings.ToUpper(syslogStandard) {
 	case "RFC3164":
 		parser = rfc3164.NewParser(rfc3164.WithYear(rfc3164.CurrentYear{}))
-	case "RFC5452":
+	case "RFC5424":
 		parser = rfc5424.NewParser()
+	default:
+		si.ctx.LogError("inlet-syslog unsupported", "syslog_standard", syslogStandard)
+		return
 	}
 	bestEffort := si.ctx.Config().GetBool("best_effort", false)
 	if bestEffort {
@@ -151,20 +150,20 @@ func (si *syslogInlet) handleDiagram() {
 			n, addr, err := si.pktConn.ReadFrom(buf)
 			if err != nil {
 				if !si.closed {
-					slog.Warn("inlet-syslog", "read error", err)
+					si.ctx.LogWarn("inlet-syslog", "read_error", err)
 					si.pushCh <- Data{err: err}
 				}
 				return
 			}
 			message, err := parser.Parse(buf[:n])
 			if err != nil {
-				slog.Warn("inlet-syslog", "parse error", err)
+				si.ctx.LogWarn("inlet-syslog", "parse_error", err, "msg", string(buf[:n]))
 				return
 			}
 			if message == nil {
 				return
 			}
-			if r := records(message, si.separator); r != nil {
+			if r := records(message, si.nameInfix); r != nil {
 				r = r.Append(engine.NewField("remote_host", addr.(*net.UDPAddr).IP.String()))
 				si.pushCh <- Data{records: []engine.Record{r}}
 			}
@@ -189,13 +188,13 @@ func (si *syslogInlet) handleStream() {
 	}
 	parser.WithListener(func(r *syslog.Result) {
 		if r.Error != nil {
-			slog.Warn("inlet-syslog", "parse error", r.Error)
+			si.ctx.LogWarn("inlet-syslog", "parse error", r.Error)
 			return
 		}
 		if r.Message == nil {
 			return
 		}
-		if r := records(r.Message, si.separator); r != nil {
+		if r := records(r.Message, si.nameInfix); r != nil {
 			si.pushCh <- Data{records: []engine.Record{r}}
 		}
 	})

@@ -2,7 +2,6 @@ package snmp
 
 import (
 	"fmt"
-	"log/slog"
 	"sync"
 	"time"
 
@@ -150,7 +149,7 @@ func (si *snmpInlet) Gather() ([]engine.Record, error) {
 			defer wg.Done()
 			gs, err := si.getConnection(idx)
 			if err != nil {
-				slog.Warn("inlet_snmp", "connecting", agent, "error", err)
+				si.ctx.LogWarn("inlet_snmp", "connecting", agent, "error", err)
 				return
 			}
 			t := Table{
@@ -159,7 +158,7 @@ func (si *snmpInlet) Gather() ([]engine.Record, error) {
 			}
 			topTags := map[string]string{}
 			if recs, err := si.gatherTable(gs, t, topTags, false); err != nil {
-				slog.Warn("inlet_snmp", "gathering table", si.name, "error", err)
+				si.ctx.LogWarn("inlet_snmp", "gathering table", si.name, "error", err)
 			} else {
 				resultLock.Lock()
 				result = append(result, recs...)
@@ -168,7 +167,7 @@ func (si *snmpInlet) Gather() ([]engine.Record, error) {
 
 			for _, table := range si.tables {
 				if recs, err := si.gatherTable(gs, table, topTags, true); err != nil {
-					slog.Warn("inlet_snmp", "gathering table", table.Name, "error", err)
+					si.ctx.LogWarn("inlet_snmp", "gathering table", table.Name, "error", err)
 				} else {
 					resultLock.Lock()
 					result = append(result, recs...)
@@ -228,7 +227,7 @@ func (si *snmpInlet) gatherTable(gs Conn, table Table, topTags map[string]string
 			case uint:
 				rec.Append(engine.NewField(recName, uint64(v)))
 			default:
-				slog.Warn("inlet_snmp drop record", "name", recName, "type", fmt.Sprintf("%T", v), "value", fmt.Sprintf("%v", v))
+				si.ctx.LogWarn("inlet_snmp drop record", "name", recName, "type", fmt.Sprintf("%T", v), "value", fmt.Sprintf("%v", v))
 			}
 		}
 		if len(rec.Names()) > 0 {

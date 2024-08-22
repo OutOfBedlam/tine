@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log/slog"
 	"os"
 	"strings"
 
@@ -34,7 +33,7 @@ var _ = engine.Inlet((*fileInlet)(nil))
 func (fi *fileInlet) Open() error {
 	path := fi.ctx.Config().GetString("path", "")
 	data := fi.ctx.Config().GetStringSlice("data", nil)
-	slog.Debug("inlet.file", "path", path, "data", util.FormatCount(len(data), util.CountUnitLines))
+	fi.ctx.LogDebug("inlet.file", "path", path, "data", util.FormatCount(len(data), util.CountUnitLines))
 	if path == "" && len(data) == 0 {
 		return fmt.Errorf("no path or data specified")
 	}

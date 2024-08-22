@@ -3,7 +3,6 @@ package mqtt
 import (
 	"bytes"
 	"fmt"
-	"log/slog"
 	"sync/atomic"
 	"time"
 
@@ -81,7 +80,7 @@ func (mo *mqttOutlet) Handle(recs []engine.Record) error {
 	tok := mo.client.Publish(mo.topic, mo.qos, false, data.Bytes())
 	tok.WaitTimeout(mo.timeout)
 	if tok.Error() != nil {
-		slog.Error("outlet.mqtt", "error", tok.Error().Error())
+		mo.ctx.LogError("outlet.mqtt", "error", tok.Error().Error())
 	}
 	return nil
 }
