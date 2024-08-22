@@ -2,7 +2,6 @@ package syslog_test
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"log/slog"
 	"net"
@@ -80,11 +79,9 @@ func runTest(t *testing.T, pipeFile, inputFile, expectFile string, check func(st
 	wgSender := sync.WaitGroup{}
 	wgSender.Add(1)
 	go func() {
-		time.Sleep(500 * time.Millisecond)
-		fmt.Println("SEND...")
+		time.Sleep(100 * time.Millisecond)
 		syslog_sender(inputFile)
 		time.Sleep(100 * time.Millisecond)
-		fmt.Println("SEND...DONE")
 		wgSender.Done()
 	}()
 	wgSender.Wait()
@@ -131,6 +128,7 @@ func syslog_sender(inputFile string) {
 	content, _ := os.ReadFile(inputFile)
 	lines := bytes.Split(content, []byte("\n"))
 	for _, line := range lines {
+		line = bytes.TrimSpace(line)
 		if len(line) == 0 {
 			continue
 		}

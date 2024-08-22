@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log/slog"
 	"net"
 	"strings"
 	"sync"
@@ -163,7 +162,7 @@ func (si *syslogInlet) handleDatagram() {
 			if message == nil {
 				return
 			}
-			if r := records(message, si.nameInfix); r != nil {
+			if r := si.records(message); r != nil {
 				r = r.Append(engine.NewField("remote_host", addr.(*net.UDPAddr).IP.String()))
 				si.pushCh <- Data{records: []engine.Record{r}}
 			}
@@ -194,18 +193,18 @@ func (si *syslogInlet) handleStream() {
 		if r.Message == nil {
 			return
 		}
-		if r := records(r.Message, si.nameInfix); r != nil {
+		if r := si.records(r.Message); r != nil {
 			si.pushCh <- Data{records: []engine.Record{r}}
 		}
 	})
 	si.pushCh <- Data{err: io.EOF}
 }
 
-func records(msg syslog.Message, separator string) engine.Record {
+func (si *syslogInlet) records(msg syslog.Message) engine.Record {
 	ret := engine.NewRecord()
 	switch msg := msg.(type) {
 	default:
-		slog.Warn("inlet-syslog", "unsupported message type", fmt.Sprintf("%T", msg))
+		si.ctx.LogWarn("inlet-syslog", "unsupported message type", fmt.Sprintf("%T", msg))
 	case *rfc3164.SyslogMessage:
 		ret = ret.Append(
 			engine.NewField("facility_code", int64(*msg.Facility)),
@@ -270,7 +269,7 @@ func records(msg syslog.Message, separator string) engine.Record {
 					continue
 				}
 				for k, v := range sdparams {
-					ret = ret.Append(engine.NewField(sdid+separator+k, v))
+					ret = ret.Append(engine.NewField(sdid+si.nameInfix+k, v))
 				}
 			}
 		}
