@@ -30,6 +30,11 @@ func TestSyslogInlet(t *testing.T) {
 			inputFile:  "./testdata/syslog1_in.txt",
 			expectFile: "./testdata/syslog1_out.txt",
 		},
+		{
+			pipeFile:   "./testdata/syslog5424.toml",
+			inputFile:  "./testdata/syslog5424_in.txt",
+			expectFile: "./testdata/syslog5424_out.txt",
+		},
 	}
 
 	originalStdout := os.Stdout
