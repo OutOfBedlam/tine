@@ -12,7 +12,6 @@ require (
 	github.com/emicklei/dot v1.6.2
 	github.com/expr-lang/expr v1.16.9
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
-	github.com/golang/snappy v0.0.4
 	github.com/gosnmp/gosnmp v1.38.0
 	github.com/kbinani/screenshot v0.0.0-20240809223827-e520a411f991
 	github.com/leodido/go-syslog/v4 v4.1.0

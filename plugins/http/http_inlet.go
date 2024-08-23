@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -104,7 +105,7 @@ func (hi *httpInlet) Process(next engine.InletNextFunc) {
 			next(nil, err)
 			return
 		}
-		ret := Map2Record("", obj)
+		ret := json2Record("", obj)
 		next([]engine.Record{ret}, resultErr)
 		return
 	} else {
@@ -114,33 +115,31 @@ func (hi *httpInlet) Process(next engine.InletNextFunc) {
 	}
 }
 
-func Map2Record(prefix string, obj map[string]any) engine.Record {
+func json2Record(prefix string, obj map[string]any) engine.Record {
 	ret := engine.NewRecord()
 	for k, v := range obj {
-		switch v := v.(type) {
-		case float64:
-			ret = ret.Append(engine.NewField(prefix+k, v))
-		case int:
-			ret = ret.Append(engine.NewField(prefix+k, int64(v)))
-		case int64:
-			ret = ret.Append(engine.NewField(prefix+k, v))
-		case string:
-			ret = ret.Append(engine.NewField(prefix+k, v))
-		case bool:
-			ret = ret.Append(engine.NewField(prefix+k, v))
-		case time.Time:
-			ret = ret.Append(engine.NewField(prefix+k, v))
-		case []byte:
-			ret = ret.Append(engine.NewField(prefix+k, v))
-		case map[string]any:
-			subRec := Map2Record(prefix+k+".", v)
-			ret = ret.Append(subRec.Fields()...)
-		case []any:
-			// TODO: support array
-			continue
-		default:
-			continue
-		}
+		ret = ret.Append(json2Field(prefix+k, v)...)
 	}
 	return ret
+}
+
+func json2Field(name string, v any) []*engine.Field {
+	switch v := v.(type) {
+	case float64:
+		return []*engine.Field{engine.NewField(name, v)}
+	case string:
+		return []*engine.Field{engine.NewField(name, v)}
+	case bool:
+		return []*engine.Field{engine.NewField(name, v)}
+	case map[string]any:
+		subRec := json2Record(name+".", v)
+		return subRec.Fields()
+	case []any:
+		ret := []*engine.Field{}
+		for i, v := range v {
+			ret = append(ret, json2Field(fmt.Sprintf("%s[%d]", name, i), v)...)
+		}
+		return ret
+	}
+	return nil
 }

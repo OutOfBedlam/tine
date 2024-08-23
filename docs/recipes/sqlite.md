@@ -1,6 +1,7 @@
 # SQLite
 
-This recipe demonstrates how to utilize SQLite as a storage solution for collecting data. It not only stores the data efficiently but also enables the generation of insightful charts based on the stored information.
+This recipe demonstrates how to utilize SQLite as a storage solution for collecting data.
+It not only stores the data efficiently but also enables the generation of insightful charts based on the stored information.
 
 <figure><img src="./images/sqlite_graph_web.png" alt="" width="563"><figcaption><p>SQLite Graph Web</p></figcaption></figure>
 
