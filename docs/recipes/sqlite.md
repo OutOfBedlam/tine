@@ -84,5 +84,5 @@ name = "query"
 	templates = ['{ "time":{{ .time }}, "cpu":{{ .cpu }}, "load1":{{ .load1 }}, "load5":{{ .load5 }}, "load15":{{ .load15 }} }']
 ```
 
-Please refer the example [here](https://https://github.com/OutOfBedlam/tine/tree/main/example/sqlite_graph_web) for the full source code.
+Please refer the example [here](https://github.com/OutOfBedlam/tine/tree/main/example/sqlite_graph_web) for the full source code.
 
