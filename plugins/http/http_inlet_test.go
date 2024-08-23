@@ -14,10 +14,10 @@ import (
 	_ "github.com/OutOfBedlam/tine/plugins/http"
 )
 
-var httpServer *http.Server
+var httpInletServer *http.Server
 
-func runTestServer() (string, error) {
-	httpServer = &http.Server{
+func runInletTestServer() (string, error) {
+	httpInletServer = &http.Server{
 		Addr: "127.0.0.1:0",
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
@@ -26,12 +26,12 @@ func runTestServer() (string, error) {
 		}),
 	}
 
-	lsnr, err := net.Listen("tcp", httpServer.Addr)
+	lsnr, err := net.Listen("tcp", httpInletServer.Addr)
 	if err != nil {
 		return "", err
 	}
 
-	go http.Serve(lsnr, httpServer.Handler)
+	go http.Serve(lsnr, httpInletServer.Handler)
 
 	// Get the address the server is listening on
 	addr := lsnr.Addr().String()
@@ -39,11 +39,11 @@ func runTestServer() (string, error) {
 }
 
 func ExampleHttpInlet() {
-	addr, err := runTestServer()
+	addr, err := runInletTestServer()
 	if err != nil {
 		panic(err)
 	}
-	defer httpServer.Close()
+	defer httpInletServer.Close()
 
 	dsl := fmt.Sprintf(`
 	[[inlets.http]]
