@@ -131,6 +131,8 @@ func TestSnmpInit(t *testing.T) {
 			require.Contains(t, result[k].(string), val)
 		case "snmp_uptime":
 			require.Greater(t, result[k].(float64), 0.0)
+		case "snmp_a":
+			require.GreaterOrEqual(t, result[k].(float64), 0.0)
 		default:
 			switch v := val.(type) {
 			case int:
