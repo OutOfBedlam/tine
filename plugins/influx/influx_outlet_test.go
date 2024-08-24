@@ -3,6 +3,7 @@ package influx_test
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"testing"
 
 	"github.com/OutOfBedlam/tine/engine"
@@ -48,6 +49,9 @@ func setupInfluxdb(ctx context.Context) (*influxdbContainer, error) {
 }
 
 func TestInfluxOutlet(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("skipping test on non-linux system")
+	}
 	ctx := context.Background()
 	influxC, err := setupInfluxdb(ctx)
 	if err != nil {
