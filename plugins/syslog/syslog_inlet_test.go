@@ -35,6 +35,11 @@ func TestSyslogInlet(t *testing.T) {
 			inputFile:  "./testdata/syslog5424_in.txt",
 			expectFile: "./testdata/syslog5424_out.txt",
 		},
+		{
+			pipeFile:   "./testdata/juniper_net.toml",
+			inputFile:  "./testdata/juniper_net_in.txt",
+			expectFile: "./testdata/juniper_net_out.txt",
+		},
 	}
 
 	originalStdout := os.Stdout
