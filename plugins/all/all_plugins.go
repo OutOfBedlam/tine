@@ -18,6 +18,7 @@ import (
 	_ "github.com/OutOfBedlam/tine/plugins/ollama"
 	_ "github.com/OutOfBedlam/tine/plugins/psutil"
 	_ "github.com/OutOfBedlam/tine/plugins/screenshot"
+	_ "github.com/OutOfBedlam/tine/plugins/snmp"
 	_ "github.com/OutOfBedlam/tine/plugins/sqlite"
 	_ "github.com/OutOfBedlam/tine/plugins/syslog"
 	_ "github.com/OutOfBedlam/tine/plugins/telegram"

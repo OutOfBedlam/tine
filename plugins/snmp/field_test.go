@@ -68,7 +68,7 @@ func TestConvertHex(t *testing.T) {
 		errmsg   string
 	}{
 		{
-			name: "octest string with valid bytes",
+			name: "octet string with valid bytes",
 			ent: gosnmp.SnmpPDU{
 				Type:  gosnmp.OctetString,
 				Value: []byte{0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x20, 0x77, 0x6F, 0x72, 0x6C, 0x64},

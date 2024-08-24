@@ -2,6 +2,7 @@ package snmp
 
 import (
 	"fmt"
+	"io"
 	"sync"
 	"time"
 
@@ -12,39 +13,6 @@ func init() {
 	engine.RegisterInlet(&engine.InletReg{
 		Name:    "snmp",
 		Factory: SnmpInlet,
-		// Usage:   "--in-snmp <param>",
-		// Help: []string{
-		// 	"Gather metrics from SNMP agents.",
-		// 	"Available params:",
-		// 	"    name=<string>      SNMP client name (default: in-snmp)",
-		// 	"    agent=<string>     SNMP agent address, multiple agents are allowed",
-		// 	"                       (e.g. agent=udp://127.0.0.1:161,agent=tcp://127.0.0.1:161)",
-		// 	"    version=[1|2|3]    SNMP version (default: 2)",
-		// 	"    community=<string> SNMP community string (default: public)",
-		// 	"    unconnected_udp_socket=[true|false]  Use unconnected UDP socket (default: false)",
-		// 	"    retries=<int>      SNMP retries (default: 3)",
-		// 	"    max_repetitions=<int>  SNMP max repetitions (default: 10)",
-		// 	"    context_name=<string>  SNMPv3 context name",
-		// 	"    timeout=<duration>   SNMP timeout (default: 5s)",
-		// 	"    sec_name=<string>    SNMPv3 security name",
-		// 	"    sec_level=<lvl>      SNMPv3 security level (default: authNoPriv)",
-		// 	"                         [noAuthNoPriv|authNoPriv|authPriv]",
-		// 	"    auth_protocol=<alg>  SNMPv3 authentication protocol",
-		// 	"                         [MD5|SHA|SHA224|SHA256|SHA384|SHA512]",
-		// 	"    auth_password=<string>  SNMPv3 authentication password",
-		// 	"    priv_protocol=<alg>  SNMPv3 privacy protocol",
-		// 	"                         [DES|AES|AES192|AES192C|AES256|AES256C]",
-		// 	"    priv_password=<string>  SNMPv3 privacy password",
-		// 	"    translator=<string>  MIB translator (default: gosmi)",
-		// 	"                         [gosmi|netsnmp]",
-		// 	"    table=<string>     SNMP table name",
-		// 	"    field=<string>     SNMP field name",
-		// 	"    inherit_tags=<string>  Inherit tags from the table",
-		// 	"    engine_id=<string>  SNMPv3 engine ID",
-		// 	"    engine_boots=<int>  SNMPv3 engine boots",
-		// 	"    engine_time=<int>   SNMPv3 engine time",
-		// 	"    path=<string>       MIB path, multiple paths are allowed",
-		// },
 	})
 }
 
@@ -54,8 +22,12 @@ func SnmpInlet(ctx *engine.Context) engine.Inlet {
 
 type snmpInlet struct {
 	ctx             *engine.Context
+	interval        time.Duration
+	runCountLimit   int
+	runCount        int
 	clientConf      ClientConfig
 	name            string
+	nameInfix       string
 	agents          []string
 	tables          []Table
 	fields          []Field
@@ -67,7 +39,11 @@ var _ = engine.Inlet((*snmpInlet)(nil))
 
 func (si *snmpInlet) Open() error {
 	conf := si.ctx.Config()
-	si.name = conf.GetString("name", "inlet.snmp")
+	si.interval = conf.GetDuration("interval", 10*time.Second)
+	si.runCountLimit = conf.GetInt("count", 0)
+
+	si.name = conf.GetString("name", "inlets.snmp")
+	si.nameInfix = conf.GetString("name_infix", "_")
 	si.clientConf.Timeout = conf.GetDuration("timeout", 5*time.Second)
 	si.clientConf.Retries = conf.GetInt("retries", 3)
 	si.clientConf.Version = conf.GetInt("version", 2)
@@ -87,18 +63,17 @@ func (si *snmpInlet) Open() error {
 	si.clientConf.EngineID = conf.GetString("engine_id", "")
 	si.clientConf.EngineBoots = conf.GetUint32("engine_boots", 0)
 	si.clientConf.EngineTime = conf.GetUint32("engine_time", 0)
-	//si.clientConf.Path = conf.GetStringArray("path", []string{"/usr/share/snmp/mibs"})
-	si.clientConf.Path = conf.GetStringSlice("path", []string{})
-	si.clientConf.Translator = conf.GetString("translator", "gosmi")
 
-	si.agents = conf.GetStringSlice("agent", nil)
+	si.agents = conf.GetStringSlice("agents", nil)
 	if len(si.agents) == 0 {
 		return fmt.Errorf("no SNMP agent specified")
 	}
 
-	switch si.clientConf.Translator {
+	mibPath := conf.GetStringSlice("mib_paths", []string{})
+	mibTranslator := conf.GetString("translator", "gosmi")
+	switch mibTranslator {
 	case "gosmi":
-		if trans, err := NewGosmiTranslator(si.clientConf.Path); err != nil {
+		if trans, err := NewGosmiTranslator(mibPath); err != nil {
 			return err
 		} else {
 			si.translator = trans
@@ -106,22 +81,47 @@ func (si *snmpInlet) Open() error {
 	case "netsnmp":
 		si.translator = NewNetsnmpTranslator()
 	default:
-		return fmt.Errorf("invalid translator %q", si.clientConf.Translator)
+		return fmt.Errorf("invalid translator %q", mibTranslator)
 	}
 
 	si.connectionCache = make([]Conn, len(si.agents))
 
+	tables := conf.GetConfigSlice("tables", nil)
+	for _, c := range tables {
+		t := Table{}
+		t.Name = c.GetString("name", "")
+		t.Oid = c.GetString("oid", "")
+		t.InheritTags = c.GetStringSlice("inherit_tags", nil)
+		t.IndexAsTag = c.GetBool("index_as_tag", false)
+		si.tables = append(si.tables, t)
+	}
 	for i := range si.tables {
-		if err := si.tables[i].init(si.translator); err != nil {
+		if err := (&si.tables[i]).init(si.translator); err != nil {
 			return fmt.Errorf("initializing table %s: %w", si.tables[i].Name, err)
 		}
 	}
 
+	fields := conf.GetConfigSlice("fields", nil)
+	for _, c := range fields {
+		f := Field{}
+		f.Name = c.GetString("name", "")
+		f.Oid = c.GetString("oid", "")
+		f.OidIndexSuffix = c.GetString("oid_index_suffix", "")
+		f.OidIndexLength = c.GetInt("oid_index_length", 0)
+		f.IsTag = c.GetBool("is_tag", false)
+		f.Conversion = c.GetString("conversion", "")
+		f.Translate = c.GetBool("translate", false)
+		f.SecondaryIndexTable = c.GetBool("secondary_index_table", false)
+		f.SecondaryIndexUse = c.GetBool("secondary_index_use", false)
+		f.SecondaryOuterJoin = c.GetBool("secondary_outer_join", false)
+		si.fields = append(si.fields, f)
+	}
 	for i := range si.fields {
-		if err := si.fields[i].Init(si.translator); err != nil {
+		if err := (&si.fields[i]).Init(si.translator); err != nil {
 			return fmt.Errorf("initializing field %s: %w", si.fields[i].Name, err)
 		}
 	}
+
 	return nil
 }
 
@@ -130,11 +130,19 @@ func (si *snmpInlet) Close() error {
 }
 
 func (si *snmpInlet) Interval() time.Duration {
-	return si.ctx.Config().GetDuration("interval", si.clientConf.Timeout)
+	return si.interval
 }
 
 func (si *snmpInlet) Process(next engine.InletNextFunc) {
+	if si.runCountLimit > 0 && si.runCount >= si.runCountLimit {
+		next(nil, io.EOF)
+		return
+	}
 	recs, err := si.Gather()
+	si.runCount++
+	if err == nil && si.runCountLimit > 0 && si.runCount > si.runCountLimit {
+		err = io.EOF
+	}
 	next(recs, err)
 }
 
@@ -149,7 +157,7 @@ func (si *snmpInlet) Gather() ([]engine.Record, error) {
 			defer wg.Done()
 			gs, err := si.getConnection(idx)
 			if err != nil {
-				si.ctx.LogWarn("inlet_snmp", "connecting", agent, "error", err)
+				si.ctx.LogWarn("inlets.snmp", "connecting", agent, "error", err)
 				return
 			}
 			t := Table{
@@ -158,7 +166,7 @@ func (si *snmpInlet) Gather() ([]engine.Record, error) {
 			}
 			topTags := map[string]string{}
 			if recs, err := si.gatherTable(gs, t, topTags, false); err != nil {
-				si.ctx.LogWarn("inlet_snmp", "gathering table", si.name, "error", err)
+				si.ctx.LogWarn("inlets.snmp", "gathering table", si.name, "error", err)
 			} else {
 				resultLock.Lock()
 				result = append(result, recs...)
@@ -167,7 +175,7 @@ func (si *snmpInlet) Gather() ([]engine.Record, error) {
 
 			for _, table := range si.tables {
 				if recs, err := si.gatherTable(gs, table, topTags, true); err != nil {
-					si.ctx.LogWarn("inlet_snmp", "gathering table", table.Name, "error", err)
+					si.ctx.LogWarn("inlets.snmp", "gathering table", table.Name, "error", err)
 				} else {
 					resultLock.Lock()
 					result = append(result, recs...)
@@ -204,11 +212,11 @@ func (si *snmpInlet) gatherTable(gs Conn, table Table, topTags map[string]string
 		for name, value := range tr.Fields {
 			recName := table.Name
 			if idx, ok := tr.Tags["ifIndex"]; ok {
-				recName += "." + idx
+				recName += si.nameInfix + idx
 			} else {
 				si.ctx.LogDebug("snmp ifIndex not found", "tags", tr.Tags, "fields", tr.Fields)
 			}
-			recName = recName + "." + name
+			recName = recName + si.nameInfix + name
 			switch v := value.(type) {
 			case string:
 				rec.Append(engine.NewField(recName, v))
@@ -260,4 +268,29 @@ func (si *snmpInlet) getConnection(idx int) (Conn, error) {
 	}
 
 	return gs, nil
+}
+
+type ClientConfig struct {
+	Timeout                 time.Duration
+	Retries                 int
+	Version                 int
+	UseUnconnectedUDPSocket bool
+
+	// Version 1 and 2
+	Community string
+
+	// Version 2 and 3
+	MaxRepetitions uint32
+
+	// Version 3 only
+	ContextName  string
+	SecLevel     string
+	SecName      string
+	AuthProtocol string
+	AuthPassword string
+	PrivProtocol string
+	PrivPassword string
+	EngineID     string
+	EngineBoots  uint32
+	EngineTime   uint32
 }

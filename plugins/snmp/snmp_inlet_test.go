@@ -1,9 +1,12 @@
 package snmp
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net"
+	"os"
 	"path/filepath"
 	"runtime"
 	"sync"
@@ -11,27 +14,132 @@ import (
 	"time"
 
 	"github.com/OutOfBedlam/tine/engine"
+	_ "github.com/OutOfBedlam/tine/plugins/base"
 	"github.com/gosnmp/gosnmp"
+	"github.com/slayercat/GoSNMPServer"
+	"github.com/slayercat/GoSNMPServer/mibImps"
 	"github.com/stretchr/testify/require"
 )
+
+func TestMain(m *testing.M) {
+	master := GoSNMPServer.MasterAgent{
+		Logger: GoSNMPServer.NewDefaultLogger(),
+		SecurityConfig: GoSNMPServer.SecurityConfig{
+			AuthoritativeEngineBoots: 1,
+			Users: []gosnmp.UsmSecurityParameters{
+				{
+					UserName:                 "user",
+					AuthenticationProtocol:   gosnmp.MD5,
+					PrivacyProtocol:          gosnmp.DES,
+					AuthenticationPassphrase: "auth_password",
+					PrivacyPassphrase:        "priv_password",
+				},
+			},
+		},
+		SubAgents: []*GoSNMPServer.SubAgent{
+			{
+				CommunityIDs: []string{"public"},
+				OIDs:         mibImps.All(),
+			},
+		},
+	}
+	server := GoSNMPServer.NewSNMPServer(master)
+	err := server.ListenUDP("udp", udpTestAgent)
+	if err != nil {
+		fmt.Println("Error starting server:", err)
+		os.Exit(1)
+	}
+	go server.ServeForever()
+
+	m.Run()
+
+	server.Shutdown()
+}
+
+const udpTestAgent = "127.0.0.1:1161"
+
+func TestSnmpInlet(t *testing.T) {
+	inlet := SnmpInlet(DummyContext(
+		engine.Config{}.
+			Set("agents", []string{"udp://" + udpTestAgent}).
+			Set("translator", "gosmi"),
+	))
+	require.NoError(t, inlet.Open())
+}
 
 func DummyContext(conf engine.Config) *engine.Context {
 	return (&engine.Context{}).WithConfig(conf).WithLogger(slog.Default())
 }
 
 func TestSnmpInit(t *testing.T) {
-	inlet := SnmpInlet(DummyContext(
-		engine.Config{}.
-			Set("agent", []string{""}).
-			Set("translator", "gosmi"),
-	))
-	require.NoError(t, inlet.Open())
+	dsl := fmt.Sprintf(`
+	[log]
+		level = "info"
+		path = "-"
+		no_color = true
+	[[inlets.snmp]]
+		count = 1
+		interval = "1s"
+		agents = ["%s"]
+		mib_paths = ["/usr/share/snmp/mibs"]
+		translator = "netsnmp"
+		name = "snmp"
+		fields = [
+			{name="a", oid="1.3.6.1.4.1.2021.11.54" },
+			{name="uptime", oid="1.3.6.1.2.1.1.3.0", conversion="int"},
+			{name="ifDescr", oid="1.3.6.1.2.1.2.2.1.2.0"},
+		]
+		# tables = [
+		# 	{name="if", oid="1.3.6.1.2.1.1.3" },
+		# ]
+	[[flows.select]]
+		includes = ["**"]
+	[[outlets.file]]
+		path = "-"
+		format = "json"
+	`, udpTestAgent)
+
+	serial := int64(0)
+	engine.Now = func() time.Time { serial++; return time.Unix(1721954797+serial, 0) }
+	sb := &bytes.Buffer{}
+	pipeline, err := engine.New(engine.WithConfig(dsl), engine.WithWriter(sb))
+	if err != nil {
+		panic(err)
+	}
+	if err := pipeline.Run(); err != nil {
+		panic(err)
+	}
+	expect := map[string]any{
+		"_in":          "snmp",
+		"_ts":          1721954798,
+		"snmp_a":       0,
+		"snmp_uptime":  135873,
+		"snmp_ifDescr": "lo0",
+	}
+	t.Log("--------------------------\n", sb.String())
+	result := map[string]any{}
+	err = json.Unmarshal(sb.Bytes(), &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for k, val := range expect {
+		switch v := val.(type) {
+		case int:
+			if k == "snmp_uptime" {
+				require.Greater(t, result[k].(float64), 0.0)
+			} else {
+				require.Equal(t, float64(v), result[k], "field: %s", k)
+			}
+		default:
+			require.Equal(t, val, result[k], "field: %s", k)
+		}
+	}
 }
 
 func TestSnmpInit_noTranslate(t *testing.T) {
 	inlet := SnmpInlet(DummyContext(
 		engine.Config{}.
-			Set("agent", []string{""}).
+			Set("agents", []string{""}).
 			Set("translator", "netsnmp"),
 	))
 	s := inlet.(*snmpInlet)
@@ -81,7 +189,7 @@ func TestSnmpInit_noTranslate(t *testing.T) {
 func TestSnmpInit_noName_noOid(t *testing.T) {
 	inlet := SnmpInlet(DummyContext(
 		engine.Config{}.
-			Set("agent", ""),
+			Set("agents", ""),
 	))
 	s := inlet.(*snmpInlet)
 	s.tables = []Table{
@@ -97,7 +205,7 @@ func TestSnmpInit_noName_noOid(t *testing.T) {
 func TestGetSNMPConnection_v2(t *testing.T) {
 	inlet := SnmpInlet(DummyContext(
 		engine.Config{}.
-			Set("agent", []string{"1.2.3.4:567", "1.2.3.4", "udp://127.0.0.1"}).
+			Set("agents", []string{"1.2.3.4:567", "1.2.3.4", "udp://127.0.0.1"}).
 			Set("timeout", "3s").
 			Set("retries", "4").
 			Set("version", "2").
@@ -141,7 +249,7 @@ func TestGetSNMPConnectionTCP(t *testing.T) {
 
 	inlet := SnmpInlet(DummyContext(
 		engine.Config{}.
-			Set("agent", fmt.Sprintf("tcp://%s", tcpServer.Addr())).
+			Set("agents", fmt.Sprintf("tcp://%s", tcpServer.Addr())).
 			Set("version", "2"),
 	))
 	require.NoError(t, inlet.Open())
@@ -157,7 +265,7 @@ func TestGetSNMPConnectionTCP(t *testing.T) {
 func TestGetSNMPConnection_v3(t *testing.T) {
 	inlet := SnmpInlet(DummyContext(
 		engine.Config{}.
-			Set("agent", "1.2.3.4").
+			Set("agents", "1.2.3.4").
 			Set("version", 3).
 			Set("max_repetitions", 20).
 			Set("context_name", "mycontext").
@@ -204,7 +312,7 @@ func TestGetSNMPConnection_v3_blumenthal(t *testing.T) {
 			Name:      "AES192",
 			Algorithm: gosnmp.AES192,
 			Config: engine.Config{}.
-				Set("agent", "1.2.3.4").
+				Set("agents", "1.2.3.4").
 				Set("version", 3).
 				Set("max_repetitions", 20).
 				Set("context_name", "mycontext").
@@ -223,7 +331,7 @@ func TestGetSNMPConnection_v3_blumenthal(t *testing.T) {
 			Name:      "AES192C",
 			Algorithm: gosnmp.AES192C,
 			Config: engine.Config{}.
-				Set("agent", "1.2.3.4").
+				Set("agents", "1.2.3.4").
 				Set("version", 3).
 				Set("max_repetitions", 20).
 				Set("context_name", "mycontext").
@@ -242,7 +350,7 @@ func TestGetSNMPConnection_v3_blumenthal(t *testing.T) {
 			Name:      "AES256",
 			Algorithm: gosnmp.AES256,
 			Config: engine.Config{}.
-				Set("agent", "1.2.3.4").
+				Set("agents", "1.2.3.4").
 				Set("version", 3).
 				Set("max_repetitions", 20).
 				Set("context_name", "mycontext").
@@ -261,7 +369,7 @@ func TestGetSNMPConnection_v3_blumenthal(t *testing.T) {
 			Name:      "AES256C",
 			Algorithm: gosnmp.AES256C,
 			Config: engine.Config{}.
-				Set("agent", "1.2.3.4").
+				Set("agents", "1.2.3.4").
 				Set("version", 3).
 				Set("max_repetitions", 20).
 				Set("context_name", "mycontext").
@@ -307,7 +415,7 @@ func TestGetSNMPConnection_v3_blumenthal(t *testing.T) {
 
 func TestGetSNMPConnection_caching(t *testing.T) {
 	inlet := SnmpInlet(DummyContext(engine.Config{}.
-		Set("agent", []string{"1.2.3.4", "1.2.3.5", "1.2.3.5"}).
+		Set("agents", []string{"1.2.3.4", "1.2.3.5", "1.2.3.5"}).
 		Set("version", "2").
 		Set("translator", "netsnmp"),
 	))
@@ -438,7 +546,7 @@ func TestGather(t *testing.T) {
 	t.Skip("Skipping test due to random failures.")
 	inlet := SnmpInlet(DummyContext(
 		engine.NewConfig().
-			Set("agent", "TestGather").
+			Set("agents", "TestGather").
 			Set("name", "mytable"),
 	))
 	require.NoError(t, inlet.Open())
@@ -503,7 +611,7 @@ func TestGather_host(t *testing.T) {
 	t.Skip("Skipping test due to not-implemented")
 	inlet := SnmpInlet(DummyContext(
 		engine.NewConfig().
-			Set("agent", "TestGather").
+			Set("agents", "TestGather").
 			Set("name", "mytable"),
 	))
 	require.NoError(t, inlet.Open())
@@ -536,10 +644,10 @@ func TestSnmpInitGosmi(t *testing.T) {
 
 	inlet := SnmpInlet(DummyContext(
 		engine.NewConfig().
-			Set("agent", "TestGather").
+			Set("agents", "TestGather").
 			Set("name", "mytable").
 			Set("translator", "gosmi").
-			Set("path", testDataPath),
+			Set("mib_paths", testDataPath),
 	))
 	s := inlet.(*snmpInlet)
 	s.tables = []Table{
@@ -577,7 +685,7 @@ func TestSnmpInitGosmi(t *testing.T) {
 func TestSnmpInit_noTranslateGosmi(t *testing.T) {
 	inlet := SnmpInlet(DummyContext(
 		engine.NewConfig().
-			Set("agent", "TestGather").
+			Set("agents", "TestGather").
 			Set("name", "mytable").
 			Set("translator", "gosmi"),
 	))
@@ -627,7 +735,7 @@ func TestGatherGosmi(t *testing.T) {
 	t.Skip("Skipping test due to random failures.")
 	inlet := SnmpInlet(DummyContext(
 		engine.NewConfig().
-			Set("agent", "TestGather").
+			Set("agents", "TestGather").
 			Set("name", "mytable").
 			Set("translator", "gosmi"),
 	))
@@ -691,7 +799,7 @@ func TestGather_hostGosmi(t *testing.T) {
 	t.Skip("Skipping test due to not-implemented")
 	inlet := SnmpInlet(DummyContext(
 		engine.NewConfig().
-			Set("agent", "TestGather").
+			Set("agents", "TestGather").
 			Set("name", "mytable").
 			Set("translator", "gosmi"),
 	))
@@ -728,13 +836,13 @@ func TestGatherSysUptime(t *testing.T) {
 
 	inlet := SnmpInlet(DummyContext(
 		engine.NewConfig().
-			Set("agent", "udp://127.0.0.1").
+			Set("agents", "udp://127.0.0.1").
 			Set("version", "2").
 			Set("retries", "0").
 			Set("timeout", "3s").
 			Set("community", "private").
 			Set("translator", "netsnmp").
-			Set("path", "/usr/share/snmp/mibs"),
+			Set("mib_paths", "/usr/share/snmp/mibs"),
 	))
 	s := inlet.(*snmpInlet)
 	s.tables = []Table{

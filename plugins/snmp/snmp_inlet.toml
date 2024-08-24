@@ -1,0 +1,80 @@
+## Gather metrics from SNMP agents.
+[[inlets.snmp]]
+    interval = "10s"
+    count = 0
+
+    ## SNMP client name
+    name = "my"
+
+    name_infix = "_"
+    
+    ## SNMP agent address, multiple agents are allowed
+    ## e.g. agent=udp://
+    agents = ["udp://127.0.0.1:161", "tcp://127.0.0.1:161"]
+
+    ## SNMP timeout (default: 5s)
+    timeout = "5s"
+
+    ## SNMP retries (default: 3)
+    retries = 3
+
+    ## SNMP version (default: 2)
+    version = 2
+
+    ## Use unconnected UDP socket (default: false)
+    unconnected_udp_socket = false
+
+    ## SNMPv1 and SNMPv2c community string (default: public)
+    community = "public"
+
+    ## SNMPv2 and SNMPv3 max repetitions (default: 10)
+    max_repetitions = 10
+
+    ## SNMPv3 context name
+    context_name = "context"
+
+    ## SNMPv3 security name
+    sec_name = "username"
+
+    ## SNMPv3 security level [noAuthNoPriv|authNoPriv|authPriv] (default: authNoPriv)
+    sec_level = "authNoPriv"
+
+    ## SNMPv3 authentication protocol [MD5|SHA|SHA224|SHA256|SHA384|SHA512] (default: MD5)
+    auth_protocol = "MD5"
+
+    ## SNMPv3 authentication password
+    auth_password = "password"
+
+    ## SNMPv3 privacy protocol [DES|AES|AES192|AES192C|AES256|AES256C]
+    priv_protocol = ""
+
+    ## SNMPv3 privacy password
+    priv_password = ""
+
+    ## SNMPv3 engine ID
+    engine_id = ""
+
+    ## SNMPv3 engine boots
+    engine_boots = 0
+
+    ## SNMPv3 engine time
+    engine_time = 0
+
+    ## SNMP MIB path, multiple paths are allowed
+    # mib_paths = ["/usr/share/snmp/mibs"]
+    mib_paths = []
+
+    ## SNMP MIB translator [gosmi|netsnmp] (default: gosmi)
+    translator = "gosmi"
+
+    ## SNMP table name
+    tables = []
+
+    ## SNMP field name
+    ## Array of Field
+    ## Field
+    ##   name       string
+    ##   oid        string
+    ##   is_tag     bool
+    ##   conversion string // [float|float(X)|int|hwaddr|ipaddr|enum|enum(X)]
+    fields = []
