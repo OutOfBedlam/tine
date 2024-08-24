@@ -72,8 +72,8 @@ func DummyContext(conf engine.Config) *engine.Context {
 }
 
 func TestSnmpInit(t *testing.T) {
-	if runtime.GOOS != "darwin" {
-		t.Skip("Skipping test")
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping test on Windows")
 	}
 	dsl := fmt.Sprintf(`
 	[log]
@@ -117,7 +117,7 @@ func TestSnmpInit(t *testing.T) {
 		"_ts":          1721954798,
 		"snmp_a":       0,
 		"snmp_uptime":  135873,
-		"snmp_ifDescr": "lo0",
+		"snmp_ifDescr": "lo",
 	}
 	t.Log("--------------------------\n", sb.String())
 	result := map[string]any{}
@@ -126,18 +126,18 @@ func TestSnmpInit(t *testing.T) {
 		t.Fatal(err)
 	}
 	for k, val := range expect {
-		if k == "snmp_ifDescr" {
-			continue
-		}
-		switch v := val.(type) {
-		case int:
-			if k == "snmp_uptime" {
-				require.Greater(t, result[k].(float64), 0.0)
-			} else {
-				require.Equal(t, float64(v), result[k], "field: %s", k)
-			}
+		switch k {
+		case "snmp_ifDescr":
+			require.Contains(t, result[k].(string), val)
+		case "snmp_uptime":
+			require.Greater(t, result[k].(float64), 0.0)
 		default:
-			require.Equal(t, val, result[k], "field: %s", k)
+			switch v := val.(type) {
+			case int:
+				require.Equal(t, float64(v), result[k], "field: %s", k)
+			default:
+				require.Equal(t, val, result[k], "field: %s", k)
+			}
 		}
 	}
 }
