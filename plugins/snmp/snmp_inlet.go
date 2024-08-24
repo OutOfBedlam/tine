@@ -31,6 +31,7 @@ type snmpInlet struct {
 	agents          []string
 	tables          []Table
 	fields          []Field
+	tags            engine.Tags
 	connectionCache []Conn
 	translator      Translator
 }
@@ -41,9 +42,10 @@ func (si *snmpInlet) Open() error {
 	conf := si.ctx.Config()
 	si.interval = conf.GetDuration("interval", 10*time.Second)
 	si.runCountLimit = conf.GetInt("count", 0)
-
 	si.name = conf.GetString("name", "inlets.snmp")
 	si.nameInfix = conf.GetString("name_infix", "_")
+	si.tags = engine.Tags{}
+
 	si.clientConf.Timeout = conf.GetDuration("timeout", 5*time.Second)
 	si.clientConf.Retries = conf.GetInt("retries", 3)
 	si.clientConf.Version = conf.GetInt("version", 2)
@@ -122,6 +124,14 @@ func (si *snmpInlet) Open() error {
 		}
 	}
 
+	tags := conf.GetConfigSlice("tags", nil)
+	for _, c := range tags {
+		name := c.GetString("name", "")
+		value := c.GetValue("value")
+		if value.IsNotNull() {
+			si.tags[name] = value
+		}
+	}
 	return nil
 }
 
@@ -134,13 +144,13 @@ func (si *snmpInlet) Interval() time.Duration {
 }
 
 func (si *snmpInlet) Process(next engine.InletNextFunc) {
-	if si.runCountLimit > 0 && si.runCount >= si.runCountLimit {
+	if si.runCountLimit > 0 && si.runCount > si.runCountLimit {
 		next(nil, io.EOF)
 		return
 	}
 	recs, err := si.Gather()
 	si.runCount++
-	if err == nil && si.runCountLimit > 0 && si.runCount > si.runCountLimit {
+	if err == nil && si.runCountLimit > 0 && si.runCount >= si.runCountLimit {
 		err = io.EOF
 	}
 	next(recs, err)
@@ -164,8 +174,7 @@ func (si *snmpInlet) Gather() ([]engine.Record, error) {
 				Name:   si.name,
 				Fields: si.fields,
 			}
-			topTags := map[string]string{}
-			if recs, err := si.gatherTable(gs, t, topTags, false); err != nil {
+			if recs, err := si.gatherTable(gs, t, false); err != nil {
 				si.ctx.LogWarn("inlets.snmp", "gathering table", si.name, "error", err)
 			} else {
 				resultLock.Lock()
@@ -174,7 +183,7 @@ func (si *snmpInlet) Gather() ([]engine.Record, error) {
 			}
 
 			for _, table := range si.tables {
-				if recs, err := si.gatherTable(gs, table, topTags, true); err != nil {
+				if recs, err := si.gatherTable(gs, table, true); err != nil {
 					si.ctx.LogWarn("inlets.snmp", "gathering table", table.Name, "error", err)
 				} else {
 					resultLock.Lock()
@@ -188,7 +197,7 @@ func (si *snmpInlet) Gather() ([]engine.Record, error) {
 	return result, nil
 }
 
-func (si *snmpInlet) gatherTable(gs Conn, table Table, topTags map[string]string, walk bool) ([]engine.Record, error) {
+func (si *snmpInlet) gatherTable(gs Conn, table Table, walk bool) ([]engine.Record, error) {
 	rt, err := table.Build(gs, walk)
 	if err != nil {
 		return nil, err
@@ -196,19 +205,20 @@ func (si *snmpInlet) gatherTable(gs Conn, table Table, topTags map[string]string
 
 	ret := make([]engine.Record, 0, len(rt.Rows))
 	for _, tr := range rt.Rows {
+		rec := engine.NewRecord()
+
 		if !walk {
 			for k, v := range tr.Tags {
-				topTags[k] = v
+				rec.Tags().Set(k, engine.NewValue(v))
 			}
 		} else {
 			for _, k := range table.InheritTags {
 				if v, ok := tr.Tags[k]; ok {
-					topTags[k] = v
+					rec.Tags().Set(k, engine.NewValue(v))
 				}
 			}
 		}
 
-		rec := engine.NewRecord()
 		for name, value := range tr.Fields {
 			recName := table.Name
 			if idx, ok := tr.Tags["ifIndex"]; ok {

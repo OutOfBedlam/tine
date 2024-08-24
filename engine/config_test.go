@@ -239,5 +239,13 @@ func TestConfigValues(t *testing.T) {
 	require.Equal(t, float64(5), c.GetFloat("sint", 0))
 	require.Equal(t, float64(6), c.GetFloat("int32", 0))
 	require.Equal(t, float64(7), c.GetFloat("uint32", 0))
-
+	// GetValue
+	require.Equal(t, 3.14, c.GetValue("flt64").raw)
+	require.Equal(t, 3.14, math.Round(c.GetValue("flt32").raw.(float64)*100)/100)
+	require.Equal(t, "3.14", c.GetValue("sflt").raw)
+	require.Equal(t, true, c.GetValue("bol").raw)
+	require.Equal(t, int64(1), c.GetValue("int").raw)
+	require.Equal(t, uint64(2), c.GetValue("uint").raw)
+	require.Equal(t, int64(3), c.GetValue("int64").raw)
+	require.Equal(t, uint64(4), c.GetValue("uint64").raw)
 }

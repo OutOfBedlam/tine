@@ -95,6 +95,11 @@ func TestSnmpInit(t *testing.T) {
 		# tables = [
 		# 	{name="if", oid="1.3.6.1.2.1.1.3" },
 		# ]
+		tags = [
+			{name="dc", value="far_east"},
+			{name="rack", value=12},
+			{name="primary", value=true}
+		]
 	[[flows.select]]
 		includes = ["**"]
 	[[outlets.file]]

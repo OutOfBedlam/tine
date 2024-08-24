@@ -177,6 +177,30 @@ func (c Config) GetConfigSlice(key string, defaultVal []Config) []Config {
 	return defaultVal
 }
 
+func (c Config) GetValue(key string) *Value {
+	if v, ok := c[key]; ok {
+		switch val := v.(type) {
+		case bool:
+			return NewValue(val)
+		case string:
+			return NewValue(val)
+		case float32:
+			return NewValue(float64(val))
+		case float64:
+			return NewValue(val)
+		case int:
+			return NewValue(int64(val))
+		case int64:
+			return NewValue(val)
+		case uint:
+			return NewValue(uint64(val))
+		case uint64:
+			return NewValue(val)
+		}
+	}
+	return NewNullValue(UNTYPED)
+}
+
 func (c Config) GetBool(key string, defaultVal bool) bool {
 	if v, ok := c[key]; ok {
 		switch val := v.(type) {
