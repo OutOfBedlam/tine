@@ -7,23 +7,6 @@
     ## e.g. tcp://:5514, udp://:5514, unix:///var/run/syslog.sock
     address = "udp://127.0.0.1:5516"
     
-    ## SD-ID separator
-    name_infix = "_"
-
-    ## Standard
-    ## RFC3164, RFC5424
-    syslog_standard = "RFC3164"
-
-    ## parallelim
-    parallelism = 1
-
-    ## Best effort to parse the message
-    best_effort = false
-
-    ## TCP framing
-    ## octetcounting, non-transport
-    framing = "octetcounting"
-
 # [[flows.dump]]
 #     level = "info"
 [[outlets.file]]

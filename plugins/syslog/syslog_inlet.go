@@ -34,7 +34,7 @@ func SyslogInlet(ctx *engine.Context) engine.Inlet {
 type syslogInlet struct {
 	ctx *engine.Context
 
-	nameInfix string
+	SdIdInfix string
 
 	pushCh    chan Data
 	closeOnce sync.Once
@@ -58,7 +58,7 @@ type Data struct {
 func (si *syslogInlet) Open() error {
 	address := si.ctx.Config().GetString("address", "tcp://127.0.0.1:6514")
 	protoAddr := strings.SplitN(address, "://", 2)
-	si.nameInfix = si.ctx.Config().GetString("name_infix", "_")
+	si.SdIdInfix = si.ctx.Config().GetString("sd_id_infix", "_")
 
 	si.ctx.LogDebug("inlet-syslog", "address", address)
 
@@ -269,7 +269,7 @@ func (si *syslogInlet) records(msg syslog.Message) engine.Record {
 					continue
 				}
 				for k, v := range sdparams {
-					ret = ret.Append(engine.NewField(sdid+si.nameInfix+k, v))
+					ret = ret.Append(engine.NewField(sdid+si.SdIdInfix+k, v))
 				}
 			}
 		}

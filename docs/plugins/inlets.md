@@ -828,6 +828,76 @@ tine run ./example_out.toml ./example_in.toml
 {"name":"cpu_total_percent","time":1723874991,"value":9.37}
 ```
 
+### SYSLOG
+
+*Source* [plugins/syslog](https://github.com/OutOfBedlam/tine/tree/main/plugins/syslog)
+
+**Config**
+
+```toml
+## Syslog input plugins
+## receive and parse RFC3164 and RFC5424 syslog messages
+##
+## <PRI>VERSION TIMESTAMP HOSTNAME APP-NAME PROCID MSGID [SD-ID STRUCTURED-DATA] MESSAGE
+##
+[[inlets.syslog]]
+    ## Listen address
+    ## e.g. tcp://:5514, udp://:5514, unix:///var/run/syslog.sock
+    address = "udp://127.0.0.1:5516"
+    
+    ## SD-ID separator
+    sd_id_infix = "_"
+
+    ## Standard
+    ## RFC3164, RFC5424
+    syslog_standard = "rfc3164"
+
+    ## parallelim
+    parallelism = 1
+
+    ## Best effort to parse the message
+    best_effort = false
+
+    ## TCP framing
+    ## octetcounting, non-transport
+    framing = "octetcounting"
+```
+
+**Example**
+
+```toml
+[[inlets.syslog]]
+    ## Listen address
+    ## e.g. tcp://:5514, udp://:5514, unix:///var/run/syslog.sock
+    address = "udp://:5514"    
+[[outlets.file]]
+    path = "-"
+    format = "json"
+```
+
+Then, add `*.* @<host_ip_of_tine_runs>:5514` to the source system's syslog.
+
+*Run*
+
+```sh
+tine run ./example.toml
+```
+
+*Output*
+
+```json
+{
+    "appname":"login",
+    "facility_code":0,
+    "hostname":"local.local",
+    "message":"USER_PROCESS: 17309 ttys004",
+    "procid":"17309",
+    "remote_host":"127.0.0.1",
+    "severity_code":5,
+    "timestamp":1724490558
+}
+```
+
 ### TELEGRAM
 
 *Source* [plugins/telegram](https://github.com/OutOfBedlam/tine/tree/main/plugins/telegram)

@@ -17,8 +17,8 @@
 
 ## Embedding TINE in Go
 
-* [Use Recipe](embedding/use_recipe.md)
-* [Use API](embedding/use_api.md)
+* [Use Recipe](embedding/use\_recipe.md)
+* [Use API](embedding/use\_api.md)
 
 ## Plugins
 
@@ -32,5 +32,6 @@
 * [OLLAMA](recipes/ollama.md)
 * [OLLAMA Telegram Bot](recipes/ollama\_chatbot.md)
 * [Web Page Snapshot](recipes/chrome\_snap.md)
-* [RRD](recipes/rrd.md)
+* [Syslog Receiver](recipes/syslog.md)
 * [SQLite](recipes/sqlite.md)
+* [RRD](recipes/rrd.md)

@@ -8,7 +8,7 @@
     address = "udp://127.0.0.1:5516"
     
     ## SD-ID separator
-    name_infix = "_"
+    sd_id_infix = "_"
 
     ## Standard
     ## RFC3164, RFC5424
