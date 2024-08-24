@@ -13,6 +13,7 @@ import (
 	_ "github.com/OutOfBedlam/tine/plugins/expr"
 	_ "github.com/OutOfBedlam/tine/plugins/http"
 	_ "github.com/OutOfBedlam/tine/plugins/image"
+	_ "github.com/OutOfBedlam/tine/plugins/influx"
 	_ "github.com/OutOfBedlam/tine/plugins/mqtt"
 	_ "github.com/OutOfBedlam/tine/plugins/nats"
 	_ "github.com/OutOfBedlam/tine/plugins/ollama"

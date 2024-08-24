@@ -1,0 +1,23 @@
+[[outlets.influx]]
+    ## The name of the database to write to
+    ##
+    ## If the database does not exist, create first by running:
+    ## curl -XPOST 'http://localhost:8086/query' --data-urlencode 'q=CREATE DATABASE "metrics"'
+    ##
+    db = "metrics"
+    ## The URL of the InfluxDB server
+    ## Or file path to write to a file
+    # path = "-"
+    path = "http://127.0.0.1:8086/write?db=metrics"
+    ## The tags to add to the metrics
+    ## If 'value' is not set, the value of the tag will be taken from the record
+    tags = [
+        {name="dc", value="us-east-1"},
+        {name="env", value="prod"},
+        {name="_in"}
+    ]
+
+    ## Write timeout, especially for the HTTP request
+    timeout = "3s"
+    ## Debug mode for logging the response message from the InfluxDB 
+    debug = false
