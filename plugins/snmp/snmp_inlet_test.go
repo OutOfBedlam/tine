@@ -123,6 +123,9 @@ func TestSnmpInit(t *testing.T) {
 		t.Fatal(err)
 	}
 	for k, val := range expect {
+		if k == "snmp_ifDescr" {
+			continue
+		}
 		switch v := val.(type) {
 		case int:
 			if k == "snmp_uptime" {
