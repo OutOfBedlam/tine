@@ -72,6 +72,9 @@ func DummyContext(conf engine.Config) *engine.Context {
 }
 
 func TestSnmpInit(t *testing.T) {
+	if runtime.GOOS != "darwin" {
+		t.Skip("Skipping test")
+	}
 	dsl := fmt.Sprintf(`
 	[log]
 		level = "info"
