@@ -61,6 +61,7 @@ type Creator struct {
 
 // NewCreator returns new Creator object. You need to call Create to really
 // create database file.
+//
 //	filename - name of database file
 //	start    - don't accept any data timed before or at time specified
 //	step     - base interval in seconds with which data will be fed into RRD

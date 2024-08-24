@@ -15,7 +15,7 @@ func init() {
 		// Usage:   "--in-snmp <param>",
 		// Help: []string{
 		// 	"Gather metrics from SNMP agents.",
-		// 	"Avaliable params:",
+		// 	"Available params:",
 		// 	"    name=<string>      SNMP client name (default: in-snmp)",
 		// 	"    agent=<string>     SNMP agent address, multiple agents are allowed",
 		// 	"                       (e.g. agent=udp://127.0.0.1:161,agent=tcp://127.0.0.1:161)",

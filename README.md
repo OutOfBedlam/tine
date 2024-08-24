@@ -3,7 +3,7 @@
 [![latest](https://img.shields.io/github/v/release/OutOfBedlam/tine?sort=semver)](https://github.com/OutOfBedlam/tine/releases)
 ![CI](https://github.com/OutOfBedlam/tine/actions/workflows/ci.yml/badge.svg)
 [![codecov](https://codecov.io/gh/OutOfBedlam/tine/graph/badge.svg?token=5XSG9M9P8E)](https://codecov.io/gh/OutOfBedlam/tine)
-
+[![Go Report Card](https://goreportcard.com/badge/github.com/OutOfBedlam/tine)](https://goreportcard.com/report/github.com/OutOfBedlam/tine)
 
 ![TINE is not ETL](./docs/images/tine-drop-circlex256.png)
 
