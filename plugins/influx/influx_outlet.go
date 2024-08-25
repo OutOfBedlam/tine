@@ -2,10 +2,12 @@ package influx
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -135,18 +137,45 @@ func (io *influxOutlet) rec2Metric(rec engine.Record) (ilp.Metric, error) {
 			tags[k] = v
 		}
 	}
+
+	fieldsTakenToTags := []string{}
+
 	for _, k := range io.tagsFromRecord {
-		if v := rec.Tags().Get(k); v != nil {
-			if s, ok := v.String(); ok {
-				if s != "" { // do not add empty strings
-					tags[k] = s
-				}
+		var tagName = ""
+		var tagValue *engine.Value
+		if strings.HasPrefix(k, "#") {
+			if v := rec.Tags().Get(k[1:]); v != nil {
+				tagName = k[1:]
+				tagValue = v
+			}
+		} else {
+			if v := rec.Field(k); v != nil {
+				tagName = k
+				tagValue = v.Value
+				fieldsTakenToTags = append(fieldsTakenToTags, k)
+			}
+		}
+		if tagName == "" || tagValue == nil || tagValue.IsNull() {
+			continue
+		}
+		switch tagValue.Type() {
+		case engine.TIME:
+			ts, _ := tagValue.Time()
+			tags[tagName] = fmt.Sprintf("%d", ts.UnixNano())
+		default:
+			if s, ok := tagValue.String(); ok && s != "" {
+				// do not add empty strings
+				tags[tagName] = s
 			}
 		}
 	}
 
 	fields := make(map[string]interface{}) // Initialize the fields map
 	for _, f := range rec.Fields() {
+		if slices.Contains(fieldsTakenToTags, f.Name) {
+			// excludes fields that were taken to tags
+			continue
+		}
 		switch f.Type() {
 		case engine.INT:
 			if v, ok := f.Value.Int64(); ok {
