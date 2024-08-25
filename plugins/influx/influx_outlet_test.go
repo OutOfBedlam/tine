@@ -167,9 +167,9 @@ func TestInfluxOutlet_tags(t *testing.T) {
 		for _, field := range metrics[i].FieldList() {
 			switch field.Key {
 			case "area":
-				require.Equal(t, []string{"a", "b"}[i], metrics[i].FieldList()[0].Value)
+				require.Equal(t, []string{"a", "b"}[i], field.Value)
 			case "ival":
-				require.Equal(t, []int64{1, 2}[i], metrics[i].FieldList()[1].Value)
+				require.Equal(t, []int64{1, 2}[i], field.Value)
 			default:
 				t.Fatalf("unexpected field: %s", field.Key)
 			}
