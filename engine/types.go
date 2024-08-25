@@ -75,12 +75,11 @@ func (r *tagRecord) AppendOrReplace(fields ...*Field) Record {
 }
 
 func (r *tagRecord) Field(name string) *Field {
-	name = strings.ToUpper(name)
 	for _, f := range r.fields {
 		if f == nil {
 			continue
 		}
-		if strings.ToUpper(f.Name) == name {
+		if strings.EqualFold(f.Name, name) {
 			return f
 		}
 	}

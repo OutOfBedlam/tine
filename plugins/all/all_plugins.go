@@ -18,6 +18,7 @@ import (
 	_ "github.com/OutOfBedlam/tine/plugins/nats"
 	_ "github.com/OutOfBedlam/tine/plugins/ollama"
 	_ "github.com/OutOfBedlam/tine/plugins/psutil"
+	_ "github.com/OutOfBedlam/tine/plugins/qrcode"
 	_ "github.com/OutOfBedlam/tine/plugins/screenshot"
 	_ "github.com/OutOfBedlam/tine/plugins/snmp"
 	_ "github.com/OutOfBedlam/tine/plugins/sqlite"

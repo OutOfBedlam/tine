@@ -310,3 +310,63 @@ allowing applications to inject their own functions as flows with the specified 
 
 ```json
 ```
+
+### QRCODE
+
+*Source* [plugins/qrcode](https://github.com/OutOfBedlam/tine/tree/main/plugins/qrcode)
+
+**Config**
+
+```toml
+[[flows.qrcode]]
+    ## The input field to generate QRCode
+    input_field = "url"
+    ## The output field to store the QRCode image (in png format)
+    output_field = "qrcode"
+
+    # QRCode width should be < 256
+    width = 11
+
+    ## if the background_transparent is true, the background_color will be ignored
+    background_transparent = true
+
+    ## The background color of the QRCode image
+    background_color = "#ffffff"
+
+    ## The foreground color of the QRCode image
+    foreground_color = "#000000"
+
+    # logo image should only has 1/5 width of QRCode at most (.png or .jpeg)
+    logo = "./tine_x64.png"
+
+    ## Half tone image should be a .jpeg or .png file
+    halftone = "./test.jpeg"
+```
+
+**Example**
+
+```toml
+[[inlets.args]]
+[[flows.qrcode]]
+    input_field = "in"
+    output_field = "qrcode"
+    # QRCode width should be < 256
+    width = 11
+    # background_transparent = true
+    background_color = "#ffffff"
+    foreground_color = "#000000"
+[[outlets.image]]
+    path_field = "out"
+    image_fields = ["qrcode"]
+    overwrite = true
+```
+
+*Run*
+
+```sh
+tine run ./example.toml -- in="https://tine.thingsme.xyz" out=./output.png
+```
+
+*Output*
+
+<figure><img src="./images/flows_qrcode_output.png" alt="" width="200"><figcaption><p>output.png</p></figcaption></figure>
