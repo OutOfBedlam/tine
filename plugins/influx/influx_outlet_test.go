@@ -1,6 +1,7 @@
 package influx_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"runtime"
@@ -12,6 +13,8 @@ import (
 	_ "github.com/OutOfBedlam/tine/plugins/base"
 	_ "github.com/OutOfBedlam/tine/plugins/influx"
 	_ "github.com/OutOfBedlam/tine/plugins/psutil"
+	ilp "github.com/influxdata/line-protocol"
+	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
@@ -111,7 +114,7 @@ func TestInfluxOutlet(t *testing.T) {
 	pipeline.Stop()
 }
 
-func ExampleInfluxOutlet_tags() {
+func TestInfluxOutlet_tags(t *testing.T) {
 	dsl := `
 		[log]
 			path = "-"
@@ -125,15 +128,15 @@ func ExampleInfluxOutlet_tags() {
 			fields = ["area", "ival","rack"]
 			types = ["string", "int","string"]
 		[[outlets.influx]]
-			path = "-"
 			tags = [
 				{name="dc", value="us-east-1"},
 				{name="#_in"},
 				{name="rack"}
 			]
 	`
+	buff := &bytes.Buffer{}
 	engine.Now = func() time.Time { return time.Unix(1724549120, 0) }
-	pipeline, err := engine.New(engine.WithConfig(dsl))
+	pipeline, err := engine.New(engine.WithConfig(dsl), engine.WithWriter(buff))
 	if err != nil {
 		panic(err)
 	}
@@ -142,7 +145,41 @@ func ExampleInfluxOutlet_tags() {
 		panic(err)
 	}
 	pipeline.Stop()
-	// Output:
+
+	parser := ilp.NewParser(ilp.NewMetricHandler())
+	metrics, err := parser.Parse(buff.Bytes())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	require.Equal(t, 2, len(metrics))
+	require.Equal(t, "metrics", metrics[1].Name())
+
+	// Expected outputs:
 	// metrics,_in=file,dc=us-east-1,rack=#1 area="a",ival=1i 1724549120000000000
 	// metrics,_in=file,dc=us-east-1,rack=#2 area="b",ival=2i 1724549120000000000
+
+	for i := 0; i < len(metrics); i++ {
+		require.Equal(t, "metrics", metrics[i].Name())
+		require.Equal(t, time.Unix(1724549120, 0), metrics[i].Time())
+
+		require.Equal(t, 2, len(metrics[i].FieldList()))
+		for _, field := range metrics[i].FieldList() {
+			switch field.Key {
+			case "area":
+				require.Equal(t, []string{"a", "b"}[i], metrics[i].FieldList()[0].Value)
+			case "ival":
+				require.Equal(t, []int64{1, 2}[i], metrics[i].FieldList()[1].Value)
+			default:
+				t.Fatalf("unexpected field: %s", field.Key)
+			}
+		}
+		strList := []string{}
+		for _, tag := range metrics[i].TagList() {
+			strList = append(strList, fmt.Sprintf("%s=%s", tag.Key, tag.Value))
+		}
+		require.Equal(t,
+			fmt.Sprintf("_in=file,dc=us-east-1,rack=#%d", i+1),
+			strings.Join(strList, ","))
+	}
 }
