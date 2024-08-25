@@ -29,6 +29,7 @@
 
 ## RECIPES
 
+* [QRCode Generator](recipes/qrcode_gen.md)
 * [OLLAMA](recipes/ollama.md)
 * [OLLAMA Telegram Bot](recipes/ollama\_chatbot.md)
 * [Web Page Snapshot](recipes/chrome\_snap.md)
