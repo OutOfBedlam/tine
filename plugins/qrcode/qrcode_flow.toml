@@ -1,0 +1,23 @@
+[[flows.qrcode]]
+    ## The input field to generate QRCode
+    input_field = "url"
+    ## The output field to store the QRCode image (in png format)
+    output_field = "qrcode"
+
+    # QRCode width should be < 256
+    width = 11
+
+    ## if the background_transparent is true, the background_color will be ignored
+    background_transparent = true
+
+    ## The background color of the QRCode image
+    background_color = "#ffffff"
+
+    ## The foreground color of the QRCode image
+    foreground_color = "#000000"
+
+    # logo image should only has 1/5 width of QRCode at most (.png or .jpeg)
+    logo = "./tine_x64.png"
+
+    ## Half tone image should be a .jpeg or .png file
+    halftone = "./test.jpeg"
