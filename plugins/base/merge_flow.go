@@ -82,8 +82,11 @@ func (mf *mergeFlow) Process(records []engine.Record, nextFunc engine.FlowNextFu
 	mf.table = remains
 
 	ret := []engine.Record{}
-	for _, r := range selected.Rows() {
-		ret = append(ret, engine.NewRecord(r...))
+	for _, k := range selected.Keys() {
+		row := selected.Get(k)
+		r := engine.NewRecord(row.Fields...)
+		r.Tags().Set(mf.joinTag, engine.NewValue(time.Unix(k, 0)))
+		ret = append(ret, r)
 	}
 	nextFunc(ret, nil)
 }

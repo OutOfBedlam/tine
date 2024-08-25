@@ -14,7 +14,7 @@
     tags = [
         {name="dc", value="us-east-1"},
         {name="env", value="prod"},
-        {name="_in"}
+        {name="#_in"}
     ]
 
     ## Write timeout, especially for the HTTP request
