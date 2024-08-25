@@ -3,6 +3,7 @@ package influx_test
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -50,6 +51,9 @@ func setupInfluxdb(ctx context.Context) (*influxdbContainer, error) {
 }
 
 func TestInfluxOutlet(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("skipping test on windows")
+	}
 	ctx := context.Background()
 	influxC, err := setupInfluxdb(ctx)
 	if err != nil {
