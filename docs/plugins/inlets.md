@@ -255,6 +255,23 @@ Execute external command and yields records for the output of stdout of the comm
 {"_in":"exec","_ts":1722516459,"stdout":"1722516459"}
 ```
 
+### FAKEIT
+
+*Source* [plugins/fakeit](https://github.com/OutOfBedlam/tine/tree/main/plugins/fakeit)
+
+**Config**
+
+```toml
+[[inlets.fakeit]]
+    seed = 1
+    count = 2
+    interval = "1s"
+    fields = [
+			"name", "email", "phone", "city", "state", "zip", "country", 
+			"latitude", "longitude", "int", "uint", "float", "unknown",
+    ]
+```
+
 ### FILE
 
 *Source* [plugins/base](https://github.com/OutOfBedlam/tine/tree/main/plugins/base)

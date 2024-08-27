@@ -1,0 +1,8 @@
+[[inlets.fakeit]]
+    seed = 1
+    count = 2
+    interval = "1s"
+    fields = [
+			"name", "email", "phone", "city", "state", "zip", "country", 
+			"latitude", "longitude", "int", "uint", "float", "unknown",
+    ]
