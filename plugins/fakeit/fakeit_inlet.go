@@ -95,6 +95,22 @@ func (fi *fakeItInlet) gen(n string) *engine.Field {
 		return engine.NewField(n, uint64(fi.faker.Uint64()))
 	case "float":
 		return engine.NewField(n, fi.faker.Float64())
+		// misc.
+	case "uuid":
+		return engine.NewField(n, fi.faker.UUID())
+		// string
+	case "digit":
+		return engine.NewField(n, fi.faker.Digit())
+	case "digitN":
+		return engine.NewField(n, fi.faker.DigitN(5))
+	case "letter":
+		return engine.NewField(n, fi.faker.Letter())
+	case "letterN":
+		return engine.NewField(n, fi.faker.LetterN(5))
+	case "lexify":
+		return engine.NewField(n, fi.faker.Lexify("????"))
+	case "numerify":
+		return engine.NewField(n, fi.faker.Numerify("###"))
 	default:
 		return engine.NewField(n, n)
 	}
